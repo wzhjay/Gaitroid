@@ -1,0 +1,17 @@
+# Packages #
+############
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Compiled source #
+###################
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+*.project
+*.classpath
