@@ -30,6 +30,19 @@
                   android:label="@string/select_device"
                   android:theme="@android:style/Theme.Dialog">
         </activity>
+        <activity android:name="com.gaitroid.ConfigureActivity" 
+            	  android:theme="@android:style/Theme.Dialog" 
+                  android:label="Configure">
+        </activity>
+        <activity android:name="com.gaitroid.GraphActivity"
+            	  android:theme="@android:style/Theme.Dialog"
+            	  android:label="Graph">
+        </activity>
+        <activity android:name="com.gaitroid.SensorViewActivity" 
+           		  android:theme="@android:style/Theme.Dialog" 
+            	  android:label="Sensor View">
+            
+        </activity>
         <service android:enabled="true" android:name="com.shimmerresearch.service.MultiShimmerPlayService" />
     </application>
 
