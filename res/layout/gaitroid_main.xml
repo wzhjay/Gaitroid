@@ -8,6 +8,11 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".GaitroidMain" >
     
+    <android.support.v4.view.ViewPager xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/pager"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" />
+    
     <Button
         android:id="@+id/connect_socket"
         android:layout_width="wrap_content"
@@ -61,5 +66,14 @@
         android:layout_alignRight="@+id/button_start"
         android:layout_below="@+id/button_start"
         android:text="Stop" />
+
+    <Button
+        android:id="@+id/button_audio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/button_stop"
+        android:layout_alignRight="@+id/button_stop"
+        android:layout_below="@+id/button_stop"
+        android:text="Audio" />
 
 </RelativeLayout>

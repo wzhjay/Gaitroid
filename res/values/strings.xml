@@ -12,4 +12,5 @@
 	<string name="select_device">select a Shimmer to connect</string>
     <string name="none_found">No devices found</string>
     <string name="enable_sensors_done">Done</string>
+    <string name="dummy_section_text">Section %1d is just a dummy section.</string>
 </resources>
