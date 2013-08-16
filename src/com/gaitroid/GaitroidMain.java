@@ -324,7 +324,18 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 
         @Override
         public CharSequence getPageTitle(int position) {
-            return "Section " + (position + 1);
+            //return "Section " + (position + 1);
+            if(position == 0) {
+            	return "Configure";
+            }
+            else if(position == 1) {
+            	return "Test";
+            }
+            else if(position == 2) {
+            	return "Profile";
+            }
+            else
+            	return "Section " + (position + 1);
         }
     }
 
@@ -364,7 +375,33 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 //                            startActivity(externalActivityIntent);
 //                        }
 //                    });
-
+            
+//          rootView.findViewById(R.id.connect_socket)
+//	          .setOnClickListener(new View.OnClickListener() {
+//	              @Override
+//	              public void onClick(View v) {
+//	                  //Perform action on click
+//	              	Log.d("Gaitroid", "click button_socket");
+//	              	IOCallback io = new BasicExample();
+//	          		
+//	          		SocketIO socket = null ;
+//	          		try {
+//	          			socket = new SocketIO("http://192.168.237.150:3000/");
+//	          			socket.connect(io);
+//	          		} catch (MalformedURLException e) {
+//	          			// TODO Auto-generated catch block
+//	          			e.printStackTrace();
+//	          		}
+//	          		
+//	          		try {
+//	  					socket.emit("msg", new JSONObject().put("key", "hello world"));
+//	  				} catch (JSONException e) {
+//	  					// TODO Auto-generated catch block
+//	  					e.printStackTrace();
+//	  				}
+//	              }
+//	          });
+           
             return rootView;
         }
     }
