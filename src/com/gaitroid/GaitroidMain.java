@@ -49,6 +49,11 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.TextToSpeech.Engine;
+import android.media.AudioManager;
+import java.util.HashMap;
+
 public class GaitroidMain extends FragmentActivity implements ActionBar.TabListener {
 
 	static final int REQUEST_ENABLE_BT = 1;
@@ -73,9 +78,10 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 	String BluetoothAddress="";	
 	int mEnabledSensors=0;
 	
-	
+	// test to voice
 	private TextToSpeech tts;
-	//tts.setLanguage(Locale.US);
+	private HashMap<String, String> ttsParams;
+	private static final int TTS_STREAM = AudioManager.STREAM_NOTIFICATION;
 	/**
      * The {@link android.support.v4.view.PagerAdapter} that will provide fragments for each of the
      * three primary sections of the app. We use a {@link android.support.v4.app.FragmentPagerAdapter}
@@ -91,6 +97,7 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
     ViewPager mViewPager;
 
     public void onCreate(Bundle savedInstanceState) {
+    	// =============================================== tabs view ===================
         super.onCreate(savedInstanceState);
         setContentView(R.layout.gaitroid_main);
 
@@ -132,7 +139,14 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
                             .setText(mAppSectionsPagerAdapter.getPageTitle(i))
                             .setTabListener(this));
         }
+        // =============================================== tabs view ===================
         
+        // =============================================== test to voice ===============
+        //ttsParams = new HashMap<String, String>();
+		//ttsParams.put(Engine.KEY_PARAM_STREAM, String.valueOf(TTS_STREAM));
+
+		this.setVolumeControlStream(TTS_STREAM);
+		
         // =============================================== test buttons ===================
         final Context context = this;
 		//super.onCreate(savedInstanceState);
@@ -268,18 +282,16 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 			e.printStackTrace();
 		}
 		*/
-		final Button button_audio = (Button) findViewById(R.id.button_audio);
-		button_audio.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-            	Log.d("Shimmer", "play audio");
-            	MediaPlayer mp = MediaPlayer.create(context, R.raw.start);
-            	mp.start();
-//            	String myTest = "Test start after 5 seconds";
-//            	tts.speak(myTest, TextToSpeech.QUEUE_FLUSH, null);
-            }
-        });
+//		final Button button_audio = (Button) findViewById(R.id.button_audio);
+//		button_audio.setOnClickListener(new View.OnClickListener() {
+//            public void onClick(View v) {
+//            	Log.d("Shimmer", "play audio");
+//            	MediaPlayer mp = MediaPlayer.create(context, R.raw.start);
+//            	mp.start();
+//            }
+//        });
     }
-
+    // =============================================== tabs view functions ===================
     @Override
     public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
     }
@@ -310,8 +322,15 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
                 case 0:
                     // The first section of the app is the most interesting -- it offers
                     // a launchpad into the other demonstrations in this example application.
-                    return new LaunchpadSectionFragment();
-
+                    return new LaunchpadSectionFragment1();
+                case 1:
+                    // The first section of the app is the most interesting -- it offers
+                    // a launchpad into the other demonstrations in this example application.
+                    return new LaunchpadSectionFragment2();
+                case 2:
+                    // The first section of the app is the most interesting -- it offers
+                    // a launchpad into the other demonstrations in this example application.
+                    return new LaunchpadSectionFragment3();
                 default:
                     // The other sections of the app are dummy placeholders.
                     Fragment fragment = new DummySectionFragment();
@@ -345,41 +364,14 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
     }
 
     /**
-     * A fragment that launches other parts of the demo application.
+     * A fragment that launches as home screen.
      */
-    public static class LaunchpadSectionFragment extends Fragment {
+    public static class LaunchpadSectionFragment1 extends Fragment {
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_section_launchpad, container, false);
-
-            // Demonstration of a collection-browsing activity.
-//            rootView.findViewById(R.id.demo_collection_button)
-//                    .setOnClickListener(new View.OnClickListener() {
-//                        @Override
-//                        public void onClick(View view) {
-//                            Intent intent = new Intent(getActivity(), CollectionDemoActivity.class);
-//                            startActivity(intent);
-//                        }
-//                    });
-
-            // Demonstration of navigating to external activities.
-//            rootView.findViewById(R.id.demo_external_activity)
-//                    .setOnClickListener(new View.OnClickListener() {
-//                        @Override
-//                        public void onClick(View view) {
-//                            // Create an intent that asks the user to pick a photo, but using
-//                            // FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET, ensures that relaunching
-//                            // the application from the device home screen does not return
-//                            // to the external activity.
-//                            Intent externalActivityIntent = new Intent(Intent.ACTION_PICK);
-//                            externalActivityIntent.setType("image/*");
-//                            externalActivityIntent.addFlags(
-//                                    Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
-//                            startActivity(externalActivityIntent);
-//                        }
-//                    });
+            View rootView = inflater.inflate(R.layout.fragment_section_launchpad1, container, false);
             
 //          rootView.findViewById(R.id.connect_socket)
 //	          .setOnClickListener(new View.OnClickListener() {
@@ -410,7 +402,50 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
             return rootView;
         }
     }
+    
+    /**
+     * A fragment that launches as home screen.
+     */
+    public static class LaunchpadSectionFragment2 extends Fragment {
+    	// test to voice
+    	private TextToSpeech tts;
+    	private HashMap<String, String> ttsParams;
+    	
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                Bundle savedInstanceState) {
+            View rootView = inflater.inflate(R.layout.fragment_section_launchpad2, container, false);
+            ttsParams = new HashMap<String, String>();
+    		ttsParams.put(Engine.KEY_PARAM_STREAM, String.valueOf(TTS_STREAM));
+    		
+            rootView.findViewById(R.id.button_audio)
+            .setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                	if (tts != null) {
+						tts.speak("Hello", TextToSpeech.QUEUE_FLUSH,
+								ttsParams);
+					}
+                }
+            });
+            
+            return rootView;
+        }
+    }
+    
+    /**
+     * A fragment that launches as home screen.
+     */
+    public static class LaunchpadSectionFragment3 extends Fragment {
 
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                Bundle savedInstanceState) {
+            View rootView = inflater.inflate(R.layout.fragment_section_launchpad3, container, false);
+           
+            return rootView;
+        }
+    }
     /**
      * A dummy fragment representing a section of the app, but that simply displays dummy text.
      */
@@ -428,6 +463,7 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
             return rootView;
         }
     }
+ // =============================================== end tabs view functions ===================
     
     @Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -520,7 +556,17 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
   	  if(mServiceBind == true){
   		  getApplicationContext().unbindService(mTestServiceConnection);
   	  }
-  	 }
+  	  
+  	  // text to voice
+  	  if (tts != null) {
+		tts.shutdown();
+  	  }
+    }
+    
+//	public void onSuccessfulInit(TextToSpeech tts) {
+//		super.onSuccessfulInit(tts);
+//		this.tts = tts;
+//	}
     
   public void onResume(){
   	super.onResume();
