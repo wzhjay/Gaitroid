@@ -31,6 +31,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.speech.tts.TextToSpeech;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
@@ -71,7 +72,10 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 	
 	String BluetoothAddress="";	
 	int mEnabledSensors=0;
-
+	
+	
+	private TextToSpeech tts;
+	//tts.setLanguage(Locale.US);
 	/**
      * The {@link android.support.v4.view.PagerAdapter} that will provide fragments for each of the
      * three primary sections of the app. We use a {@link android.support.v4.app.FragmentPagerAdapter}
@@ -270,7 +274,8 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
             	Log.d("Shimmer", "play audio");
             	MediaPlayer mp = MediaPlayer.create(context, R.raw.start);
             	mp.start();
-            	//audioPlayer("res/raw/", "test.mp3");
+//            	String myTest = "Test start after 5 seconds";
+//            	tts.speak(myTest, TextToSpeech.QUEUE_FLUSH, null);
             }
         });
     }
