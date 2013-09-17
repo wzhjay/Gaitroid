@@ -17,15 +17,24 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
-
-        <activity
-            android:name="com.gaitroid.GaitroidMain"
-            android:label="@string/app_name" >
+		
+        <activity android:name="com.gaitroid.LoginActivity" 
+           		  android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+            	  android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name="com.gaitroid.GaitroidMain"
+            android:label="@string/app_name" >
+            <!-- <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter> -->
         </activity>
         <activity android:name="com.gaitroid.DeviceListActivity"
                   android:label="@string/select_device"
@@ -42,6 +51,11 @@
         <activity android:name="com.gaitroid.SensorViewActivity" 
            		  android:theme="@android:style/Theme.Dialog" 
             	  android:label="Sensor View">
+            
+        </activity>
+        <activity android:name="com.gaitroid.RegisterActivity" 
+           		  android:theme="@android:style/Theme.Dialog" 
+            	  android:label="Register New Account">
             
         </activity>
         <service android:enabled="true" android:name="com.shimmerresearch.service.MultiShimmerPlayService" />
