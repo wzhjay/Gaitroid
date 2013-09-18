@@ -1,17 +1,23 @@
 package com.gaitroid;
 
-import java.net.UnknownHostException;
-import java.util.Set;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.MongoClient;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -22,41 +28,83 @@ public class LoginActivity extends Activity {
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Intent i;
+        // if user had login before and never logout, jump to home page
+        
+        
+        StrictMode.ThreadPolicy policy = new StrictMode.
+        ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+        
         // setting default screen to login.xml
         setContentView(R.layout.login);
-        
+        final Context ctx = this;
         final Button btnLogin = (Button) findViewById(R.id.btnLogin);
         final EditText uText = (EditText) findViewById(R.id.username);
         final EditText pText = (EditText) findViewById(R.id.password);
+        
+        
+        final UserDBHandler db = new UserDBHandler(ctx);
+        
+        if(db.hasUser()) {
+        	Log.d("Gaitroid", "Jumping...");
+        	i = new Intent(this, GaitroidMain.class);
+        	startActivity(i);
+            finish();
+        }
         
         btnLogin.setOnClickListener(new View.OnClickListener() {
         	public void onClick(View v) {
         		Log.v("Gaitroid", uText.getText().toString());
         		Log.v("Gaitroid", pText.getText().toString());
         		
-        		String username = uText.getText().toString();
-        		String password = pText.getText().toString();
-        		
-        		MongoClient mongoClient = null;
-				try {
-					mongoClient = new MongoClient("192.168.1.101", 27017);
-				} catch (UnknownHostException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-        		DB db = mongoClient.getDB("gaitroid_database");
-        		
-        		Set<String> collectionNames = db.getCollectionNames();
-        		for (String s : collectionNames) {
-        			Log.v("Gaitroid", s);
-        		}
-        		DBCollection patients = db.getCollection("patients");
-        		DBCollection doctors = db.getCollection("doctors");
-        		BasicDBObject searchQuery = new BasicDBObject();
-        		searchQuery.put("username", username);
-        		DBCursor cursor = patients.find(searchQuery);
-        		while (cursor.hasNext()) {
-        			Log.v("Gaitroid", cursor.next().toString());
+        		String username = uText.getText().toString().trim();
+        		String password = pText.getText().toString().trim();
+        		String getUserPatient = getUserPatient(username, password);
+        		if(getUserPatient != null){
+	        		try {
+	        			JSONArray jsonArray = new JSONArray(getUserPatient);
+	        			Log.i("Gaitriod",
+	        					"Number of entries " + jsonArray.length());
+	        			for (int i = 0; i < jsonArray.length(); i++) {
+	        				JSONObject patient = jsonArray.getJSONObject(i);
+	        				Log.i("Gaitriod", patient.toString());
+	        				Log.i("Gaitriod", patient.optString("username"));
+	        				Log.i("Gaitriod", patient.optString("password"));
+	        				JSONArray patientProfile = patient.getJSONArray("patient_profile");
+	        				JSONArray patientProfileAddress = patientProfile.getJSONObject(0).getJSONArray("address");
+	        				Log.i("Gaitriod", patientProfile.getJSONObject(0).optString("lastname"));
+	        				Log.i("Gaitriod", patientProfileAddress.getJSONObject(0).optString("country"));
+
+	        				// Inserting Contacts
+	        		        Log.d("Gaitroid", "Inserting .."); 
+	        		        db.addUser(new User(patient.optString("_id"),
+	        		        		patient.optString("username"),
+	        		        		patient.optString("password"),
+	        		        		patientProfile.getJSONObject(0).optString("firstname"),
+	        		        		patientProfile.getJSONObject(0).optString("lastname"),
+	        		        		patientProfile.getJSONObject(0).optString("gender"),
+	        		        		patientProfile.getJSONObject(0).optString("email"),
+	        		        		patientProfile.getJSONObject(0).optString("phone").toString(),
+	        		        		patientProfile.getJSONObject(0).optString("age").toString(),
+	        		        		patientProfileAddress.getJSONObject(0).optString("country"),
+	        		        		patientProfileAddress.getJSONObject(0).optString("city"),
+	        		        		patientProfileAddress.getJSONObject(0).optString("street"),
+	        		        		patientProfileAddress.getJSONObject(0).optString("postcode"),
+	        		        		patientProfile.getJSONObject(0).optString("created_time")
+	        		        		));
+	        		        
+	        		        Log.d("Gaitroid", "Reading user..");
+		        			User u = db.getUser("wzhjay");
+		        			String log = "Id: "+u.getID()+" ,username: " + u.getUsername() + " ,createTime: " + u.getCreateTime();
+		        			Log.d("Gaitroid", log);
+	        			}
+	        			
+	        			Intent j = new Intent(LoginActivity.this, GaitroidMain.class);
+	        			startActivity(j);
+	        		} catch (Exception e) {
+	        			e.printStackTrace();
+	        		}
         		}
         	}
         });
@@ -73,4 +121,29 @@ public class LoginActivity extends Activity {
             }
         });
     }
+	
+	public String getUserPatient(String username, String  password) {
+	    StringBuilder builder = new StringBuilder();
+	    HttpClient client = new DefaultHttpClient();
+	    HttpGet httpGet = new HttpGet(((MyApplication) this.getApplication()).getBaseAPIPath() + "patient/" + username + "/" + password);
+	    try {
+	      HttpResponse response = client.execute(httpGet);
+	      StatusLine statusLine = response.getStatusLine();
+	      int statusCode = statusLine.getStatusCode();
+	      if (statusCode == 200) {
+	        BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+	        String line;
+	        while ((line = rd.readLine()) != null) {
+	          builder.append(line);
+	        }
+	      } else {
+	        Log.e("Gaitroid", "Failed to call api");
+	      }
+	    } catch (ClientProtocolException e) {
+	      e.printStackTrace();
+	    } catch (IOException e) {
+	      e.printStackTrace();
+	    }
+	    return builder.toString();
+	  }
 }
