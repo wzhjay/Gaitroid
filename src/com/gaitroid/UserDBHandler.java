@@ -123,6 +123,27 @@ public class UserDBHandler extends SQLiteOpenHelper {
         return user;
     }
     
+ // Getting single user
+    User getUser() {
+        SQLiteDatabase db = this.getReadableDatabase();
+ 
+        Cursor cursor = db.query(TABLE_USER, new String[] { KEY_ID,
+        		KEY_USERNAME, KEY_PASSWORD, KEY_FIRSTNAME, KEY_LASTNAME, KEY_GENDER,KEY_EMAIL, KEY_PHONE, KEY_AGE, KEY_COUNTRY, KEY_CITY,KEY_STREET, KEY_POSTCODE, KEY_CREATEDTIME}, null, null, null, null, null);
+        if (cursor != null)
+            cursor.moveToFirst();
+ 
+        User user = new User(cursor.getString(0),
+                cursor.getString(1), cursor.getString(2),
+                cursor.getString(3), cursor.getString(4),
+                cursor.getString(5), cursor.getString(6),
+                cursor.getString(7), cursor.getString(8),
+                cursor.getString(9), cursor.getString(10),
+                cursor.getString(11), cursor.getString(12),
+                cursor.getString(13));
+        // return user
+        return user;
+    }
+    
     // check is user login in before
     public boolean hasUser(){
     	SQLiteDatabase db = this.getReadableDatabase();

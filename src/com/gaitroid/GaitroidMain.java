@@ -95,7 +95,12 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
      * time.
      */
     ViewPager mViewPager;
-
+    
+    //database handler
+    private UserDBHandler userDBHandler = new UserDBHandler(mCtx); 
+    private Handler handler;
+    private TextView t;
+    
     public void onCreate(Bundle savedInstanceState) {
     	// =============================================== tabs view ===================
         super.onCreate(savedInstanceState);
@@ -139,7 +144,17 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
                             .setText(mAppSectionsPagerAdapter.getPageTitle(i))
                             .setTabListener(this));
         }
-        // =============================================== tabs view ===================
+        // ============================================ end tabs view ===================
+        
+//        User user = userDBHandler.getUser();
+//        t = (TextView) findViewById(R.id.username);
+//        t.setText(user.getUsername().toString());
+        
+        // ============================= loading data from User DB ======================
+        
+        
+        
+        // ============================= end loading data from User DB ==================
         
         // =============================================== test to voice ===============
         //ttsParams = new HashMap<String, String>();
@@ -177,94 +192,95 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 //		mCurrentSlot=sender.getExtras().getInt("CurrentSlot");
 //	    Log.d("Shimmer","Create MC:  " + extraData);
 
-		final Button button_socket = (Button) findViewById(R.id.connect_socket);
-		button_socket.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                //Perform action on click
-            	Log.d("Gaitroid", "click button_socket");
-            	IOCallback io = new BasicExample();
-        		
-        		SocketIO socket = null ;
-        		try {
-        			socket = new SocketIO("http://192.168.237.150:3000/");
-        			socket.connect(io);
-        		} catch (MalformedURLException e) {
-        			// TODO Auto-generated catch block
-        			e.printStackTrace();
-        		}
-        		
-        		try {
-					socket.emit("msg", new JSONObject().put("key", "hello world"));
-				} catch (JSONException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-            }
-        });
+//		final Button button_socket = (Button) findViewById(R.id.connect_socket);
+//		button_socket.setOnClickListener(new View.OnClickListener() {
+//            public void onClick(View v) {
+//                //Perform action on click
+//            	Log.d("Gaitroid", "click button_socket");
+//            	IOCallback io = new BasicExample();
+//        		
+//        		SocketIO socket = null ;
+//        		try {
+//        			socket = new SocketIO("http://192.168.237.150:3000/");
+//        			socket.connect(io);
+//        		} catch (MalformedURLException e) {
+//        			// TODO Auto-generated catch block
+//        			e.printStackTrace();
+//        		}
+//        		
+//        		try {
+//					socket.emit("msg", new JSONObject().put("key", "hello world"));
+//				} catch (JSONException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//            }
+//        });
+//		
+//		final Button button_bluetooth = (Button) findViewById(R.id.connect_bluetooth);
+//		button_bluetooth.setOnClickListener(new View.OnClickListener() {
+//            public void onClick(View v) {
+//                // Perform action on click
+//            	Log.d("Gaitroid", "click button_bluetooth");
+//            	BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+//                if(mBluetoothAdapter == null) {
+//                	Toast.makeText(context, "Device does not support Bluetooth\nExiting...", Toast.LENGTH_LONG).show();
+//                	finish();
+//                }
+//                    
+//            	if(!mBluetoothAdapter.isEnabled()) {     	
+//                	Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+//                	startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+//            	}
+//            	
+//            	
+//            	// Bind service
+//            	//Intent intent=new Intent(GaitroidMain.this, MultiShimmerPlayService.class);
+//    			//getApplicationContext().bindService(intent,mTestServiceConnection, Context.BIND_AUTO_CREATE);
+//    		    
+//    		    Intent mainCommandIntent=new Intent(GaitroidMain.this,DeviceListActivity.class);
+//    	 		startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_CONNECT_SHIMMER);
+//            }
+//        });
+//		
+//		final Button button_disconnect = (Button) findViewById(R.id.button_disconnect);
+//		button_disconnect.setOnClickListener(new View.OnClickListener() {
+//            public void onClick(View v) {
+//                // Perform action on click
+//            	mService.disconnectAllDevices();
+//            }
+//        });
+//		
+//		final Button button_start_streaming = (Button) findViewById(R.id.button_start_streaming);
+//		button_start_streaming.setOnClickListener(new View.OnClickListener() {
+//            public void onClick(View v) {
+//                // Perform action on click
+//            	Intent mainCommandIntent=new Intent(GaitroidMain.this,ConfigureActivity.class);
+//				  startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_CONFIGURE_SHIMMER);
+//            }
+//        });
+//		
+//		final Button button_start = (Button) findViewById(R.id.button_start);
+//		button_start.setOnClickListener(new View.OnClickListener() {
+//            public void onClick(View v) {
+//                // Perform action on click
+//            	// Bind service
+//            	
+//            	mService.startStreamingAllDevicesGetSensorNames();
+//
+//        	    Intent mainCommandIntent=new Intent(GaitroidMain.this,GraphActivity.class);
+//        	    mainCommandIntent.putExtra("BluetoothAddress",mCurrentDevice);
+//				startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_GRAPH_SHIMMER);
+//            }
+//        });
+//		
+//		final Button button_stop = (Button) findViewById(R.id.button_stop);
+//		button_stop.setOnClickListener(new View.OnClickListener() {
+//            public void onClick(View v) {
+//            	mService.stopStreamingAllDevices();
+//            }
+//        });
 		
-		final Button button_bluetooth = (Button) findViewById(R.id.connect_bluetooth);
-		button_bluetooth.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                // Perform action on click
-            	Log.d("Gaitroid", "click button_bluetooth");
-            	BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-                if(mBluetoothAdapter == null) {
-                	Toast.makeText(context, "Device does not support Bluetooth\nExiting...", Toast.LENGTH_LONG).show();
-                	finish();
-                }
-                    
-            	if(!mBluetoothAdapter.isEnabled()) {     	
-                	Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                	startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-            	}
-            	
-            	
-            	// Bind service
-            	//Intent intent=new Intent(GaitroidMain.this, MultiShimmerPlayService.class);
-    			//getApplicationContext().bindService(intent,mTestServiceConnection, Context.BIND_AUTO_CREATE);
-    		    
-    		    Intent mainCommandIntent=new Intent(GaitroidMain.this,DeviceListActivity.class);
-    	 		startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_CONNECT_SHIMMER);
-            }
-        });
-		
-		final Button button_disconnect = (Button) findViewById(R.id.button_disconnect);
-		button_disconnect.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                // Perform action on click
-            	mService.disconnectAllDevices();
-            }
-        });
-		
-		final Button button_start_streaming = (Button) findViewById(R.id.button_start_streaming);
-		button_start_streaming.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                // Perform action on click
-            	Intent mainCommandIntent=new Intent(GaitroidMain.this,ConfigureActivity.class);
-				  startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_CONFIGURE_SHIMMER);
-            }
-        });
-		
-		final Button button_start = (Button) findViewById(R.id.button_start);
-		button_start.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                // Perform action on click
-            	// Bind service
-            	
-            	mService.startStreamingAllDevicesGetSensorNames();
-
-        	    Intent mainCommandIntent=new Intent(GaitroidMain.this,GraphActivity.class);
-        	    mainCommandIntent.putExtra("BluetoothAddress",mCurrentDevice);
-				startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_GRAPH_SHIMMER);
-            }
-        });
-		
-		final Button button_stop = (Button) findViewById(R.id.button_stop);
-		button_stop.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-            	mService.stopStreamingAllDevices();
-            }
-        });
 		// Sends a string to the server.
 		//socket.send("Hello Server");
 

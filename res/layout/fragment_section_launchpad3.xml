@@ -18,11 +18,155 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    
+	
     <LinearLayout android:orientation="vertical"
         android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+		
+        <RelativeLayout android:orientation="vertical"
+		    android:layout_width="fill_parent"
+		    android:layout_height="120dip"
+		    android:padding="6dip"
+		    android:id="@+id/user_info_1" >
+		
+		    <ImageView
+		        android:id="@+id/user_photo"
+		        android:layout_width="150dip"
+		        android:layout_height="120dip"
+		        android:layout_alignParentBottom="true"
+		        android:layout_alignParentTop="true"
+		        android:layout_marginRight="6dip"
+		        android:contentDescription="user"
+		        android:src="@drawable/user" />
+		
+		    <TextView
+		        android:id="@+id/username"
+		        android:layout_width="fill_parent"
+		        android:layout_height="30dip"
+		        android:layout_alignParentBottom="true"
+		        android:layout_alignParentRight="true"
+		        android:layout_toRightOf="@id/user_photo"
+		        android:layout_marginRight="10dip"
+		        android:ellipsize="marquee"
+		        android:singleLine="true"
+		        android:text="Username"
+		        android:textSize="14sp" />
+		
+		    <TextView
+		        android:id="@+id/name"
+		        android:layout_width="fill_parent"
+		        android:layout_height="wrap_content"
+		        android:layout_above="@id/username"
+		        android:layout_alignParentRight="true"
+		        android:layout_alignParentTop="true"
+		        android:layout_marginRight="10dip"
+		        android:layout_alignWithParentIfMissing="true"
+		        android:layout_toRightOf="@id/user_photo"
+		        android:gravity="center_vertical"
+		        android:text="User's Name"
+		        android:textSize="16sp" />
+			
+		</RelativeLayout>
+	
+        <TextView
+	        android:id="@+id/email"
+	        android:layout_width="fill_parent"
+	        android:layout_height="30dip"
+	        android:ellipsize="marquee"
+	        android:singleLine="true"
+	        android:gravity="center_vertical"
+	        android:padding="6dip"
+	        android:layout_marginRight="16dip"
+	        android:text="User's Email"
+	        android:textSize="14sp" />
+	
+	    <TextView
+		    android:id="@+id/phone"
+	        android:layout_width="fill_parent"
+		    android:layout_height="30dip"
+	        android:layout_above="@id/email"
+	        android:gravity="center_vertical"
+	        android:padding="6dip"
+	        android:layout_marginRight="16dip"
+	        android:text="User's phone"
+	        android:textSize="14sp" />
+	    
+	    <TextView
+	        android:id="@+id/age"
+	        android:layout_width="fill_parent"
+	        android:layout_height="30dip"
+	        android:ellipsize="marquee"
+	        android:singleLine="true"
+	        android:gravity="center_vertical"
+	        android:padding="6dip"
+	        android:layout_marginRight="16dip"
+	        android:text="User's age"
+	        android:textSize="14sp" />
+	
+	    <TextView
+		    android:id="@+id/gender"
+	        android:layout_width="fill_parent"
+		    android:layout_height="30dip"
+	        android:layout_above="@id/age"
+	        android:gravity="center_vertical"
+	        android:padding="6dip"
+	        android:layout_marginRight="16dip"
+	        android:text="User's gender"
+	        android:textSize="14sp" />
+	    
+	    <TextView
+	        android:id="@+id/city"
+	        android:layout_width="fill_parent"
+	        android:layout_height="30dip"
+	        android:ellipsize="marquee"
+	        android:singleLine="true"
+	        android:gravity="center_vertical"
+	        android:padding="6dip"
+	        android:layout_marginRight="16dip"
+	        android:text="User's city"
+	        android:textSize="14sp" />
+	
+	    <TextView
+		    android:id="@+id/country"
+	        android:layout_width="fill_parent"
+		    android:layout_height="30dip"
+	        android:layout_above="@id/age"
+	        android:gravity="center_vertical"
+	        android:padding="6dip"
+	        android:layout_marginRight="16dip"
+	        android:text="User's country"
+	        android:textSize="14sp" />
+	    <TextView
+	        android:id="@+id/created_time"
+	        android:layout_width="fill_parent"
+	        android:layout_height="30dip"
+	        android:ellipsize="marquee"
+	        android:singleLine="true"
+	        android:gravity="center_vertical"
+	        android:padding="6dip"
+	        android:layout_marginRight="16dip"
+	        android:text="User's created_time"
+	        android:textSize="14sp" />
+	
+	    <TextView
+		    android:id="@+id/postcode"
+	        android:layout_width="fill_parent"
+		    android:layout_height="30dip"
+	        android:layout_above="@id/created_time"
+	        android:gravity="center_vertical"
+	        android:padding="6dip"
+	        android:layout_marginRight="16dip"
+	        android:text="User's postcode"
+	        android:textSize="14sp" />
+	    
+	    <Button
+        android:id="@+id/logout"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center">
-
+        android:layout_marginTop="40dip"
+        android:layout_gravity ="bottom"
+        android:text="Logout" />
     </LinearLayout>
 
 </FrameLayout>
