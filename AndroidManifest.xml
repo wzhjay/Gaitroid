@@ -60,6 +60,10 @@
             	  android:label="Register New Account">
             
         </activity>
+        <activity android:name="com.gaitroid.LogoutActivity" 
+            	  android:theme="@android:style/Theme.Dialog"
+            	  android:label="Logout?">
+        </activity>
         <service android:enabled="true" android:name="com.shimmerresearch.service.MultiShimmerPlayService" />
     </application>
 

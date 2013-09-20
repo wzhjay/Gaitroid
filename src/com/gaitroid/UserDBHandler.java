@@ -128,7 +128,7 @@ public class UserDBHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getReadableDatabase();
  
         Cursor cursor = db.query(TABLE_USER, new String[] { KEY_ID,
-        		KEY_USERNAME, KEY_PASSWORD, KEY_FIRSTNAME, KEY_LASTNAME, KEY_GENDER,KEY_EMAIL, KEY_PHONE, KEY_AGE, KEY_COUNTRY, KEY_CITY,KEY_STREET, KEY_POSTCODE, KEY_CREATEDTIME}, null, null, null, null, null);
+        		KEY_USERNAME, KEY_PASSWORD, KEY_FIRSTNAME, KEY_LASTNAME, KEY_GENDER,KEY_EMAIL, KEY_PHONE, KEY_AGE, KEY_COUNTRY, KEY_CITY,KEY_STREET, KEY_POSTCODE, KEY_CREATEDTIME}, null, null, null, null, null, "1");
         if (cursor != null)
             cursor.moveToFirst();
  
@@ -186,6 +186,13 @@ public class UserDBHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         db.delete(TABLE_USER, KEY_ID + " = ?",
                 new String[] { String.valueOf(user.getID()) });
+        db.close();
+    }
+    
+    // Deleting user table
+    public void deleteUser() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("delete from "+ TABLE_USER);
         db.close();
     }
 }

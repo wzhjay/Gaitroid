@@ -160,13 +160,33 @@
 	        android:text="User's postcode"
 	        android:textSize="14sp" />
 	    
-	    <Button
-        android:id="@+id/logout"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="40dip"
-        android:layout_gravity ="bottom"
-        android:text="Logout" />
+	     <LinearLayout
+	         android:id="@+id/user_info_btn"
+	         android:layout_width="fill_parent"
+	         android:layout_height="wrap_content"
+	         android:orientation="horizontal"
+	         android:layout_marginTop="40dip"
+	         android:layout_marginRight="2dip"
+        	 android:layout_marginLeft="2dip"
+	         android:padding="6dp">
+		    
+	         <Button
+	             android:id="@+id/logout_btn"
+	             android:layout_width="0dip"
+	             android:layout_height="match_parent"
+	             android:text="Logout"
+	             android:layout_weight="1" />
+	         
+	         <Button
+	             android:id="@+id/edit_user"
+	             android:layout_width="0dip"
+	             android:layout_height="match_parent"
+	             android:layout_alignParentRight="true"
+	             android:layout_weight="1"
+	             android:text="Edit" />
+
+	     </LinearLayout>
+	    
     </LinearLayout>
 
 </FrameLayout>

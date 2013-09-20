@@ -6,6 +6,8 @@ import java.util.Collection;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import root.gast.speech.SpeechRecognizingAndSpeakingActivity;
+
 import com.shimmerresearch.driver.FormatCluster;
 import com.shimmerresearch.driver.ObjectCluster;
 import com.shimmerresearch.driver.Shimmer;
@@ -15,6 +17,7 @@ import com.shimmerresearch.service.MultiShimmerPlayService.LocalBinder;
 import io.socket.IOCallback;
 import io.socket.SocketIO;
 import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -29,6 +32,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.speech.tts.TextToSpeech;
@@ -48,10 +52,10 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.Engine;
 import android.media.AudioManager;
+
 import java.util.HashMap;
 
 public class GaitroidMain extends FragmentActivity implements ActionBar.TabListener {
@@ -72,16 +76,20 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 	private int mAccelRange=-1;
 	private int mGSRRange=-1;
 	private boolean mServiceFirstTime=true;
-	private Context mCtx;
+	private static Context mCtx;
 	private static String mSensorView = ""; //The sensor device which should be viewed on the graph
 	
 	String BluetoothAddress="";	
 	int mEnabledSensors=0;
 	
 	// test to voice
-	private TextToSpeech tts;
-	private HashMap<String, String> ttsParams;
+	private static TextToSpeech tts;
+	private static HashMap<String, String> ttsParams;
 	private static final int TTS_STREAM = AudioManager.STREAM_NOTIFICATION;
+	private SharedPreferences preferences;
+	private boolean useTtsNotification;
+	private static final String USE_TTS_NOTIFICATION_PREFERENCE_KEY = "USE_TTS_NOTIFICATION_PREFERENCE_KEY";
+	
 	/**
      * The {@link android.support.v4.view.PagerAdapter} that will provide fragments for each of the
      * three primary sections of the app. We use a {@link android.support.v4.app.FragmentPagerAdapter}
@@ -97,15 +105,16 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
     ViewPager mViewPager;
     
     //database handler
-    private UserDBHandler userDBHandler = new UserDBHandler(mCtx); 
-    private Handler handler;
-    private TextView t;
+    private final static UserDBHandler userDBHandler = new UserDBHandler(mCtx); 
+    private final Handler handler = new Handler();
+    private static TextView t;
+    private static RequestTask task;
     
     public void onCreate(Bundle savedInstanceState) {
     	// =============================================== tabs view ===================
         super.onCreate(savedInstanceState);
         setContentView(R.layout.gaitroid_main);
-
+        
         // Create the adapter that will return a fragment for each of the three primary sections
         // of the app.
         mAppSectionsPagerAdapter = new AppSectionsPagerAdapter(getSupportFragmentManager());
@@ -146,16 +155,29 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
         }
         // ============================================ end tabs view ===================
         
-//        User user = userDBHandler.getUser();
-//        t = (TextView) findViewById(R.id.username);
-//        t.setText(user.getUsername().toString());
+//        handler.postDelayed(new Runnable(){
+//        	public void run() {
+//              //User user = userDBHandler.getUser("wzhjay");
+//              t.setText("qnmlgb");
+//        	}
+//        }, 50);
+        t = (TextView) findViewById(R.id.username);
+        task =(RequestTask)new RequestTask();
         
         // ============================= loading data from User DB ======================
-        
-        
+
         
         // ============================= end loading data from User DB ==================
         
+        // ============================= tts ============================================
+        preferences = getPreferences(MODE_PRIVATE);
+    	useTtsNotification = true;
+    	useTtsNotification = preferences.getBoolean(
+    			USE_TTS_NOTIFICATION_PREFERENCE_KEY, useTtsNotification);
+        
+    	
+    	// ============================= end tts ========================================
+    	
         // =============================================== test to voice ===============
         //ttsParams = new HashMap<String, String>();
 		//ttsParams.put(Engine.KEY_PARAM_STREAM, String.valueOf(TTS_STREAM));
@@ -307,6 +329,26 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 //            }
 //        });
     }
+
+    public class RequestTask extends AsyncTask<String, String, String>{
+        
+		@Override
+		protected String doInBackground(String... params) {
+			// TODO Auto-generated method stub
+			 //User user = userDBHandler.getUser("wzhjay");
+			 //Log.i("Gaitroid", user.getUsername());
+			return null;
+		}
+		
+		@Override
+		protected void onPostExecute(String result){
+    		super.onPostExecute(result);
+    		
+    		t.setText("qnmlgb");
+    	}
+
+    }
+    
     // =============================================== tabs view functions ===================
     @Override
     public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
@@ -423,16 +465,10 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
      * A fragment that launches as home screen.
      */
     public static class LaunchpadSectionFragment2 extends Fragment {
-    	// test to voice
-    	private TextToSpeech tts;
-    	private HashMap<String, String> ttsParams;
-    	
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_section_launchpad2, container, false);
-            ttsParams = new HashMap<String, String>();
-    		ttsParams.put(Engine.KEY_PARAM_STREAM, String.valueOf(TTS_STREAM));
     		
             rootView.findViewById(R.id.button_audio)
             .setOnClickListener(new View.OnClickListener() {
@@ -453,14 +489,27 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
      * A fragment that launches as home screen.
      */
     public static class LaunchpadSectionFragment3 extends Fragment {
-
+    	
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_section_launchpad3, container, false);
-           
+            
+            rootView.findViewById(R.id.logout_btn)
+            .setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                	Intent i = new Intent(GaitroidMain.mCtx, LogoutActivity.class);
+                	startActivity(i);
+//                	userDBHandler.deleteUser();
+//                	Intent i = new Intent(GaitroidMain.mCtx, LoginActivity.class);
+//                	startActivity(i);
+                }
+            });
+            //task.execute();
             return rootView;
         }
+        
     }
     /**
      * A dummy fragment representing a section of the app, but that simply displays dummy text.
