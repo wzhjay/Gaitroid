@@ -104,10 +104,6 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
      */
     ViewPager mViewPager;
     
-    //database handler
-    
-    private final Handler handler = new Handler();
-
     public void onCreate(Bundle savedInstanceState) {
     	// =============================================== tabs view ===================
         super.onCreate(savedInstanceState);
@@ -424,11 +420,25 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
      * A fragment that launches as home screen.
      */
     public static class LaunchpadSectionFragment1 extends Fragment {
-
+    	
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_section_launchpad1, container, false);
+            
+          rootView.findViewById(R.id.button_speed)
+	          .setOnClickListener(new View.OnClickListener() {
+	              @Override
+	              public void onClick(View v) {
+	            	  Context context = getActivity(); 
+	            	  SpeedPickerDialogPreference spdf = new SpeedPickerDialogPreference(context); 
+	            	  spdf.setDefaultValue(5);
+	            	  spdf.setMaxValue(10);
+	            	  spdf.setMaxValue(1);
+	            	  
+	              }
+	          });
+            
             
 //          rootView.findViewById(R.id.connect_socket)
 //	          .setOnClickListener(new View.OnClickListener() {
