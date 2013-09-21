@@ -116,29 +116,30 @@
 	        android:textSize="14sp" />
 	    
 	    <TextView
-	        android:id="@+id/city"
+	        android:id="@+id/country"
 	        android:layout_width="fill_parent"
 	        android:layout_height="30dip"
 	        android:ellipsize="marquee"
 	        android:singleLine="true"
+	        android:gravity="center_vertical"
+	        android:padding="6dip"
+	        android:layout_marginRight="16dip"
+	        android:text="User's ciuntry"
+	        android:textSize="14sp" />
+	
+	    <TextView
+		    android:id="@+id/city"
+	        android:layout_width="fill_parent"
+		    android:layout_height="30dip"
+	        android:layout_above="@id/country"
 	        android:gravity="center_vertical"
 	        android:padding="6dip"
 	        android:layout_marginRight="16dip"
 	        android:text="User's city"
 	        android:textSize="14sp" />
-	
+	    
 	    <TextView
-		    android:id="@+id/country"
-	        android:layout_width="fill_parent"
-		    android:layout_height="30dip"
-	        android:layout_above="@id/age"
-	        android:gravity="center_vertical"
-	        android:padding="6dip"
-	        android:layout_marginRight="16dip"
-	        android:text="User's country"
-	        android:textSize="14sp" />
-	    <TextView
-	        android:id="@+id/created_time"
+	        android:id="@+id/street"
 	        android:layout_width="fill_parent"
 	        android:layout_height="30dip"
 	        android:ellipsize="marquee"
@@ -146,18 +147,29 @@
 	        android:gravity="center_vertical"
 	        android:padding="6dip"
 	        android:layout_marginRight="16dip"
-	        android:text="User's created_time"
+	        android:text="User's street"
 	        android:textSize="14sp" />
-	
+	    
 	    <TextView
-		    android:id="@+id/postcode"
+	        android:id="@+id/postcode"
 	        android:layout_width="fill_parent"
-		    android:layout_height="30dip"
-	        android:layout_above="@id/created_time"
+	        android:layout_height="30dip"
+	        android:ellipsize="marquee"
+	        android:singleLine="true"
 	        android:gravity="center_vertical"
 	        android:padding="6dip"
 	        android:layout_marginRight="16dip"
 	        android:text="User's postcode"
+	        android:textSize="14sp" />
+	
+	    <TextView
+		    android:id="@+id/created_time"
+	        android:layout_width="fill_parent"
+		    android:layout_height="30dip"
+	        android:gravity="center_vertical"
+	        android:padding="6dip"
+	        android:layout_marginRight="16dip"
+	        android:text="User's created_time"
 	        android:textSize="14sp" />
 	    
 	     <LinearLayout
