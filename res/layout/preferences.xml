@@ -1,11 +1,13 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:custom="http://schemas.android.com/apk/res-auto" >
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
+    android:key="pref_key" >
  
-    <com.gaitroid.SpeedPickerDialogPreference
+    <com.gaitroid.NumberPickerDialogPreference
+        android:key="abc"
         android:defaultValue="200"
-        android:dialogMessage="Please select the speed:"
+        android:dialogMessage="Please select the number:"
         android:max="250"
-        android:title="Choose Speed"
+        android:title="Choose Value"
         custom:min="100" />
  
 </PreferenceScreen>

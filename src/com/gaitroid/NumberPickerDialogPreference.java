@@ -9,32 +9,33 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.NumberPicker;
 import android.widget.TextView;
-
-public class SpeedPickerDialogPreference extends DialogPreference{
-	private static final int DEFAULT_MIN_VALUE = 0;
+ 
+public class NumberPickerDialogPreference extends DialogPreference
+{
+    private static final int DEFAULT_MIN_VALUE = 0;
     private static final int DEFAULT_MAX_VALUE = 100;
     private static final int DEFAULT_VALUE = 0;
-    
+ 
     private int mMinValue;
     private int mMaxValue;
     private int mValue;
     private NumberPicker mNumberPicker;
-    
-    public SpeedPickerDialogPreference(Context context)
+ 
+    public NumberPickerDialogPreference(Context context)
     {
         this(context, null);
     }
-    
-    public SpeedPickerDialogPreference(Context context, AttributeSet attrs)
+ 
+    public NumberPickerDialogPreference(Context context, AttributeSet attrs)
     {
         super(context, attrs);
  
         // get attributes specified in XML
-        TypedArray a = context.getTheme().obtainStyledAttributes(attrs, R.styleable.SpeedPickerDialogPreference, 0, 0);
+        TypedArray a = context.getTheme().obtainStyledAttributes(attrs, R.styleable.NumberPickerDialogPreference, 0, 0);
         try
         {
-            setMinValue(a.getInteger(R.styleable.SpeedPickerDialogPreference_min, DEFAULT_MIN_VALUE));
-            setMaxValue(a.getInteger(R.styleable.SpeedPickerDialogPreference_android_max, DEFAULT_MAX_VALUE));
+            setMinValue(a.getInteger(R.styleable.NumberPickerDialogPreference_min, DEFAULT_MIN_VALUE));
+            setMaxValue(a.getInteger(R.styleable.NumberPickerDialogPreference_android_max, DEFAULT_MAX_VALUE));
         }
         finally
         {
@@ -42,24 +43,24 @@ public class SpeedPickerDialogPreference extends DialogPreference{
         }
  
         // set layout
-        setDialogLayoutResource(R.layout.preference_speed_picker_dialog);
+        setDialogLayoutResource(R.layout.preference_number_picker_dialog);
         setPositiveButtonText(android.R.string.ok);
         setNegativeButtonText(android.R.string.cancel);
         setDialogIcon(null);
     }
-    
+ 
     @Override
     protected void onSetInitialValue(boolean restore, Object defaultValue)
     {
         setValue(restore ? getPersistedInt(DEFAULT_VALUE) : (Integer) defaultValue);
     }
-    
+ 
     @Override
     protected Object onGetDefaultValue(TypedArray a, int index)
     {
         return a.getInt(index, DEFAULT_VALUE);
     }
-    
+ 
     @Override
     protected void onBindDialogView(View view)
     {
@@ -68,17 +69,17 @@ public class SpeedPickerDialogPreference extends DialogPreference{
         TextView dialogMessageText = (TextView) view.findViewById(R.id.text_dialog_message);
         dialogMessageText.setText(getDialogMessage());
  
-        mNumberPicker = (NumberPicker) view.findViewById(R.id.speed_picker);
+        mNumberPicker = (NumberPicker) view.findViewById(R.id.number_picker);
         mNumberPicker.setMinValue(mMinValue);
         mNumberPicker.setMaxValue(mMaxValue);
         mNumberPicker.setValue(mValue);
     }
-    
+ 
     public int getMinValue()
     {
         return mMinValue;
     }
-    
+ 
     public void setMinValue(int minValue)
     {
         mMinValue = minValue;
@@ -100,7 +101,7 @@ public class SpeedPickerDialogPreference extends DialogPreference{
     {
         return mValue;
     }
-    
+ 
     public void setValue(int value)
     {
         value = Math.max(Math.min(value, mMaxValue), mMinValue);
@@ -112,7 +113,7 @@ public class SpeedPickerDialogPreference extends DialogPreference{
             notifyChanged();
         }
     }
-    
+ 
     @Override
     protected void onDialogClosed(boolean positiveResult)
     {
@@ -128,7 +129,7 @@ public class SpeedPickerDialogPreference extends DialogPreference{
             }
         }
     }
-    
+ 
     @Override
     protected Parcelable onSaveInstanceState()
     {
@@ -143,7 +144,7 @@ public class SpeedPickerDialogPreference extends DialogPreference{
  
         return myState;
     }
-    
+ 
     @Override
     protected void onRestoreInstanceState(Parcelable state)
     {
@@ -163,7 +164,7 @@ public class SpeedPickerDialogPreference extends DialogPreference{
  
         super.onRestoreInstanceState(myState.getSuperState());
     }
-    
+ 
     private static class SavedState extends BaseSavedState
     {
         int minValue;
@@ -210,5 +211,4 @@ public class SpeedPickerDialogPreference extends DialogPreference{
             }
         };
     }
- 
 }

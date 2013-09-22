@@ -14,7 +14,7 @@
     </TextView>
  
     <NumberPicker
-        android:id="@+id/speed_picker"
+        android:id="@+id/number_picker"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="6dip"

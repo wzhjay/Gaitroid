@@ -22,6 +22,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.preference.Preference;
+import android.preference.PreferenceScreen;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningServiceInfo;
@@ -55,6 +57,7 @@ import android.widget.TextView;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.Engine;
 import android.media.AudioManager;
+import android.preference.*;
 
 import java.util.HashMap;
 
@@ -148,21 +151,6 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
                             .setTabListener(this));
         }
         // ============================================ end tabs view ===================
-        
-//        handler.postDelayed(new Runnable(){
-//        	public void run() {
-//              //User user = userDBHandler.getUser("wzhjay");
-//              t.setText("qnmlgb");
-//        	}
-//        }, 50);
-        
-
-        //task =(RequestTask)new RequestTask();
-        
-        // ============================= loading data from User DB ======================
-
-        
-        // ============================= end loading data from User DB ==================
         
         // ============================= tts ============================================
         preferences = getPreferences(MODE_PRIVATE);
@@ -344,6 +332,33 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 //
 //    }
     
+    // ========================================= preference dialog functions ===================
+    private static PreferenceScreen findPreferenceScreenForPreference( String key, PreferenceScreen screen ) {
+        PreferenceScreen result = null;
+
+        android.widget.Adapter ada = screen.getRootAdapter();
+        for( int i = 0; i < ada.getCount(); i++ ) {
+            String prefKey = ((PreferenceScreen) ada.getItem(i)).getKey();
+            if( prefKey != null && prefKey.equals( key ) ) {
+                return screen;
+            }
+            if( ada.getItem(i).getClass().equals(android.preference.PreferenceScreen.class) ) {
+                result = findPreferenceScreenForPreference( key, (PreferenceScreen) ada.getItem(i) );
+                if( result != null ) {
+                    return result;
+                }
+            }
+        }
+
+        return null;
+    }
+
+	private static void openPreference( String key ) {
+        PreferenceScreen screen = findPreferenceScreenForPreference( key, null );
+        if( screen != null ) {
+            screen.onItemClick(null, null, screen.findPreference(key).getOrder(), 0);
+        }
+    }
     // =============================================== tabs view functions ===================
     @Override
     public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
@@ -431,11 +446,12 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 	              @Override
 	              public void onClick(View v) {
 	            	  Context context = getActivity(); 
-	            	  SpeedPickerDialogPreference spdf = new SpeedPickerDialogPreference(context); 
+	            	  NumberPickerDialogPreference spdf = new NumberPickerDialogPreference(context); 
 	            	  spdf.setDefaultValue(5);
 	            	  spdf.setMaxValue(10);
 	            	  spdf.setMaxValue(1);
 	            	  
+	            	  openPreference( "abc" );
 	              }
 	          });
             
@@ -468,6 +484,7 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
            
             return rootView;
         }
+
     }
     
     /**

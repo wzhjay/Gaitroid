@@ -79,6 +79,7 @@ containing a value of this type.
         public static final int logout_dialog_btn=0x7f09002b;
         public static final int name=0x7f090016;
         public static final int new_devices=0x7f09000e;
+        public static final int number_picker=0x7f09002e;
         public static final int pager=0x7f090023;
         public static final int pager_title_strip=0x7f09003a;
         public static final int paired_devices=0x7f09000c;
@@ -86,7 +87,6 @@ containing a value of this type.
         public static final int phone=0x7f090018;
         public static final int postcode=0x7f09001e;
         public static final int speed=0x7f090010;
-        public static final int speed_picker=0x7f09002e;
         public static final int street=0x7f09001d;
         public static final int text_dialog_message=0x7f09002d;
         public static final int title_new_devices=0x7f09000d;
@@ -109,7 +109,7 @@ containing a value of this type.
         public static final int graph_view=0x7f030009;
         public static final int login=0x7f03000a;
         public static final int logout=0x7f03000b;
-        public static final int preference_speed_picker_dialog=0x7f03000c;
+        public static final int preference_number_picker_dialog=0x7f03000c;
         public static final int preferences=0x7f03000d;
         public static final int sensor_view=0x7f03000e;
         public static final int viewpager=0x7f03000f;
@@ -169,24 +169,24 @@ containing a value of this type.
            <colgroup align="left" />
            <colgroup align="left" />
            <tr><th>Attribute</th><th>Description</th></tr>
-           <tr><td><code>{@link #SpeedPickerDialogPreference_android_max com.gaitroid:android_max}</code></td><td></td></tr>
-           <tr><td><code>{@link #SpeedPickerDialogPreference_min com.gaitroid:min}</code></td><td></td></tr>
+           <tr><td><code>{@link #NumberPickerDialogPreference_android_max com.gaitroid:android_max}</code></td><td></td></tr>
+           <tr><td><code>{@link #NumberPickerDialogPreference_min com.gaitroid:min}</code></td><td></td></tr>
            </table>
-           @see #SpeedPickerDialogPreference_android_max
-           @see #SpeedPickerDialogPreference_min
+           @see #NumberPickerDialogPreference_android_max
+           @see #NumberPickerDialogPreference_min
          */
-        public static final int[] SpeedPickerDialogPreference = {
+        public static final int[] NumberPickerDialogPreference = {
             0x01010136, 0x7f010000
         };
         /**
           <p>This symbol is the offset where the {@link com.gaitroid.R.attr#android_max}
-          attribute's value can be found in the {@link #SpeedPickerDialogPreference} array.
+          attribute's value can be found in the {@link #NumberPickerDialogPreference} array.
           @attr name android:android_max
         */
-        public static final int SpeedPickerDialogPreference_android_max = 0;
+        public static final int NumberPickerDialogPreference_android_max = 0;
         /**
           <p>This symbol is the offset where the {@link com.gaitroid.R.attr#min}
-          attribute's value can be found in the {@link #SpeedPickerDialogPreference} array.
+          attribute's value can be found in the {@link #NumberPickerDialogPreference} array.
 
 
           <p>Must be an integer value, such as "<code>100</code>".
@@ -197,6 +197,6 @@ theme attribute (in the form
 containing a value of this type.
           @attr name android:min
         */
-        public static final int SpeedPickerDialogPreference_min = 1;
+        public static final int NumberPickerDialogPreference_min = 1;
     };
 }
