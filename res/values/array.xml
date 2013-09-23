@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <string-array name="sample_rate_spinner_array">
+        <item>10</item>
+        <item>51.2</item>
+        <item>102.4</item>
+        <item>128</item>
+        <item>170.7</item>
+        <item>204.8</item>
+        <item>256</item>
+        <item>512</item>
+    </string-array>
+    
+    <string-array name="accel_range_spinner_array">
+        <item>+/- 1.5g</item>
+        <item>+/- 6g</item>
+    </string-array>
+ 
+</resources>

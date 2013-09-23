@@ -2,29 +2,115 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 	
-    <ScrollView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="6dip" >
-       
         <LinearLayout android:layout_width="match_parent"
     		android:layout_height="match_parent"
-    		android:orientation="vertical" >
+    		android:orientation="vertical"
+    		android:padding="6dip" >
 
 	        <TextView
-	            android:id="@+id/speed"
-	            android:layout_width="wrap_content"
-	            android:layout_height="wrap_content"
-	            android:text="Speed" />
+		        android:id="@+id/speed_text"
+		        android:layout_width="fill_parent"
+			    android:layout_height="wrap_content"
+		        android:layout_alignParentRight="true"
+		        android:layout_alignParentTop="true"
+		        android:layout_marginRight="10dip"
+		        android:layout_alignWithParentIfMissing="true"
+		        android:gravity="center_vertical"
+		        android:text="Enable Sensors"
+		        android:textSize="14sp" />
+	        
+	        <Button
+		        android:id="@+id/button_speed"
+		        android:layout_width="wrap_content"
+		        android:layout_height="wrap_content"
+		        android:text="Speed" />
+	    
+	    
+	        <RelativeLayout android:orientation="vertical"
+			    android:layout_width="fill_parent"
+			    android:layout_height="wrap_content"
+			    android:id="@+id/logging"
+			    android:layout_marginTop="10dip" >
 			
-			<Button
-	        	android:id="@+id/button_speed"
-	        	android:layout_width="wrap_content"
-	       	 	android:layout_height="wrap_content"
-	        	android:text="Speed" />
-	    </LinearLayout>
-        
-    </ScrollView>
+			    <TextView
+			        android:id="@+id/logging_text"
+			        android:layout_width="fill_parent"
+			        android:layout_height="wrap_content"
+			        android:layout_alignParentRight="true"
+			        android:layout_alignParentTop="true"
+			        android:layout_marginRight="10dip"
+			        android:layout_alignWithParentIfMissing="true"
+			        android:gravity="center_vertical"
+			        android:text="Enable Logging"
+			        android:textSize="14sp" />
 
+			    <Switch
+			        android:id="@+id/logging_switch"
+			        android:layout_width="wrap_content"
+			        android:layout_height="wrap_content"
+			        android:layout_alignParentTop="true"
+			        android:layout_alignRight="@+id/logging_text"
+			        android:layout_marginRight="60dp"
+			        android:checked="true" />
+				
+			</RelativeLayout>
+			
+	        <RelativeLayout android:orientation="vertical"
+			    android:layout_width="fill_parent"
+			    android:layout_height="wrap_content"
+			    android:id="@+id/sample_rate"
+			    android:layout_marginTop="10dip" >
+			
+			    <TextView
+			        android:id="@+id/sample_rate_text"
+			        android:layout_width="fill_parent"
+			        android:layout_height="wrap_content"
+			        android:layout_alignParentRight="true"
+			        android:layout_alignParentTop="true"
+			        android:layout_marginRight="10dip"
+			        android:layout_alignWithParentIfMissing="true"
+			        android:gravity="center_vertical"
+			        android:text="Sample Rate"
+			        android:textSize="14sp" />
+
+			    <Spinner
+			        android:id="@+id/sample_rate_spinner"
+			        android:layout_width="wrap_content"
+			        android:layout_height="wrap_content"
+			        android:layout_alignParentTop="true"
+			        android:entries="@array/sample_rate_spinner_array"
+			        android:prompt="@string/sample_rate_spinner_default"
+			        android:textSize="14sp"
+			        android:layout_marginLeft="150dp" />
+				
+			</RelativeLayout>
+			
+	        <RelativeLayout android:orientation="vertical"
+			    android:layout_width="fill_parent"
+			    android:layout_height="wrap_content"
+			    android:id="@+id/accel_range"
+			    android:layout_marginTop="10dip" >
+			
+			    <TextView
+			        android:id="@+id/accel_range_text"
+			        android:layout_width="fill_parent"
+			        android:layout_height="wrap_content"
+			        android:layout_alignParentTop="true"
+			        android:layout_alignWithParentIfMissing="true"
+			        android:gravity="center_vertical"
+			        android:text="Accel Range"
+			        android:textSize="14sp" />
+
+			    <Spinner
+			        android:id="@+id/accel_range_spinner"
+			        android:layout_width="wrap_content"
+			        android:layout_height="wrap_content"
+			        android:layout_alignParentTop="true"
+			        android:entries="@array/accel_range_spinner_array"
+			        android:prompt="@string/accel_range_spinner_default"
+			        android:textSize="14sp"
+			        android:layout_marginLeft="150dp" />
+				
+			</RelativeLayout>
+        </LinearLayout>
 </FrameLayout>
