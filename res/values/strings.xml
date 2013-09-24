@@ -16,4 +16,8 @@
     
     <string name="sample_rate_spinner_default">128</string>
     <string name="accel_range_spinner_default">+/- 1.5g</string>
+    
+    <string name="rad_slow">Slow</string>
+    <string name="rad_normal">Normal</string>
+    <string name="rad_fast">Fast</string>
 </resources>

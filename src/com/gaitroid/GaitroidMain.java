@@ -441,19 +441,19 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
                 Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_section_launchpad1, container, false);
             
-          rootView.findViewById(R.id.button_speed)
-	          .setOnClickListener(new View.OnClickListener() {
-	              @Override
-	              public void onClick(View v) {
-	            	  Context context = getActivity(); 
-	            	  NumberPickerDialogPreference spdf = new NumberPickerDialogPreference(context); 
-	            	  spdf.setDefaultValue(5);
-	            	  spdf.setMaxValue(10);
-	            	  spdf.setMaxValue(1);
-	            	  
-	            	  openPreference( "abc" );
-	              }
-	          });
+//          rootView.findViewById(R.id.button_speed)
+//	          .setOnClickListener(new View.OnClickListener() {
+//	              @Override
+//	              public void onClick(View v) {
+//	            	  Context context = getActivity(); 
+//	            	  NumberPickerDialogPreference spdf = new NumberPickerDialogPreference(context); 
+//	            	  spdf.setDefaultValue(5);
+//	            	  spdf.setMaxValue(10);
+//	            	  spdf.setMaxValue(1);
+//	            	  
+//	            	  openPreference( "abc" );
+//	              }
+//	          });
             
             
 //          rootView.findViewById(R.id.connect_socket)
@@ -542,7 +542,7 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
             t =(TextView)rootView.findViewById(R.id.email);
             t.setText("Email: " + user.getEmail().toString());
             t =(TextView)rootView.findViewById(R.id.phone);
-            t.setText(user.getPhone().toString());
+            t.setText("Phone Number: " + user.getPhone().toString());
             t =(TextView)rootView.findViewById(R.id.age);
             t.setText("Age: " + user.getAge().toString());
             t =(TextView)rootView.findViewById(R.id.gender);

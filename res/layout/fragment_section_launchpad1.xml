@@ -17,14 +17,39 @@
 		        android:layout_alignWithParentIfMissing="true"
 		        android:gravity="center_vertical"
 		        android:text="Enable Sensors"
-		        android:textSize="14sp" />
+		        android:textSize="16sp" />
 	        
-	        <Button
-		        android:id="@+id/button_speed"
-		        android:layout_width="wrap_content"
-		        android:layout_height="wrap_content"
-		        android:text="Speed" />
-	    
+	        <RadioGroup
+			    android:layout_width="fill_parent"
+			    android:layout_height="wrap_content"
+			    android:id="@+id/radio_speed_group"
+			    android:orientation="horizontal"
+			    android:padding="6dip"
+			    android:layout_marginTop="4dip">
+			    
+			    <RadioButton
+			        android:id="@+id/radio_slow"
+			        android:layout_width="wrap_content"
+			        android:layout_height="wrap_content"
+			        android:text="@string/rad_slow"
+			        android:checked="true"
+			        android:textSize="14sp"
+			        android:layout_marginLeft="20dip"/>
+			    <RadioButton
+			        android:id="@+id/radio_normal"
+			        android:layout_width="wrap_content"
+			        android:layout_height="wrap_content"
+			        android:text="@string/rad_normal"
+			        android:textSize="14sp"
+			        android:layout_marginLeft="6dip"/>
+			    <RadioButton
+			        android:id="@+id/radio_fast"
+			        android:layout_width="wrap_content"
+			        android:layout_height="wrap_content"
+			        android:text="@string/rad_fast"
+			        android:textSize="14sp"
+			        android:layout_marginLeft="6dip"/>
+			</RadioGroup>
 	    
 	        <RelativeLayout android:orientation="vertical"
 			    android:layout_width="fill_parent"
@@ -42,7 +67,7 @@
 			        android:layout_alignWithParentIfMissing="true"
 			        android:gravity="center_vertical"
 			        android:text="Enable Logging"
-			        android:textSize="14sp" />
+			        android:textSize="16sp" />
 
 			    <Switch
 			        android:id="@+id/logging_switch"
@@ -71,7 +96,7 @@
 			        android:layout_alignWithParentIfMissing="true"
 			        android:gravity="center_vertical"
 			        android:text="Sample Rate"
-			        android:textSize="14sp" />
+			        android:textSize="16sp" />
 
 			    <Spinner
 			        android:id="@+id/sample_rate_spinner"
@@ -99,7 +124,7 @@
 			        android:layout_alignWithParentIfMissing="true"
 			        android:gravity="center_vertical"
 			        android:text="Accel Range"
-			        android:textSize="14sp" />
+			        android:textSize="16sp" />
 
 			    <Spinner
 			        android:id="@+id/accel_range_spinner"
