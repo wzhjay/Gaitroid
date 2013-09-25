@@ -16,8 +16,9 @@
 		        android:layout_marginRight="10dip"
 		        android:layout_alignWithParentIfMissing="true"
 		        android:gravity="center_vertical"
-		        android:text="Enable Sensors"
-		        android:textSize="16sp" />
+		        android:text="Training Speed"
+		        android:textSize="16sp"
+		        android:padding="6dip" />
 	        
 	        <RadioGroup
 			    android:layout_width="fill_parent"
@@ -55,7 +56,8 @@
 			    android:layout_width="fill_parent"
 			    android:layout_height="wrap_content"
 			    android:id="@+id/logging"
-			    android:layout_marginTop="10dip" >
+			    android:layout_marginTop="8dip"
+			    android:padding="6dip" >
 			
 			    <TextView
 			        android:id="@+id/logging_text"
@@ -84,7 +86,8 @@
 			    android:layout_width="fill_parent"
 			    android:layout_height="wrap_content"
 			    android:id="@+id/sample_rate"
-			    android:layout_marginTop="10dip" >
+			    android:layout_marginTop="8dip"
+			    android:padding="6dip" >
 			
 			    <TextView
 			        android:id="@+id/sample_rate_text"
@@ -114,7 +117,8 @@
 			    android:layout_width="fill_parent"
 			    android:layout_height="wrap_content"
 			    android:id="@+id/accel_range"
-			    android:layout_marginTop="10dip" >
+			    android:layout_marginTop="8dip"
+			    android:padding="6dip" >
 			
 			    <TextView
 			        android:id="@+id/accel_range_text"
@@ -137,5 +141,99 @@
 			        android:layout_marginLeft="150dp" />
 				
 			</RelativeLayout>
+			
+	        <RelativeLayout android:orientation="vertical"
+			    android:layout_width="fill_parent"
+			    android:layout_height="wrap_content"
+			    android:id="@+id/sensors"
+			    android:layout_marginTop="8dip"
+			    android:padding="6dip" >
+			
+			    <TextView
+			        android:id="@+id/sensors_text"
+			        android:layout_width="wrap_content"
+			        android:layout_height="wrap_content"
+			        android:layout_alignParentTop="true"
+			        android:layout_alignWithParentIfMissing="true"
+			        android:gravity="center_vertical"
+			        android:text="Sensors Enabled"
+			        android:textSize="16sp" />
+			    
+			    <CheckBox
+			        android:id="@+id/chk_accel"
+			        android:layout_width="wrap_content"
+			        android:layout_height="wrap_content"
+			        android:text="Accelerometer"
+			        android:checked="true"
+			        android:clickable="false"
+			        android:layout_below="@+id/sensors_text"
+			        android:layout_toRightOf="@+id/sensors_text" />
+			 
+			    <CheckBox
+			        android:id="@+id/chk_gyro"
+			        android:layout_width="wrap_content"
+			        android:layout_height="wrap_content"
+			        android:text="Gyroscope"
+			        android:checked="true"
+			        android:clickable="false"
+			        android:layout_below="@+id/chk_accel"
+			        android:layout_toRightOf="@+id/sensors_text" />
+			 
+			    <CheckBox
+			        android:id="@+id/chk_fsr_front"
+			        android:layout_width="wrap_content"
+			        android:layout_height="wrap_content"
+			        android:text="Front FSR"
+			        android:checked="true"
+			        android:clickable="false"
+			        android:layout_below="@+id/chk_gyro"
+			        android:layout_toRightOf="@+id/sensors_text" />
+			 
+			    <CheckBox
+			        android:id="@+id/chk_fsr_back"
+			        android:layout_width="wrap_content"
+			        android:layout_height="wrap_content"
+			        android:text="Back FSR"
+			        android:checked="true"
+			        android:clickable="false"
+			        android:layout_below="@+id/chk_fsr_front"
+			        android:layout_toRightOf="@+id/sensors_text" />
+
+			    <Button
+			        android:id="@+id/btn_connect"
+			        android:layout_width="wrap_content"
+			        android:layout_height="wrap_content"
+			        android:layout_alignLeft="@+id/sensors_text"
+			        android:layout_alignBottom="@+id/chk_gyro"
+			        android:text="Connect" />
+				
+			</RelativeLayout>
+			
+	        <LinearLayout
+		         android:id="@+id/confure_btns"
+		         android:layout_width="fill_parent"
+		         android:layout_height="wrap_content"
+		         android:orientation="horizontal"
+		         android:layout_marginTop="5dip"
+		         android:layout_marginRight="2dip"
+	        	 android:layout_marginLeft="2dip"
+		         android:padding="6dp">
+			    
+		         <Button
+		             android:id="@+id/btn_disconnect"
+		             android:layout_width="0dip"
+		             android:layout_height="match_parent"
+		             android:text="Logout"
+		             android:layout_weight="1" />
+		         
+		         <Button
+		             android:id="@+id/btn_streaming"
+		             android:layout_width="0dip"
+		             android:layout_height="match_parent"
+		             android:layout_alignParentRight="true"
+		             android:layout_weight="1"
+		             android:text="Strat Streaming" />
+	
+		     </LinearLayout>
         </LinearLayout>
 </FrameLayout>
