@@ -223,7 +223,7 @@
 		             android:id="@+id/btn_disconnect"
 		             android:layout_width="0dip"
 		             android:layout_height="match_parent"
-		             android:text="Logout"
+		             android:text="Disconnect"
 		             android:layout_weight="1" />
 		         
 		         <Button
