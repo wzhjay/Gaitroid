@@ -41,6 +41,7 @@ import android.speech.tts.TextToSpeech;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.View;
 import android.view.WindowManager;
@@ -73,7 +74,7 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 	public static final int REQUEST_CONFIGURE_GRAPH = 8;
 	String mCurrentDevice=null;
 	int mCurrentSlot=-1;
-	MultiShimmerPlayService mService;
+	static MultiShimmerPlayService mService;
 	private boolean mServiceBind=false;
 	private double mSamplingRate=-1;
 	private int mAccelRange=-1;
@@ -421,7 +422,7 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
             	return "Configure";
             }
             else if(position == 1) {
-            	return "Test";
+            	return "Training";
             }
             else if(position == 2) {
             	return "Profile";
@@ -441,21 +442,54 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
                 Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_section_launchpad1, container, false);
             
-//          rootView.findViewById(R.id.button_speed)
-//	          .setOnClickListener(new View.OnClickListener() {
-//	              @Override
-//	              public void onClick(View v) {
-//	            	  Context context = getActivity(); 
-//	            	  NumberPickerDialogPreference spdf = new NumberPickerDialogPreference(context); 
-//	            	  spdf.setDefaultValue(5);
-//	            	  spdf.setMaxValue(10);
-//	            	  spdf.setMaxValue(1);
-//	            	  
-//	            	  openPreference( "abc" );
-//	              }
-//	          });
+            rootView.findViewById(R.id.btn_connect)
+	          .setOnClickListener(new View.OnClickListener() {
+	              @Override
+	              public void onClick(View v) {
+	            	  Log.d("Gaitroid", "click button_bluetooth");
+		              	BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+		                  if(mBluetoothAdapter == null) {
+		                	Context c = mCtx;
+		                	CharSequence msg = "Device does not support Bluetooth\nExiting...";
+		                	int duration = Toast.LENGTH_SHORT;
+		                  	//Toast.makeText(mCtx, "Device does not support Bluetooth\nExiting...", Toast.LENGTH_LONG).show();
+		                  	//finish();
+		                	getActivity().runOnUiThread( new Toaster(getActivity(), c, msg, duration) );
+		                  }
+		                      
+		              	if(!mBluetoothAdapter.isEnabled()) {     	
+		                  	Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+		                  	startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+		              	}
+		              	
+		              	
+		              	// Bind service
+		              	//Intent intent=new Intent(GaitroidMain.this, MultiShimmerPlayService.class);
+		      			//getApplicationContext().bindService(intent,mTestServiceConnection, Context.BIND_AUTO_CREATE);
+		      		    
+		      		    Intent mainCommandIntent=new Intent(getActivity(), DeviceListActivity.class);
+		      	 		startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_CONNECT_SHIMMER);
+	              }
+	          });
             
+            rootView.findViewById(R.id.btn_disconnect)
+	          .setOnClickListener(new View.OnClickListener() {
+	              @Override
+	              public void onClick(View v) {
+	            	  mService.disconnectAllDevices();
+	              }
+	          });
             
+          rootView.findViewById(R.id.btn_streaming)
+	          .setOnClickListener(new View.OnClickListener() {
+	              @Override
+	              public void onClick(View v) {
+	            	  mService.startStreamingAllDevicesGetSensorNames();
+//	            	  Intent mainCommandIntent=new Intent(GaitroidMain.this,GraphActivity.class);
+//	   	 	      	  mainCommandIntent.putExtra("BluetoothAddress",mCurrentDevice);
+//	            	  startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_GRAPH_SHIMMER);
+	              }
+	          });
 //          rootView.findViewById(R.id.connect_socket)
 //	          .setOnClickListener(new View.OnClickListener() {
 //	              @Override
@@ -487,6 +521,49 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 
     }
     
+    public static class Toaster implements Runnable
+    {
+	    Context         theContext;
+	    CharSequence    theMessage;
+	    int             theDuration;
+	    Activity        theActivity;
+	
+	    public Toaster( Activity a, Context c, CharSequence s, int i )
+	    {
+	        theActivity = a;
+	        theContext = c;
+	        theMessage = s;
+	        theDuration = i;
+	    }
+	
+	    @Override
+	    public void run() 
+	    {
+	        Toast toast = Toast.makeText(theContext, theMessage, theDuration );
+	        toast.setGravity(Gravity.CENTER_HORIZONTAL|Gravity.CENTER_VERTICAL, 0, 0);
+	        toast.show();   
+	
+	        Thread t = new Thread( new Runnable()
+	        {
+	            @Override
+	            public void run()
+	            {
+	                try 
+	                {
+	                    Thread.sleep(theDuration == Toast.LENGTH_SHORT ? 2500 : 4000);
+	                }
+	                catch (InterruptedException e) 
+	                {
+	                    e.printStackTrace();
+	                }
+	
+	                theActivity.finish();
+	            }
+	
+	        });
+	        t.start();
+	    }
+    }
     /**
      * A fragment that launches as home screen.
      */
