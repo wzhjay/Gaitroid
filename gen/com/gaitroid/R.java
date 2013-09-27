@@ -42,7 +42,7 @@ containing a value of this type.
         public static final int accel_range=0x7f0a001b;
         public static final int accel_range_spinner=0x7f0a001d;
         public static final int accel_range_text=0x7f0a001c;
-        public static final int action_settings=0x7f0a0052;
+        public static final int action_settings=0x7f0a0054;
         public static final int age=0x7f0a0030;
         public static final int btnLogin=0x7f0a0040;
         public static final int btn_connect=0x7f0a0024;
@@ -86,6 +86,8 @@ containing a value of this type.
         public static final int footer=0x7f0a003d;
         public static final int gender=0x7f0a0031;
         public static final int graph=0x7f0a003b;
+        public static final int graphics_frameLayout=0x7f0a0051;
+        public static final int graphics_glsurfaceview=0x7f0a0052;
         public static final int header=0x7f0a003c;
         public static final int linearLayout1=0x7f0a003e;
         public static final int link_to_register=0x7f0a0041;
@@ -98,7 +100,7 @@ containing a value of this type.
         public static final int new_devices=0x7f0a000e;
         public static final int number_picker=0x7f0a0045;
         public static final int pager=0x7f0a003a;
-        public static final int pager_title_strip=0x7f0a0051;
+        public static final int pager_title_strip=0x7f0a0053;
         public static final int paired_devices=0x7f0a000c;
         public static final int password=0x7f0a003f;
         public static final int phone=0x7f0a002f;
@@ -139,7 +141,8 @@ containing a value of this type.
         public static final int preference_number_picker_dialog=0x7f03000c;
         public static final int preferences=0x7f03000d;
         public static final int sensor_view=0x7f03000e;
-        public static final int viewpager=0x7f03000f;
+        public static final int training=0x7f03000f;
+        public static final int viewpager=0x7f030010;
     }
     public static final class menu {
         public static final int gaitroid_main=0x7f090000;

@@ -64,6 +64,10 @@
             	  android:theme="@android:style/Theme.Dialog"
             	  android:label="Logout?">
         </activity>
+        <activity android:name="com.gaitroid.TrainActivity" 
+            	  android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+            	  android:label="Training">
+        </activity>
         <service android:enabled="true" android:name="com.shimmerresearch.service.MultiShimmerPlayService" />
     </application>
 

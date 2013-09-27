@@ -72,7 +72,7 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 	public static final int REQUEST_LOGGING_SHIMMER = 6;
 	public static final int REQUEST_GRAPH_SHIMMER = 7;
 	public static final int REQUEST_CONFIGURE_GRAPH = 8;
-	String mCurrentDevice=null;
+	static String mCurrentDevice=null;
 	int mCurrentSlot=-1;
 	static MultiShimmerPlayService mService;
 	private boolean mServiceBind=false;
@@ -485,9 +485,9 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 	              @Override
 	              public void onClick(View v) {
 	            	  mService.startStreamingAllDevicesGetSensorNames();
-//	            	  Intent mainCommandIntent=new Intent(GaitroidMain.this,GraphActivity.class);
-//	   	 	      	  mainCommandIntent.putExtra("BluetoothAddress",mCurrentDevice);
-//	            	  startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_GRAPH_SHIMMER);
+	            	  Intent mainCommandIntent=new Intent(mCtx,TrainActivity.class);
+	   	 	      	  mainCommandIntent.putExtra("BluetoothAddress",mCurrentDevice);
+	            	  startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_GRAPH_SHIMMER);
 	              }
 	          });
 //          rootView.findViewById(R.id.connect_socket)

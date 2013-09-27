@@ -1,6 +1,6 @@
-//beta 1.0 (16 April 2013)
+//1.0.2a
 
-/*Changes since beta 0.9
+/*Changes since beta 0.9 (1 January 2013)
  * 
  * - Packet Reception Rate is now provided, whenever a packet loss detected a message is sent via handler, see MESSAGE_PACKET_LOSS_DETECTED
  * - Changed Accel cal parameters
@@ -20,9 +20,25 @@
  * - Update Toggle LED
  * - Switched to the use of createInsecureRfcommSocketToServiceRecord 
  * - ECG and EMG units have a * (mVolts*) as an indicator when default parameters are used
+ * - SR 30 support
+ * - Orientation 
+ * - Support for low and high power Mag (high power == high sampling rate Mag)
+ * - Support for different mag range
+ * - Updated the execution model when transmitting commands, now uses a thread, and will improve Main UI thread latency 
  * 
+ * Changes since beta 1.0 (21 May 2013)
+ * - Added support for on the fly gyro offset calibration
+ * - Added quartenions
+ * - Convert to an instruction stack format, no longer supports Boilerplate
+ * 
+ * Changes since beta 1.0.1 (20 June 2013)
+ * - Fix the no response bug, through the use of the function dummyreadSamplingRate()
+ * - Updates to allow operation with Boilerplate
+ * - add get functions for lower power mag and gyro cal on the fly
+ * 
+ * Changes since beta 1.0.1 (20 June 2013)
+ * - minor fix to the stop streaming command, causing it to block the inputstream, and not being able to clear the bytes from minstream
  * */
-
 
 
 package com.shimmerresearch.driver;
@@ -34,12 +50,24 @@ import it.gerdavax.easybluetooth.RemoteDevice;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
+import javax.vecmath.AxisAngle4d;
+import javax.vecmath.Quat4d;
+import javax.vecmath.Vector3d;
+
 import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
+
+import com.shimmerresearch.algorithms.GradDes3DOrientation;
+import com.shimmerresearch.algorithms.GradDes3DOrientation.Quaternion;
+
+
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -68,6 +96,11 @@ public class Shimmer{
     public static final int MESSAGE_STOP_STREAMING_COMPLETE = 9;
     public static final int MESSAGE_PACKET_LOSS_DETECTED = 11;
     public static final int MESSAGE_NOT_SYNC = 12;
+    public static final int SHIMMER_1=0;
+    public static final int SHIMMER_2=1;
+    public static final int SHIMMER_2R=2;
+    public static final int SHIMMER_3=3;
+    public static final int SHIMMER_SR30=4;
     // Key names received from the Shimmer Handler 
     public static final String TOAST = "toast";
     private boolean mInitialized = false;
@@ -102,6 +135,12 @@ public class Shimmer{
     public static final int SENSOR_HEART				   = 0x4000;
     public static final int SENSOR_BATT	  			       = 0x10000; //THIS IS A DUMMY VALUE
         
+    //Sensor Bitmap for SR30
+    public static final int SENSOR_A_ACCEL_SR30				   = 0x01;
+    public static final int SENSOR_GYRO_SR30			   	   = 0x02;
+    public static final int SENSOR_VBATT_SR30				   = 0x04;
+    public static final int SENSOR_MAG_SR30					   = 0x08;
+    public static final int SENSOR_D_ACCEL_SR30				   = 0x10;
     
     //Constants describing the packet type
     private static final byte DATA_PACKET                      = (byte) 0x00;
@@ -139,14 +178,25 @@ public class Shimmer{
 	private static final byte SET_ECG_CALIBRATION_COMMAND      = (byte) 0x29;
 	private static final byte ECG_CALIBRATION_RESPONSE         = (byte) 0x2A;
 	private static final byte GET_ECG_CALIBRATION_COMMAND      = (byte) 0x2B;
-	private static final byte GET_ALL_CALIBRATION_COMMAND      = (byte) 0x2C; 
+	private static final byte GET_ALL_CALIBRATION_COMMAND      = (byte) 0x2C;
+	private static final byte GET_ALL_CALIBRATION_COMMAND_SR30 = (byte) 0x15;
 	private static final byte ALL_CALIBRATION_RESPONSE         = (byte) 0x2D; 
+	private static final byte ALL_CALIBRATION_RESPONSE_SR30    = (byte) 0x16; 
 	private static final byte GET_FW_VERSION_COMMAND           = (byte) 0x2E;
 	private static final byte FW_VERSION_RESPONSE              = (byte) 0x2F;
 	private static final byte SET_BLINK_LED                    = (byte) 0x30;
 	private static final byte BLINK_LED_RESPONSE               = (byte) 0x31;
 	private static final byte GET_BLINK_LED                    = (byte) 0x32;
 	private static final byte SET_GYRO_TEMP_VREF_COMMAND       = (byte) 0x33;
+	private static final byte SET_BUFFER_SIZE_COMMAND          = (byte) 0x34;
+	private static final byte BUFFER_SIZE_RESPONSE             = (byte) 0x35;
+	private static final byte GET_BUFFER_SIZE_COMMAND          = (byte) 0x36;
+	private static final byte SET_MAG_GAIN_COMMAND             = (byte) 0x37;
+	private static final byte MAG_GAIN_RESPONSE                = (byte) 0x38;
+	private static final byte GET_MAG_GAIN_COMMAND             = (byte) 0x39;
+	private static final byte SET_MAG_SAMPLING_RATE_COMMAND    = (byte) 0x3A;
+	private static final byte MAG_SAMPLING_RATE_RESPONSE       = (byte) 0x3B;
+	private static final byte GET_MAG_SAMPLING_RATE_COMMAND    = (byte) 0x3C;
 	private static final byte ACK_COMMAND_PROCESSED            = (byte) 0xff;
 	private double mFWVersion;
 	private int mFWInternal;
@@ -169,10 +219,12 @@ public class Shimmer{
 	private boolean mWaitForResponse=false; 									// This indicates whether the device is waiting for a response packet from the Shimmer Device 
 	private int mPacketSize=0; 													// Default 2 bytes for time stamp and 6 bytes for accelerometer 
 	private int mAccelRange=0;													// This stores the current accelerometer range being used. The accelerometer range is stored during two instances, once an ack packet is received after a writeAccelRange(), and after a response packet has been received after readAccelRange()  	
+	private int mMagSamplingRate=4;												// This stores the current Mag Sampling rate, it is a value between 0 and 6; 0 = 0.5 Hz; 1 = 1.0 Hz; 2 = 2.0 Hz; 3 = 5.0 Hz; 4 = 10.0 Hz; 5 = 20.0 Hz; 6 = 50.0 Hz
+	private int mMagRange=1;													// This stores the current Mag Range, it is a value between 0 and 6; 0 = 0.7 Ga; 1 = 1.0 Ga; 2 = 1.5 Ga; 3 = 2.0 Ga; 4 = 3.2 Ga; 5 = 3.8 Ga; 6 = 4.5 Ga
 	protected int mGSRRange=4;													// This stores the current GSR range being used.
     private int mConfigByte0;
     protected int mNChannels=0;	                                                // Default number of sensor channels set to three because of the on board accelerometer 
-    protected int mBufferSize;                   									// Buffer size is currently not used
+    protected int mBufferSize;                   							
     protected int mShimmerVersion;
     private String mMyBluetoothAddress="";
     private String[] mSignalNameArray=new String[19];							// 19 is the maximum number of signal thus far
@@ -189,7 +241,9 @@ public class Shimmer{
 	protected double[][] SensitivityMatrixAccel2g = {{76,0,0},{0,76,0},{0,0,76}};
 	protected double[][] SensitivityMatrixAccel4g = {{38,0,0},{0,38,0},{0,0,38}};
 	protected double[][] SensitivityMatrixAccel6g = {{25,0,0},{0,25,0},{0,0,25}};
-	
+	protected List mListofEnabledSensors = new  ArrayList<String>();
+	protected List<byte []> mListofInstructions = new  ArrayList<byte[]>();
+	protected boolean mInstructionStackLock = false;
 	protected double OffsetECGRALL=2060;
 	protected double GainECGRALL=175;
 	protected double OffsetECGLALL=2060;
@@ -210,11 +264,10 @@ public class Shimmer{
     private boolean mSync=true;													// Variable to keep track of sync
     private boolean mContinousSync=false;                                       // This is to select whether to continuously check the data packets 
 	private boolean mSetupDevice=false;											// Used by the constructor when the user intends to write new settings to the Shimmer device after connection
-    private Timer mTimer;														// Timer variable used when waiting for an ack or response packet
-    private boolean mSetSensorsComplete=true;									// Used by the command writeenabledsensors. Reason for this is because writeenabledsensors does an inquiry after receiving a Ack Packet. This variable ensures the inqruiry is comepleted before other commands can be executed.
+    private boolean mLowPowerMag = false;
+	private Timer mTimer;														// Timer variable used when waiting for an ack or response packet
     private int mBluetoothLib=0;												// 0 = default lib, 1 = arduino lib
 	private BluetoothAdapter mBluetoothAdapter = null;
-	private long mPacketCount=0; //this is to keep track of the number of packets which have been received
 	private long mPacketLossCount=0;
 	private double mPacketReceptionRate=100;
 	private double mLastReceivedCalibratedTimeStamp=-1; 
@@ -225,13 +278,23 @@ public class Shimmer{
 	private double mTempDouble3;
 	private double mTempDouble4;
 	private int mCurrentLEDStatus=0;
-	private boolean mInTheMiddleofPacket=false;
-	private boolean mSpecialWForAck=false;
 	private double mLowBattLimit=3.4;
 	private double mLastKnownHeartRate=0;
 	DescriptiveStatistics mVSenseBattMA= new DescriptiveStatistics(1024);
 	private int mTempPacketCountforBatt=0; //reason for this is if the Shimmer has low battery, and the data is trying to be sync, the ack packet of the batt may be deleted
-	
+	Quat4d mQ = new Quat4d();
+	GradDes3DOrientation mOrientationAlgo;
+	private boolean mOrientationEnabled = false;
+	private boolean mEnableOntheFlyGyroOVCal = false;
+	private int mBufferSizeforGyroOVCal = 102;
+	private double mGyroOVCalThreshold = 1.2;
+	DescriptiveStatistics mGyroX;
+	DescriptiveStatistics mGyroY;
+	DescriptiveStatistics mGyroZ;
+	DescriptiveStatistics mGyroXRaw;
+	DescriptiveStatistics mGyroYRaw;
+	DescriptiveStatistics mGyroZRaw;
+	private boolean mFirstTime=true;
 	  /**
      * Constructor. Prepares a new BluetoothChat session.
      * @param context  The UI Activity Context
@@ -295,6 +358,8 @@ public class Shimmer{
      * @param bluetoothLibrary Supported libraries are 'default' and 'gerdavax'  
      */
     public synchronized void connect(final String address, String bluetoothLibrary) {
+    	mListofInstructions.clear();
+    	mFirstTime=true;
     	mInitializeFailureDetected=false;
     	if (bluetoothLibrary=="default"){
     		mMyBluetoothAddress=address;
@@ -370,6 +435,7 @@ public class Shimmer{
      * Stop all threads
      */
     public synchronized void stop() {
+    	setState(STATE_NONE);
     	mStreaming = false;
         mInitialized = false;
     	if (mConnectThread != null) {
@@ -458,7 +524,7 @@ public class Shimmer{
             try {
                 // Connect the device through the socket. This will block
                 // until it succeeds or throws an exception
-                mmSocket.connect();
+            	mmSocket.connect();
             } catch (IOException connectException) {
             	connectionFailed();
                 // Unable to connect; close the socket and get out
@@ -605,6 +671,9 @@ private class ConnectThreadArduino extends Thread {
         private final InputStream mInStream;
         private final OutputStream mmOutStream;
         private BtSocket mSocket=null;
+        byte[] tb ={0};
+		Stack<Byte> packetStack = new Stack<Byte>();
+		byte[] newPacket=new byte[mPacketSize+1];
         public ConnectedThread(BluetoothSocket socket) {
         	
             mmSocket = socket;
@@ -643,17 +712,61 @@ private class ConnectThreadArduino extends Thread {
          *The received packets are processed here 
          */
         public synchronized void run() {
-            byte[] tb ={0};
-    		Stack<Byte> packetStack = new Stack<Byte>();
-    		byte[] newPacket=new byte[mPacketSize+1];
+        	
+        	
+        	
+        	
+        	
+        	
+        	
+        	
+        	
+        	
+        	
+            
             // Keep listening to the InputStream while connected
             while (true) {
+            	
+			/////////////////////////
+		    	// is an instruction running ? if not proceed
+		    	if (mInstructionStackLock==false){
+		    		// check instruction stack, are there any other instructions left to be executed?
+		    		if (!mListofInstructions.isEmpty()){
+		    			mInstructionStackLock=true;
+		    			byte[] insBytes = (byte[]) mListofInstructions.get(0);
+		    			mCurrentCommand=insBytes[0];
+		    			mWaitForAck=true;
+		    			write(insBytes);
+		    			if (mCurrentCommand==STOP_STREAMING_COMMAND){
+		    				mStreaming=false;
+		    			} else {
+		    				if (mCurrentCommand==GET_FW_VERSION_COMMAND){
+		    					responseTimer(ACK_TIMER_DURATION);
+		    				} else if (mCurrentCommand==GET_SAMPLING_RATE_COMMAND){
+		    					responseTimer(ACK_TIMER_DURATION);
+		    				} else {
+		    					responseTimer(ACK_TIMER_DURATION+10);
+		    				}
+		    			}
+		    			mTransactionCompleted=false;
+		    		}
+		    		
+		    	}
+            	
                 try {
                 	
-                	mInStream.read(tb,0,1);
                 	//Log.d("Shimmer","byte " + Byte.toString(tb[0]) + " " + Boolean.toString(mWaitForAck) + " " + Boolean.toString(mWaitForResponse) );	
                 	//Is the device waiting for an Ack/Response if so look out for the appropriate command
-                	if (mWaitForAck==true & mStreaming ==false) {
+                	if (mCurrentCommand==STOP_STREAMING_COMMAND) {
+                		if (mInStream.available()!=0){
+                			mInStream.read(tb,0,1);
+                		}
+                		Log.d("ShimmerCLEAR",mMyBluetoothAddress + " :: " +Byte.toString(tb[0]));
+                	}
+                	
+                	if (mWaitForAck==true && mStreaming ==false) {
+                		if (mInStream.available()!=0){
+                		mInStream.read(tb,0,1);
                 		Log.d("ShimmerREAD",mMyBluetoothAddress + " :: " +Byte.toString(tb[0]));
                 		
                 		
@@ -664,8 +777,13 @@ private class ConnectThreadArduino extends Thread {
             		    	mStreaming=false;
                 		    mTransactionCompleted=true;
                 		    mWaitForAck=false;
+                		    try {
+								Thread.sleep(200);	// Wait to ensure that we dont missed any bytes which need to be cleared
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
                 		    packetStack.clear();
-							if(mInStream.available()>0){ //this is to clear the buffer 
+                		    if(mInStream.available()>0){ //this is to clear the buffer 
 								byte[] tbtemp =new byte[mInStream.available()];
                 		    	mInStream.read(tbtemp,0,mInStream.available());
 							}
@@ -677,7 +795,8 @@ private class ConnectThreadArduino extends Thread {
                 	        msg.setData(bundle);
                 	        mHandler.sendMessage(msg);
 						    Log.d("Shimmer","Streaming Stop Done" + "Bytes still available:" + Integer.toString(mInStream.available()));
-                		    
+            			    mListofInstructions.remove(0);
+                		    mInstructionStackLock=false;
             		    }
                 		
                 		if ((byte)tb[0]==ACK_COMMAND_PROCESSED)
@@ -694,6 +813,8 @@ private class ConnectThreadArduino extends Thread {
                 			    isNowStreaming();
                 			    mWaitForAck=false;
                 			    mHandler.obtainMessage(Shimmer.MESSAGE_STATE_CHANGE, MSG_STATE_STREAMING, -1, new ObjectCluster(mMyName,getBluetoothAddress())).sendToTarget();
+                			    mListofInstructions.remove(0);
+                    		    mInstructionStackLock=false;
                 	        	}
                 		    /*else if (mCurrentCommand==STOP_STREAMING_COMMAND) {
                 		    	
@@ -720,22 +841,57 @@ private class ConnectThreadArduino extends Thread {
                 		    else if (mCurrentCommand==SET_SAMPLING_RATE_COMMAND) {
                 		    	mTimer.cancel(); //cancel the ack timer
                     		    mTimer.purge();
-                		    	mSamplingRate=mTempDoubleValue;
                 		    	Log.d("Shimmer", "SR rx" + Double.toString(mSamplingRate));
                     		    mTransactionCompleted=true;
                     		    mWaitForAck=false;
-                    		    }
+                    		    byte[] instruction=mListofInstructions.get(0);
+                    		    double tempdouble=1024/instruction[1];
+                    		    mSamplingRate = Double.parseDouble(new DecimalFormat("#.#").format(tempdouble));
+                    		    mListofInstructions.remove(0);
+                    		    mInstructionStackLock=false;
+                			}
+                		    else if (mCurrentCommand==SET_BUFFER_SIZE_COMMAND) {
+                		        mTimer.cancel(); //cancel the ack timer
+                    		    mTimer.purge();
+                    			mTransactionCompleted = true;
+                    		    mWaitForAck=false;
+                    		    mBufferSize=(int)((byte[])mListofInstructions.get(0))[1];
+                    		    mListofInstructions.remove(0);
+                    		    mInstructionStackLock=false;
+                			}
                 		    else if (mCurrentCommand==INQUIRY_COMMAND) {
                 		    	mWaitForResponse=true;
                 		    	mWaitForAck=false;
+                		    	mListofInstructions.remove(0);
                 		    	}
+                		    else if (mCurrentCommand==GET_BUFFER_SIZE_COMMAND) {
+                		    	mWaitForAck=false;
+                		    	mWaitForResponse=true;
+                		    	mListofInstructions.remove(0);
+                    		    }
                 		    else if (mCurrentCommand==GET_BLINK_LED) {
                 		    	mWaitForAck=false;
                 		    	mWaitForResponse=true;
+                		    	mListofInstructions.remove(0);
+                    		    }
+                		    else if (mCurrentCommand==GET_MAG_SAMPLING_RATE_COMMAND) {
+                		    	mWaitForAck=false;
+                		    	mWaitForResponse=true;
+                		    	mListofInstructions.remove(0);
+                    		    }
+                		    else if (mCurrentCommand==GET_MAG_GAIN_COMMAND) {
+                		    	mWaitForAck=false;
+                		    	mWaitForResponse=true;
+                		    	mListofInstructions.remove(0);
                     		    }
                 		    else if (mCurrentCommand==GET_ACCEL_SENSITIVITY_COMMAND) {
                 		    	mWaitForAck=false;
                 		    	mWaitForResponse=true;
+                    		    }
+                		    else if (mCurrentCommand==GET_GSR_RANGE_COMMAND) {
+                		    	mWaitForAck=false;
+                		    	mWaitForResponse=true;
+                		    	mListofInstructions.remove(0);
                     		    }
                 		    else if (mCurrentCommand==GET_FW_VERSION_COMMAND) {
                 		    	mWaitForResponse = true;
@@ -744,51 +900,64 @@ private class ConnectThreadArduino extends Thread {
                 		    else if (mCurrentCommand==GET_ECG_CALIBRATION_COMMAND) {
                 		    	mWaitForResponse = true;
                 		    	mWaitForAck=false;
+                		    	mListofInstructions.remove(0);
                 		    	}
                 		    else if (mCurrentCommand==GET_EMG_CALIBRATION_COMMAND) {
                 		    	mWaitForResponse = true;
                 		    	mWaitForAck=false;
+                		    	mListofInstructions.remove(0);
                 		    	}
                 		    else if (mCurrentCommand==SET_BLINK_LED) {
-                		    	mCurrentLEDStatus=mTempIntValue;
+                		    	mCurrentLEDStatus=(int)((byte[])mListofInstructions.get(0))[1];
                     		    mTransactionCompleted = true;
                     		    //mWaitForAck=false;
                     		    mTimer.cancel(); //cancel the ack timer
                     		    mTimer.purge();
+                    		    mListofInstructions.remove(0);
+                    		    mInstructionStackLock=false;
                     		    }
                 		    else if (mCurrentCommand==SET_GSR_RANGE_COMMAND) {
-                		    	mGSRRange=mTempIntValue;
+                		    	
                     		    mTransactionCompleted = true;
                     		    mWaitForAck=false;
                     		    mTimer.cancel(); //cancel the ack timer
                     		    mTimer.purge();
+                    		    mGSRRange=(int)((byte [])mListofInstructions.get(0))[1];
+                    		    mListofInstructions.remove(0);
+                    		    mInstructionStackLock=false;
                     		    }
                 		    else if (mCurrentCommand==GET_SAMPLING_RATE_COMMAND) {
                     		    mWaitForResponse=true;
                     		    mWaitForAck=false;
-                		    	}
+                    		    
+                    		}
                 		    else if (mCurrentCommand==GET_CONFIG_BYTE0_COMMAND) {
                 		    	mWaitForResponse=true;
                 		    	mWaitForAck=false;
+                		    	mListofInstructions.remove(0);
                 		    	}
                 		    else if (mCurrentCommand==SET_CONFIG_BYTE0_COMMAND) {
-                		    	mTransactionCompleted=true;
-                    		    mConfigByte0=mTempByteValue;
-                    		    mWaitForAck=false;
-                    		    mTimer.cancel(); //cancel the ack timer
+                		    	mTimer.cancel(); //cancel the ack timer
                     		    mTimer.purge();
+                		    	mConfigByte0=(int)((byte [])mListofInstructions.get(0))[1];;
+                    		    mWaitForAck=false;
+                    		    mTransactionCompleted=true;
+                    		    mListofInstructions.remove(0);
+                    		    mInstructionStackLock=false;
                 		    	}
                 		    else if (mCurrentCommand==SET_PMUX_COMMAND) {
                 		    	mTimer.cancel(); //cancel the ack timer
                     		    mTimer.purge();
+                		    	if (((byte[])mListofInstructions.get(0))[1]==1) {
+                					mConfigByte0=(byte) ((byte) (mConfigByte0|64)&(0xFF)); 
+                				}
+                				else if (((byte[])mListofInstructions.get(0))[1]==0) {
+                					mConfigByte0=(byte) ((byte)(mConfigByte0 & 191)&(0xFF));
+                				}
                 		    	mTransactionCompleted=true;
-                    		    if ((mTempByteValue & (byte)64)!=0) {
-                    				//then set ConfigByte0 at bit position 7
-                    			    mConfigByte0 = mConfigByte0 | (1 << 6);
-                    		    } else{
-                    			    mConfigByte0 = mConfigByte0 & ~(1 << 6);
-                    			}
                     		    mWaitForAck=false;
+                    		    mListofInstructions.remove(0);
+                    		    mInstructionStackLock=false;
                 		    	}
                 		    else if (mCurrentCommand==SET_GYRO_TEMP_VREF_COMMAND) {
                 		    	mTimer.cancel(); //cancel the ack timer
@@ -800,20 +969,21 @@ private class ConnectThreadArduino extends Thread {
                 		    else if (mCurrentCommand==SET_5V_REGULATOR_COMMAND) {
                 		    	mTimer.cancel(); //cancel the ack timer
                     		    mTimer.purge();
+                		    	if (((byte[])mListofInstructions.get(0))[1]==1) {
+                					mConfigByte0=(byte) (mConfigByte0|128); 
+                				}
+                				else if (((byte[])mListofInstructions.get(0))[1]==0) {
+                					mConfigByte0=(byte)(mConfigByte0 & 127);
+                				}
                 		    	mTransactionCompleted=true;
-                    		    if ((mTempByteValue & (byte)128)!=0) {
-                    				//then set ConfigByte0 at bit position 8
-                    			    mConfigByte0 = mConfigByte0 | (1 << 7);
-                    		    } else{
-                    			    mConfigByte0 = mConfigByte0 & ~(1 << 7);
-                    		    }
                     		    mWaitForAck=false;
+                    		    mListofInstructions.remove(0);
+                    		    mInstructionStackLock=false;
                 		    }
                 		    else if (mCurrentCommand==SET_ACCEL_SENSITIVITY_COMMAND) {
                 		    	mTimer.cancel(); //cancel the ack timer
                     		    mTimer.purge();
                     			mTransactionCompleted=true;
-                    		    mAccelRange=mTempIntValue;
                     		    mWaitForAck=false;
                     		    
                     		    if (mDefaultCalibrationParametersAccel == true){
@@ -827,36 +997,74 @@ private class ConnectThreadArduino extends Thread {
 	                    				SensitivityMatrixAccel = SensitivityMatrixAccel6g; 
 	                    			}
                     		    }
+                    		    mAccelRange=(int)(((byte[])mListofInstructions.get(0))[1]);
+                    		    mListofInstructions.remove(0);
+                    		    mInstructionStackLock=false;
                     		} 
-                		    else if (mCurrentCommand==GET_ACCEL_CALIBRATION_COMMAND || mCurrentCommand==GET_GYRO_CALIBRATION_COMMAND || mCurrentCommand==GET_MAG_CALIBRATION_COMMAND || mCurrentCommand==GET_ALL_CALIBRATION_COMMAND) {
+                		    else if (mCurrentCommand==SET_MAG_SAMPLING_RATE_COMMAND){
+                		    	mTimer.cancel(); //cancel the ack timer
+                    		    mTimer.purge();
+                    			mTransactionCompleted = true;
+                    		    mMagSamplingRate = mTempIntValue;
+                    		    mWaitForAck = false;
+                    		    mListofInstructions.remove(0);
+                    		    mInstructionStackLock=false;
+                		    } else if (mCurrentCommand==SET_SENSORS_COMMAND) {
+                		    	mTimer.cancel(); //cancel the ack timer
+                    		    mTimer.purge();
+                		    	mWaitForAck=false;
+                		    	byte[] instruction=mListofInstructions.get(0);
+                		    	mEnabledSensors=instruction[1]+((instruction[2]<<8)&65280);
+                		    	packetStack.clear(); // Always clear the packetStack after setting the sensors, this is to ensure a fresh start
+                    		    mTransactionCompleted=true;
+                    		    mListofInstructions.remove(0);
+                    		    mInstructionStackLock=false;
+                			}
+                		    else if (mCurrentCommand==SET_MAG_GAIN_COMMAND){
+                		    	mTimer.cancel(); //cancel the ack timer
+                    		    mTimer.purge();
+                    			mTransactionCompleted = true;
+                    		    mWaitForAck = false;
+                    		    mMagRange=(int)((byte [])mListofInstructions.get(0))[1];
+                    		    mListofInstructions.remove(0);
+                    		    mInstructionStackLock=false;
+                		    }
+                		    
+                		    else if (mCurrentCommand==GET_ACCEL_CALIBRATION_COMMAND || mCurrentCommand==GET_GYRO_CALIBRATION_COMMAND || mCurrentCommand==GET_MAG_CALIBRATION_COMMAND || mCurrentCommand==GET_ALL_CALIBRATION_COMMAND || mCurrentCommand==GET_ALL_CALIBRATION_COMMAND_SR30) {
                 		    	mWaitForResponse = true;
                 		    	mWaitForAck=false;
+                		    	mListofInstructions.remove(0);
                     		}	
                 		    else if (mCurrentCommand==GET_SHIMMER_VERSION_COMMAND) {
                 		    	mWaitForResponse = true;
                 		    	mWaitForAck=false;
+                		    	mListofInstructions.remove(0);
                     		}
                 		    else if (mCurrentCommand==SET_ECG_CALIBRATION_COMMAND){
                 		    	//mGSRRange=mTempIntValue;
                 		    	mDefaultCalibrationParametersECG = false;
-                		    	OffsetECGRALL=mTempDouble1;
-                		    	GainECGRALL=mTempDouble2;
-                		    	OffsetECGLALL=mTempDouble3;
-                		    	GainECGLALL=mTempDouble4;
-                    		    mTransactionCompleted = true;
-                    		    mWaitForAck=false;
+                		    	OffsetECGLALL=(double)((((byte[])mListofInstructions.get(0))[0]&0xFF)<<8)+(((byte[])mListofInstructions.get(0))[1]&0xFF);
+                 		   		GainECGLALL=(double)((((byte[])mListofInstructions.get(0))[2]&0xFF)<<8)+(((byte[])mListofInstructions.get(0))[3]&0xFF);
+                 		   		OffsetECGRALL=(double)((((byte[])mListofInstructions.get(0))[4]&0xFF)<<8)+(((byte[])mListofInstructions.get(0))[5]&0xFF);
+             		   			GainECGRALL=(double)((((byte[])mListofInstructions.get(0))[6]&0xFF)<<8)+(((byte[])mListofInstructions.get(0))[7]&0xFF);
                     		    mTimer.cancel(); //cancel the ack timer
                     		    mTimer.purge();
+                    		    mTransactionCompleted = true;
+                    		    mWaitForAck=false;
+                    		    mListofInstructions.remove(0);
+                    		    mInstructionStackLock=false;
                 		    }
                 		    else if (mCurrentCommand==SET_EMG_CALIBRATION_COMMAND){
                 		    	//mGSRRange=mTempIntValue;
                 		    	mDefaultCalibrationParametersEMG = false;
-                		    	OffsetEMG=mTempDouble1;
-                		    	GainEMG=mTempDouble2;
-                    		    mTransactionCompleted = true;
+                 		   		OffsetEMG=(double)((((byte[])mListofInstructions.get(0))[0]&0xFF)<<8)+(((byte[])mListofInstructions.get(0))[1]&0xFF);
+                 		   		GainEMG=(double)((((byte[])mListofInstructions.get(0))[2]&0xFF)<<8)+(((byte[])mListofInstructions.get(0))[3]&0xFF);
+                		        mTransactionCompleted = true;
                     		    mWaitForAck=false;
                     		    mTimer.cancel(); //cancel the ack timer
                     		    mTimer.purge();
+                    		    mListofInstructions.remove(0);
+                    		    mInstructionStackLock=false;
                 		    }
                 		    else if (mCurrentCommand==TOGGLE_LED_COMMAND){
                 		    	//mGSRRange=mTempIntValue;
@@ -864,19 +1072,19 @@ private class ConnectThreadArduino extends Thread {
                     		    mWaitForAck=false;
                     		    mTimer.cancel(); //cancel the ack timer
                     		    mTimer.purge();
+                    		    mListofInstructions.remove(0);
+                    		    mInstructionStackLock=false;
                 		    }
-                		    else if (mCurrentCommand==SET_SENSORS_COMMAND) {
-                		    	mTimer.cancel(); //cancel the ack timer
-                    		    mTimer.purge();
-                		    	mWaitForAck=false;
-                		    	mEnabledSensors=mTempIntValue; //if transaction successful execute update enabledSensors
-                    		    packetStack.clear(); // Always clear the packetStack after setting the sensors, this is to ensure a fresh start
-                    		    mTransactionCompleted=true;
-                    		    privateInquiry();
-                			}
-                    		
+                		    
+                		}
                 		}
                 	} else if (mWaitForResponse==true) {
+                		if (mFirstTime){
+                			mInStream.skip(mInStream.available());
+                			mFirstTime=false;
+                		} else if (mInStream.available()!=0){
+                			
+                		mInStream.read(tb,0,1);
                 		
                 		if (tb[0]==FW_VERSION_RESPONSE){
                 			mTimer.cancel(); //cancel the ack timer
@@ -906,7 +1114,10 @@ private class ConnectThreadArduino extends Thread {
                 	        if (!mDummy){
                 	        	mHandler.sendMessage(msg);
                 	        }
+                	        mListofInstructions.remove(0);
+                            mInstructionStackLock=false;
                 		    mTransactionCompleted=true;
+                		    initializeStageTwo();
                 		} else if (tb[0]==INQUIRY_RESPONSE) {
                 			mTimer.cancel(); //cancel the ack timer
                 		    mTimer.purge();
@@ -916,22 +1127,36 @@ private class ConnectThreadArduino extends Thread {
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							}
-                		    byte[] bufferInquiry = new byte[30]; 
-                		    mInStream.read(bufferInquiry, 0, 30);
-                		    mPacketSize = 2+bufferInquiry[3]*2; 
-                		    mSamplingRate = (double)1024/bufferInquiry[0];
-                    	    mAccelRange = bufferInquiry[1];
-                    	    mConfigByte0 = bufferInquiry[2] & 0xFF; //convert the byte to unsigned integer
-                    	    mNChannels = bufferInquiry[3];
-                    	    mBufferSize = bufferInquiry[4];
-                    	    byte[] signalIdArray = new byte[mNChannels];
-                    	    System.arraycopy(bufferInquiry, 5, signalIdArray, 0, mNChannels);
-                    	    interpretdatapacketformat(mNChannels,signalIdArray);
-                            Log.d("Shimmer","Inquiry Response Received for Device-> "+mMyBluetoothAddress + " "+ bufferInquiry[0]+ " "+ bufferInquiry[1]+ " "+bufferInquiry[2]+ " " +bufferInquiry[3]+ " "+bufferInquiry[4]+ " " +bufferInquiry[5]+ " " +bufferInquiry[6]+ " " +bufferInquiry[7]+ " "+bufferInquiry[8]+ " " +bufferInquiry[9]+ " " +bufferInquiry[10] + " " +bufferInquiry[11]+ " " +bufferInquiry[12]+ " " +bufferInquiry[13]+ " " +bufferInquiry[14]+ " " +bufferInquiry[15] + " " +bufferInquiry[16] + " " +bufferInquiry[17] + " " +bufferInquiry[18] );
+	                		    if (mShimmerVersion!=4){
+	                		    byte[] bufferInquiry = new byte[30]; 
+	                		    mInStream.read(bufferInquiry, 0, 30);
+	                		    mPacketSize = 2+bufferInquiry[3]*2; 
+	                		    mSamplingRate = (double)1024/bufferInquiry[0];
+	                    	    mAccelRange = bufferInquiry[1];
+	                    	    mConfigByte0 = bufferInquiry[2] & 0xFF; //convert the byte to unsigned integer
+	                    	    mNChannels = bufferInquiry[3];
+	                    	    mBufferSize = bufferInquiry[4];
+	                    	    byte[] signalIdArray = new byte[mNChannels];
+	                    	    System.arraycopy(bufferInquiry, 5, signalIdArray, 0, mNChannels);
+	                    	    interpretdatapacketformat(mNChannels,signalIdArray);
+	                            Log.d("Shimmer","Inquiry Response Received for Device-> "+mMyBluetoothAddress + " "+ bufferInquiry[0]+ " "+ bufferInquiry[1]+ " "+bufferInquiry[2]+ " " +bufferInquiry[3]+ " "+bufferInquiry[4]+ " " +bufferInquiry[5]+ " " +bufferInquiry[6]+ " " +bufferInquiry[7]+ " "+bufferInquiry[8]+ " " +bufferInquiry[9]+ " " +bufferInquiry[10] + " " +bufferInquiry[11]+ " " +bufferInquiry[12]+ " " +bufferInquiry[13]+ " " +bufferInquiry[14]+ " " +bufferInquiry[15] + " " +bufferInquiry[16] + " " +bufferInquiry[17] + " " +bufferInquiry[18] );
+                		    } else { //no config byte so adjust accordingly
+                    		    byte[] bufferInquiry = new byte[30]; 
+                    		    mInStream.read(bufferInquiry, 0, 30);
+                    		    mPacketSize = 2+bufferInquiry[2]*2; 
+                    		    mSamplingRate = (double)1024/bufferInquiry[0];
+                        	    mAccelRange = bufferInquiry[1];
+                        	    mNChannels = bufferInquiry[2];
+                        	    mBufferSize = bufferInquiry[3];
+                        	    byte[] signalIdArray = new byte[mNChannels];
+                        	    System.arraycopy(bufferInquiry, 4, signalIdArray, 0, mNChannels); // this is 4 because there is no config byte
+                        	    interpretdatapacketformat(mNChannels,signalIdArray);
+                                Log.d("Shimmer","Inquiry Response Received for Device-> "+mMyBluetoothAddress + " "+ bufferInquiry[0]+ " "+ bufferInquiry[1]+ " "+bufferInquiry[2]+ " " +bufferInquiry[3]+ " "+bufferInquiry[4]+ " " +bufferInquiry[5]+ " " +bufferInquiry[6]+ " " +bufferInquiry[7]+ " "+bufferInquiry[8]+ " " +bufferInquiry[9]+ " " +bufferInquiry[10] + " " +bufferInquiry[11]+ " " +bufferInquiry[12]+ " " +bufferInquiry[13]+ " " +bufferInquiry[14]+ " " +bufferInquiry[15] + " " +bufferInquiry[16] + " " +bufferInquiry[17] + " " +bufferInquiry[18] );
+                		    }
                             inquiryDone();
                             mWaitForResponse = false;
                             mTransactionCompleted=true;
-                            mSetSensorsComplete=true;
+                            mInstructionStackLock=false;
                         } else if(tb[0] == GSR_RANGE_RESPONSE) {
                         	mTimer.cancel(); //cancel the ack timer
                 		    mTimer.purge();
@@ -941,6 +1166,37 @@ private class ConnectThreadArduino extends Thread {
                 		    byte[] bufferGSRRange = new byte[1]; 
                  		    mInStream.read(bufferGSRRange, 0, 1);
                  	        mGSRRange=bufferGSRRange[0];
+                 	        mInstructionStackLock=false;
+                		} else if(tb[0] == MAG_SAMPLING_RATE_RESPONSE) {
+                        	mTimer.cancel(); //cancel the ack timer
+                		    mTimer.purge();
+                			Log.d("Shimmer","Response received: " + Integer.toString(mCurrentCommand));
+                		    mWaitForResponse=false;
+                		    mTransactionCompleted=true;
+                		    byte[] bufferAns = new byte[1]; 
+                 		    mInStream.read(bufferAns, 0, 1);
+                 	        mMagSamplingRate=bufferAns[0];
+                 	        mInstructionStackLock=false;
+                		} else if(tb[0] == MAG_GAIN_RESPONSE) {
+                        	mTimer.cancel(); //cancel the ack timer
+                		    mTimer.purge();
+                			Log.d("Shimmer","Response received: " + Integer.toString(mCurrentCommand));
+                		    mWaitForResponse=false;
+                		    mTransactionCompleted=true;
+                		    byte[] bufferAns = new byte[1]; 
+                 		    mInStream.read(bufferAns, 0, 1);
+                 	        mMagRange=bufferAns[0];
+                 	        mInstructionStackLock=false;
+                		}else if(tb[0]==BUFFER_SIZE_RESPONSE) {
+                			mTimer.cancel(); //cancel the ack timer
+                		    mTimer.purge();
+                			Log.d("Shimmer","Response received: " + Integer.toString(mCurrentCommand));
+                		    mWaitForResponse=false;
+                		    mTransactionCompleted=true;
+                		    byte[] byteled = new byte[1]; 
+                		    mInStream.read(byteled, 0, 1);
+                		    mBufferSize = byteled[0] & 0xFF;
+                		    mInstructionStackLock=false;
                 		} else if(tb[0]==BLINK_LED_RESPONSE) {
                 			mTimer.cancel(); //cancel the ack timer
                 		    mTimer.purge();
@@ -950,7 +1206,7 @@ private class ConnectThreadArduino extends Thread {
                 		    byte[] byteled = new byte[1]; 
                 		    mInStream.read(byteled, 0, 1);
                 		    mCurrentLEDStatus = byteled[0]&0xFF;
-                		    
+                		    mInstructionStackLock=false;
                 		} else if(tb[0]==ACCEL_SENSITIVITY_RESPONSE) {
                 			mTimer.cancel(); //cancel the ack timer
                 		    mTimer.purge();
@@ -960,13 +1216,15 @@ private class ConnectThreadArduino extends Thread {
                 		    byte[] bufferAccelSensitivity = new byte[1]; 
                  		    mInStream.read(bufferAccelSensitivity, 0, 1);
                  	        mAccelRange=bufferAccelSensitivity[0];
+	                        mListofInstructions.remove(0);
+                 	        mInstructionStackLock=false;
                 		} else if (tb[0]==SAMPLING_RATE_RESPONSE) {
                 			mTimer.cancel(); //cancel the ack timer
                 		    mTimer.purge();
                 			Log.d("Shimmer","Response received: " + Integer.toString(mCurrentCommand));
                 		    mWaitForResponse=false;
                 		    if(mStreaming==false) {
-                			    byte[] bufferSR = new byte[30]; 
+                			    byte[] bufferSR = new byte[1]; 
                         	    mInStream.read(bufferSR, 0, 1); //read the sampling rate
                         	    if (mCurrentCommand==GET_SAMPLING_RATE_COMMAND) { // this is a double check, not necessary 
                         		    double val=(double)(bufferSR[0] & (byte) ACK_COMMAND_PROCESSED);
@@ -974,6 +1232,8 @@ private class ConnectThreadArduino extends Thread {
                         		    }
                 			}
                 			mTransactionCompleted=true;
+                			mListofInstructions.remove(0);
+                            mInstructionStackLock=false;
                 		} else if (tb[0]==ACCEL_CALIBRATION_RESPONSE ) {
                 			mTimer.cancel(); //cancel the ack timer
                 		    mTimer.purge();
@@ -989,6 +1249,7 @@ private class ConnectThreadArduino extends Thread {
                  	        int packetType=tb[0];
                  	        retrievecalibrationparametersfrompacket(bufferCalibrationParameters, packetType);
                  	        mTransactionCompleted=true;
+                 	        mInstructionStackLock=false;
                  		}  else if (tb[0]==ALL_CALIBRATION_RESPONSE ) {
                 			mTimer.cancel(); //cancel the ack timer
                 		    mTimer.purge();
@@ -1050,8 +1311,45 @@ private class ConnectThreadArduino extends Thread {
                 			   GainECGRALL=(double)((bufferCalibrationParameters[10]&0xFF)<<8)+(bufferCalibrationParameters[11]&0xFF);
                 		   }
                 		   
-                 	       
-                 	       mTransactionCompleted=true;
+                		   mTransactionCompleted=true;
+                		   mInstructionStackLock=false;
+                 		} else if (tb[0]==ALL_CALIBRATION_RESPONSE_SR30 ) {
+                			mTimer.cancel(); //cancel the ack timer
+                		    mTimer.purge();
+                		    mWaitForResponse=false;
+                			Log.d("Shimmer","Response received: " + Integer.toString(mCurrentCommand));
+                			
+                			//get accel
+                			try {
+								Thread.sleep(100);	// Due to the nature of the Bluetooth SPP stack a delay has been added to ensure the buffer is filled before it is read
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+                		    byte[] bufferCalibrationParameters = new byte[21]; 
+                 		    mInStream.read(bufferCalibrationParameters, 0, 21);
+                 	        retrievecalibrationparametersfrompacket(bufferCalibrationParameters, ACCEL_CALIBRATION_RESPONSE);
+                 	        
+                 	        //get gyro
+                			try {
+								Thread.sleep(100);	// Due to the nature of the Bluetooth SPP stack a delay has been added to ensure the buffer is filled before it is read
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+                		    bufferCalibrationParameters = new byte[21]; 
+                 		    mInStream.read(bufferCalibrationParameters, 0, 21);
+                 	        retrievecalibrationparametersfrompacket(bufferCalibrationParameters, GYRO_CALIBRATION_RESPONSE);
+                 	        
+                 	        //get mag
+                			try {
+								Thread.sleep(100);	// Due to the nature of the Bluetooth SPP stack a delay has been added to ensure the buffer is filled before it is read
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+                		    bufferCalibrationParameters = new byte[21]; 
+                 		    mInStream.read(bufferCalibrationParameters, 0, 21);
+                 	        retrievecalibrationparametersfrompacket(bufferCalibrationParameters, MAG_CALIBRATION_RESPONSE);
+                 	        mTransactionCompleted=true;
+                 	        mInstructionStackLock=false;
                  		} else if (tb[0]==GYRO_CALIBRATION_RESPONSE) {
                  			mTimer.cancel(); //cancel the ack timer
                 		    mTimer.purge();
@@ -1067,6 +1365,7 @@ private class ConnectThreadArduino extends Thread {
                  	        int packetType=tb[0];
                  	        retrievecalibrationparametersfrompacket(bufferCalibrationParameters, packetType);
                  	        mTransactionCompleted=true;
+                 	        mInstructionStackLock=false;
                  		} else if (tb[0]==MAG_CALIBRATION_RESPONSE ) {
                  			mTimer.cancel(); //cancel the ack timer
                 		    mTimer.purge();
@@ -1082,23 +1381,30 @@ private class ConnectThreadArduino extends Thread {
                  	        int packetType=tb[0];
                  	        retrievecalibrationparametersfrompacket(bufferCalibrationParameters, packetType);
                  	        mTransactionCompleted=true;
+                 	        mInstructionStackLock=false;
                  		} else if(tb[0]==CONFIG_BYTE0_RESPONSE) {
                  			mTimer.cancel(); //cancel the ack timer
                 		    mTimer.purge();
                  			Log.d("Shimmer","Response received: " + Integer.toString(mCurrentCommand));
                 		    byte[] bufferConfigByte0 = new byte[1]; 
                  		    mInStream.read(bufferConfigByte0, 0, 1);
-                 		    mTransactionCompleted=true;
                  		    mConfigByte0 = bufferConfigByte0[0] & 0xFF;
-                			Log.d("ShimmerCFB",Integer.toString(mConfigByte0));
+                 		    mTransactionCompleted=true;
+                		    mInstructionStackLock=false;
                  		} else if(tb[0]==GET_SHIMMER_VERSION_RESPONSE) {
                  			mTimer.cancel(); //cancel the ack timer
                 		    mTimer.purge();
+                		    try {
+								Thread.sleep(100);	// Due to the nature of the Bluetooth SPP stack a delay has been added to ensure the buffer is filled before it is read
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
                  			Log.d("Shimmer","Response received: " + Integer.toString(mCurrentCommand));
                 			byte[] bufferShimmerVersion = new byte[1]; 
                  			mInStream.read(bufferShimmerVersion, 0, 1);
                  			mShimmerVersion=(int)bufferShimmerVersion[0];
                  			mTransactionCompleted=true;
+                 			mInstructionStackLock=false;
                 		} else if (tb[0]==ECG_CALIBRATION_RESPONSE){
 							mTimer.cancel(); //cancel the ack timer
 							mTimer.purge();
@@ -1120,8 +1426,8 @@ private class ConnectThreadArduino extends Thread {
                  		   		OffsetECGRALL=(double)((bufferCalibrationParameters[4]&0xFF)<<8)+(bufferCalibrationParameters[5]&0xFF);
              		   			GainECGRALL=(double)((bufferCalibrationParameters[6]&0xFF)<<8)+(bufferCalibrationParameters[7]&0xFF);
                  		   	}
-                  	       
                  		   	mTransactionCompleted=true;
+                 		   	mInstructionStackLock=false;
                 		} else if (tb[0]==EMG_CALIBRATION_RESPONSE){
                 			mTimer.cancel(); //cancel the ack timer
 							mTimer.purge();
@@ -1141,39 +1447,49 @@ private class ConnectThreadArduino extends Thread {
                  		   		OffsetEMG=(double)((bufferCalibrationParameters[0]&0xFF)<<8)+(bufferCalibrationParameters[1]&0xFF);
                  		   		GainEMG=(double)((bufferCalibrationParameters[2]&0xFF)<<8)+(bufferCalibrationParameters[3]&0xFF);
                  		   	}
-                  	       
                  		   	mTransactionCompleted=true;
+                 		   	mInstructionStackLock=false;
+                		}
                 		}
                 	}      	
                 	if (mStreaming==true) {
+                		mInStream.read(tb,0,1);
                 		
                 		
                 		
                 		//Log.d("Shimmer","Incoming Byte: " + Byte.toString(tb[0])); // can be commented out to watch the incoming bytes
         			    if (mSync==true) {        //if the stack is full
         			    	if (mWaitForAck==true && (byte)tb[0]==ACK_COMMAND_PROCESSED && packetStack.size()==mPacketSize+1){ //this is to handle acks during mid stream, acks only are received between packets.
-                        		Log.d("ShimmerCMD","LED_BLINK_ACK_DETECTED");
-                        		mWaitForAck=false;
-                        		mTransactionCompleted = true;    
-                        		mCurrentLEDStatus=mTempIntValue;
-                        	} else {
-	            			    if (tb[0]==DATA_PACKET && packetStack.firstElement()==DATA_PACKET && packetStack.size()==mPacketSize+1) { //check for the starting zero of the packet, and the starting zero of the subsequent packet, this causes a delay equivalent to the transmission duration between two packets
-	            			    	newPacket=convertstacktobytearray(packetStack,mPacketSize);
-		            			    ObjectCluster objectCluster=(ObjectCluster) buildMsg(newPacket, mGetDataInstruction); 
-		            			    //printtofile(newmsg.UncalibratedData);
-		            		        mHandler.obtainMessage(MESSAGE_READ, objectCluster)
-		                        	        .sendToTarget();
-		                            packetStack.clear();
-		                            if (mContinousSync==false) {         //disable continuous synchronizing 
-		                         	    mSync=false;
-		                           	}
-		            			}
-	            			    if (mStreaming==true && mWaitForAck==true && (byte)tb[0]==ACK_COMMAND_PROCESSED && (packetStack.size()==0)){ //this is to handle acks during mid stream, acks only are received between packets.
+                        		if (mCurrentCommand==SET_BLINK_LED){
+	        			    		Log.d("ShimmerCMD","LED_BLINK_ACK_DETECTED");
+	                        		mWaitForAck=false;
+	                        		mTransactionCompleted = true;   
+	                        		mTimer.cancel(); //cancel the ack timer
+	                    		    mTimer.purge();
+	                    		    mCurrentLEDStatus=(int)((byte[])mListofInstructions.get(0))[1];
+	                    		    mListofInstructions.remove(0);
+	                    		    mInstructionStackLock=false;
+                        		}
+                        	} else { // the first time you start streaming it will go through this piece of code to make sure the data streaming is alligned/sync
+                        		if (packetStack.size()==mPacketSize+1){
+		            			    if (tb[0]==DATA_PACKET && packetStack.firstElement()==DATA_PACKET) { //check for the starting zero of the packet, and the starting zero of the subsequent packet, this causes a delay equivalent to the transmission duration between two packets
+		            			    	newPacket=convertstacktobytearray(packetStack,mPacketSize);
+			            			    ObjectCluster objectCluster=(ObjectCluster) buildMsg(newPacket, mGetDataInstruction); 
+			            			    //printtofile(newmsg.UncalibratedData);
+			            		        mHandler.obtainMessage(MESSAGE_READ, objectCluster)
+			                        	        .sendToTarget();
+			                            packetStack.clear();
+			                            if (mContinousSync==false) {         //disable continuous synchronizing 
+			                         	    mSync=false;
+			                           	}
+			            			}
+                        		}
+	            			    /*if (mStreaming==true && mWaitForAck==true && (byte)tb[0]==ACK_COMMAND_PROCESSED && (packetStack.size()==0)){ //this is to handle acks during mid stream, acks only are received between packets.
 	                        		Log.d("ShimmerCMD","LED_BLINK_ACK_DETECTED");
 	                        		mWaitForAck=false;
 	                        		mCurrentLEDStatus=mTempIntValue;
 	                    		    mTransactionCompleted = true;
-	                        	} 
+	                        	} */
 	            			    packetStack.push((tb[0])); //push new sensor data into the stack
 	            			    if (packetStack.size()>mPacketSize+1) { //if the stack has reached the packet size remove an element from the stack
 	            				    packetStack.removeElementAt(0);
@@ -1182,10 +1498,16 @@ private class ConnectThreadArduino extends Thread {
                         	}
             			} else if (mSync==false){
             				if (mWaitForAck==true && (byte)tb[0]==ACK_COMMAND_PROCESSED && packetStack.size()==0){ //this is to handle acks during mid stream, acks only are received between packets.
-                        		Log.d("ShimmerCMD","LED_BLINK_ACK_DETECTED");
-                        		mWaitForAck=false;
-                        		mCurrentLEDStatus=mTempIntValue;
-                    		    mTransactionCompleted = true;                    		    
+            					if (mCurrentCommand==SET_BLINK_LED){
+	        			    		Log.d("ShimmerCMD","LED_BLINK_ACK_DETECTED");
+	                        		mWaitForAck=false;
+	                        		mTransactionCompleted = true;   
+	                        		mTimer.cancel(); //cancel the ack timer
+	                    		    mTimer.purge();
+	                    		    mCurrentLEDStatus=(int)((byte[])mListofInstructions.get(0))[1];
+	                    		    mListofInstructions.remove(0);
+	                    		    mInstructionStackLock=false;
+                        		}
                         	} else {
                         		packetStack.push((tb[0])); //push new sensor data into the stack
                         		if(packetStack.firstElement()==DATA_PACKET && (packetStack.size()==mPacketSize+1)) {         //only used when continous sync is disabled
@@ -1209,15 +1531,23 @@ private class ConnectThreadArduino extends Thread {
         		    }
                 	
                 	
+
+                
+                	
+                	
         	    } catch (IOException e) {
         	    	  Log.d("Shimmer", e.toString());
         	    	  connectionLost();
                       break;
                 }
+            	
+                
             }
         }
          
     
+        
+        
         
         /**
          * Write to the connected OutStream.
@@ -1255,78 +1585,9 @@ private class ConnectThreadArduino extends Thread {
         	}
         }
     }
-
     
-	public void startStreaming() {
-		mTempPacketCountforBatt=0;
-		mPacketLossCount = 0;
-    	mPacketReceptionRate = 100;
-    	mFirstTimeCalTime=true;
-    	mLastReceivedCalibratedTimeStamp = -1;
-    	while(getInstructionStatus()==false) {
-		};
-		mSync=true; // a backup sync done every time you start streaming
-		mCurrentCommand=START_STREAMING_COMMAND;
-    	write(new byte[]{START_STREAMING_COMMAND});
-		mWaitForAck=true;
-		mTransactionCompleted=false;
-		responseTimer(ACK_TIMER_DURATION+10); //Some Shimmer devices require a longer response time
-	}
-	
-	/**
-	 * An inquiry is used to request for the current configuration parameters from the Shimmer device (e.g. Accelerometer settings, Configuration Byte, Sampling Rate, Number of Enabled Sensors and Sensors which have been enabled). 
-	 */
-	public void inquiry() {
-		while(getInstructionStatus()==false) {};
-    	mCurrentCommand=INQUIRY_COMMAND;
-    	write(new byte[]{INQUIRY_COMMAND});
-    	mWaitForAck=true;
-		mTransactionCompleted=false;
-		responseTimer(ACK_TIMER_DURATION+5);		
-	}
-	
-	public void readFWVersion() {
-		while(getInstructionStatus()==false) {};
-		mDummy=false;//false
-		mCurrentCommand=GET_FW_VERSION_COMMAND;
-    	write(new byte[]{GET_FW_VERSION_COMMAND});
-    	mWaitForAck=true;
-		mTransactionCompleted=false;
-		responseTimer(ACK_TIMER_DURATION+2);		
-	}
-	
-	/**
-	 * The reason for this is because sometimes the 1st response is not received by the phone
-	 */
-	private void dummyreadFWVersion() {
-		while(getInstructionStatus()==false) {};
-    	mDummy=true;
-		mCurrentCommand=GET_FW_VERSION_COMMAND;
-    	write(new byte[]{GET_FW_VERSION_COMMAND});
-    	mWaitForAck=true;
-		mTransactionCompleted=false;
-		responseTimer(ACK_TIMER_DURATION);		
-	}
 
-	private void privateInquiry() { //only used after writeenabledsensors
-		mCurrentCommand=INQUIRY_COMMAND;
-		responseTimer(ACK_TIMER_DURATION+1);
-		write(new byte[]{INQUIRY_COMMAND});
-    	mWaitForAck=true;
-    	Log.d("Shimmer","mwr" + Boolean.toString(mWaitForResponse));
-		mTransactionCompleted=false;
-	}
 	
-	public void stopStreaming() {
-    	while(getInstructionStatus()==false) {};
-    	mCurrentCommand=STOP_STREAMING_COMMAND;
-    	mWaitForAck=true;
-		mTransactionCompleted=false;
-		write(new byte[]{STOP_STREAMING_COMMAND});
-		mStreaming=false;
-		mCurrentLEDStatus=-1;
-		//responseTimer(ACK_TIMER_DURATION); //A little extra time to receive the stop streaming ack
-	}
 	
   public synchronized void responseTimer(int seconds) {
         if (mTimer!=null) {
@@ -1342,6 +1603,7 @@ private class ConnectThreadArduino extends Thread {
         public void run() {
         	 {
         		  if (mCurrentCommand==GET_FW_VERSION_COMMAND){
+        			Log.d("ShimmerFW", "FW Response Timeout");
                 	mFWVersion=0.1;
                 	mFWInternal=0;
                 	mFWVersionFullName="BoilerPlate 0.1.0";
@@ -1350,13 +1612,25 @@ private class ConnectThreadArduino extends Thread {
           	        bundle.putString(TOAST, "Firmware Version: " +mFWVersionFullName);
           	        msg.setData(bundle);
           	        if (!mDummy){
-          	        	mHandler.sendMessage(msg);
+          	        	//mHandler.sendMessage(msg);
           	        }
           	        mWaitForAck=false;
                     mTransactionCompleted=true; //should be false, so the driver will know that the command has to be executed again, this is not supported at the moment 
-                    mSetSensorsComplete=true; //should be false, so the driver will know that the command has to be executed again, this is not supported at the moment 
                     mTimer.cancel(); //Terminate the timer thread
                     mTimer.purge();
+                    mFirstTime=false;
+        		    mListofInstructions.remove(0);
+        		    mInstructionStackLock=false;
+        		    initializeStageTwo();
+                } else if(mCurrentCommand==GET_SAMPLING_RATE_COMMAND && mInitialized==false){
+                	Log.d("ShimmerFW", "FW Response Timeout");
+                	mWaitForAck=false;
+                    mTransactionCompleted=true; //should be false, so the driver will know that the command has to be executed again, this is not supported at the moment 
+                    mTimer.cancel(); //Terminate the timer thread
+                    mTimer.purge();
+                    mFirstTime=false;
+        		    mListofInstructions.remove(0);
+        		    mInstructionStackLock=false;
                 } else {
                 	mInitializeFailureDetected=true;
                 	Log.d("Shimmer", "Command " + Integer.toString(mCurrentCommand) +" failed; Killing Connection  " + Double.toString(mSamplingRate));
@@ -1371,8 +1645,7 @@ private class ConnectThreadArduino extends Thread {
                 	}
 	                mWaitForAck=false;
 	                mTransactionCompleted=true; //should be false, so the driver will know that the command has to be executed again, this is not supported at the moment 
-	                mSetSensorsComplete=true; //should be false, so the driver will know that the command has to be executed again, this is not supported at the moment 
-                	stop(); //If command fail exit device 
+	                stop(); //If command fail exit device 
 
                 }
             }
@@ -1382,33 +1655,45 @@ private class ConnectThreadArduino extends Thread {
 
 	private synchronized void initialize() {	    	//See two constructors for Shimmer
     	Log.d("Shimmer","Get FW Version"); // no ack means it boilerplate version 0.0 
-		dummyreadFWVersion(); // it actually acts to clear the write buffer
+    	//InstructionsThread instructionsThread = new InstructionsThread();
+		//instructionsThread.start();
+		dummyreadSamplingRate(); // it actually acts to clear the write buffer
 		readFWVersion();
-		readConfigByte0();
-		Log.d("Shimmer","Device " + mMyBluetoothAddress + " initializing");
-    	while(getInstructionStatus()==false) {};
+		//mShimmerVersion=4;
+		
+    }
+	    
+	private void initializeStageTwo(){
+		readSamplingRate();
+		Log.d("Shimmer","Device " + mMyBluetoothAddress + " initializing"); 
     	if (!mInitializeFailureDetected){
-			if (mFWVersion==0.1){
+			if (mFWVersion==0.1 && mFWInternal==0){
+				readConfigByte0();
 				readCalibrationParameters("Accelerometer");
 				readCalibrationParameters("Magnetometer");
 				readCalibrationParameters("Gyroscope");
 			} else {
-				readBlinkLED();
+				readShimmerVersion(); // for read shimmer version the while loop is required
+				readMagSamplingRate();
+		    	if (mShimmerVersion!=4){ //if not SR30
+					writeBufferSize(1);
+					readBlinkLED();
+					readConfigByte0();
+				}
 				readCalibrationParameters("All");
 			}
-	    	if (mSetupDevice==true){
-	    		writeSamplingRate(mSamplingRate);	
-	 			writeAccelRange(mAccelRange);
-	 			Log.d("ShimmerGSR",Integer.toString(mGSRRange));
+	    	if (mSetupDevice==true && mShimmerVersion!=4){
+	    		writeAccelRange(mAccelRange);
 	 			writeGSRRange(mGSRRange);
+	 			writeSamplingRate(mSamplingRate);	
 	 			writeEnabledSensors(mSetEnabledSensors);
 	 			setContinuousSync(mContinousSync);
 	    	} else {
 	    		inquiry();
 	    	}
     	}
-    }
-	    
+	}
+	
     private void inquiryDone() {
     	Message msg = mHandler.obtainMessage(MESSAGE_TOAST);
         Bundle bundle = new Bundle();
@@ -1466,13 +1751,13 @@ private class ConnectThreadArduino extends Thread {
    }
    
 	/**
-	 * This returns the variable mTransactionCompleted which indicates whether the Shimmer device is in the midst of a command transaction. True when no transaction is taking place.
+	 * This returns the variable mTransactionCompleted which indicates whether the Shimmer device is in the midst of a command transaction. True when no transaction is taking place. This is deprecated since the update to a thread model for executing commands
 	 * @return mTransactionCompleted
 	 */
 	public boolean getInstructionStatus()
 	{	
 		boolean instructionStatus=false;
-		if (mTransactionCompleted == true && mSetSensorsComplete == true) {
+		if (mTransactionCompleted == true) {
 			instructionStatus=true;
 		} else {
 			instructionStatus=false;
@@ -1571,11 +1856,11 @@ private class ConnectThreadArduino extends Thread {
 	}
 	
 	protected int getSignalIndex(String signalName) {
-	int iSignal=-1;
+	int iSignal=0; //used to be -1, putting to zero ensure it works eventhough it might be wrong SR30
 		for (int i=0;i<mSignalNameArray.length;i++) {
-		if (signalName==mSignalNameArray[i]) {
-			iSignal=i;
-		}
+			if (signalName==mSignalNameArray[i]) {
+				iSignal=i;
+			}
 		}
 
 		return iSignal;
@@ -1592,94 +1877,173 @@ private class ConnectThreadArduino extends Thread {
 		for (int i=0;i<nC;i++) {
 			if ((byte)signalid[i]==(byte)0x00)
 			{
-				signalNameArray[i+1]="Accelerometer X";
-				signalDataTypeArray[i+1] = "u12";
-				packetSize=packetSize+2;
-				enabledSensors= (enabledSensors|SENSOR_ACCEL);
+				if (mShimmerVersion==4){
+					signalNameArray[i+1]="Low Noise Accelerometer X";
+					signalDataTypeArray[i+1] = "u12";
+					packetSize=packetSize+2;
+					enabledSensors= (enabledSensors|SENSOR_A_ACCEL_SR30);
+				} else {
+					signalNameArray[i+1]="Accelerometer X";
+					signalDataTypeArray[i+1] = "u12";
+					packetSize=packetSize+2;
+					enabledSensors= (enabledSensors|SENSOR_ACCEL);
+				}
 			}
 			else if ((byte)signalid[i]==(byte)0x01)
 			{
-				signalNameArray[i+1]="Accelerometer Y";
-				signalDataTypeArray[i+1] = "u12";
-				packetSize=packetSize+2;
-				enabledSensors= (enabledSensors|SENSOR_ACCEL);
+				if (mShimmerVersion==4){
+					signalNameArray[i+1]="Low Noise Accelerometer Y";
+					signalDataTypeArray[i+1] = "u12";
+					packetSize=packetSize+2;
+					enabledSensors= (enabledSensors|SENSOR_A_ACCEL_SR30);
+				} else {
+					signalNameArray[i+1]="Accelerometer Y";
+					signalDataTypeArray[i+1] = "u12";
+					packetSize=packetSize+2;
+					enabledSensors= (enabledSensors|SENSOR_ACCEL);
+				}
 			}
 			else if ((byte)signalid[i]==(byte)0x02)
 			{
-				signalNameArray[i+1]="Accelerometer Z";
-				signalDataTypeArray[i+1] = "u12";
-				packetSize=packetSize+2;
-				enabledSensors= (enabledSensors|SENSOR_ACCEL);
+				if (mShimmerVersion==4){
+					signalNameArray[i+1]="Low Noise Accelerometer Z";
+					signalDataTypeArray[i+1] = "u12";
+					packetSize=packetSize+2;
+					enabledSensors= (enabledSensors|SENSOR_A_ACCEL_SR30);
+				} else {
+					signalNameArray[i+1]="Accelerometer Z";
+					signalDataTypeArray[i+1] = "u12";
+					packetSize=packetSize+2;
+					enabledSensors= (enabledSensors|SENSOR_ACCEL);
+				}
 			}
 			else if ((byte)signalid[i]==(byte)0x03)
 			{
 				signalNameArray[i+1]="Gyroscope X";
 				signalDataTypeArray[i+1] = "u12";
 				packetSize=packetSize+2;
-				enabledSensors= (enabledSensors|SENSOR_GYRO);
+				if (mShimmerVersion==4){
+					enabledSensors= (enabledSensors|SENSOR_GYRO_SR30);
+				} else {
+					enabledSensors= (enabledSensors|SENSOR_GYRO);
+				}
 			}
 			else if ((byte)signalid[i]==(byte)0x04)
 			{
 				signalNameArray[i+1]="Gyroscope Y";
 				signalDataTypeArray[i+1] = "u12";
 				packetSize=packetSize+2;
-				enabledSensors= (enabledSensors|SENSOR_GYRO);
+				if (mShimmerVersion==4){
+					enabledSensors= (enabledSensors|SENSOR_GYRO_SR30);
+				} else {
+					enabledSensors= (enabledSensors|SENSOR_GYRO);
+				}
 			}
 			else if ((byte)signalid[i]==(byte)0x05)
 			{
 				signalNameArray[i+1]="Gyroscope Z";
 				signalDataTypeArray[i+1] = "u12";
 				packetSize=packetSize+2;
-				enabledSensors= (enabledSensors|SENSOR_GYRO);
+				if (mShimmerVersion==4){
+					enabledSensors= (enabledSensors|SENSOR_GYRO_SR30);
+				} else {
+					enabledSensors= (enabledSensors|SENSOR_GYRO);
+				}
 			}
 			else if ((byte)signalid[i]==(byte)0x06)
 			{
-				signalNameArray[i+1]="Magnetometer X";
+				if(mShimmerVersion==4){
+					signalNameArray[i+1]="VSenseBatt"; //should be the battery but this will do for now
+					enabledSensors= (enabledSensors|SENSOR_VBATT_SR30);	
+				} else {
+					signalNameArray[i+1]="Magnetometer X";
+					enabledSensors= (enabledSensors|SENSOR_MAG);
+				}
 				signalDataTypeArray[i+1] = "i16";
 				packetSize=packetSize+2;
-				enabledSensors= (enabledSensors|SENSOR_MAG);
+				
 			}
 			else if ((byte)signalid[i]==(byte)0x07)
 			{
-				signalNameArray[i+1]="Magnetometer Y";
+				if(mShimmerVersion==4){
+					signalNameArray[i+1]="High Range Accelerometer X";
+					enabledSensors= (enabledSensors|SENSOR_D_ACCEL_SR30);
+				} else {
+					signalNameArray[i+1]="Magnetometer Y";
+					enabledSensors= (enabledSensors|SENSOR_MAG);
+				}
 				signalDataTypeArray[i+1] = "i16";
 				packetSize=packetSize+2;
-				enabledSensors= (enabledSensors|SENSOR_MAG);
+				
 			}
 			else if ((byte)signalid[i]==(byte)0x08)
-			{
-				signalNameArray[i+1]="Magnetometer Z";
+			{	
+				if(mShimmerVersion==4){
+					signalNameArray[i+1]="High Range Accelerometer Y";
+					enabledSensors= (enabledSensors|SENSOR_D_ACCEL_SR30);
+				} else {
+					signalNameArray[i+1]="Magnetometer Z";
+					enabledSensors= (enabledSensors|SENSOR_MAG);
+				}
 				signalDataTypeArray[i+1] = "i16";
 				packetSize=packetSize+2;
-				enabledSensors= (enabledSensors|SENSOR_MAG);
+				
 			}
 			else if ((byte)signalid[i]==(byte)0x09)
 			{
-				signalNameArray[i+1]="ECG RA LL";
-				signalDataTypeArray[i+1] = "u12";
+				if(mShimmerVersion==4){
+					signalNameArray[i+1]="High Range Accelerometer Z";
+					signalDataTypeArray[i+1] = "i16";
+					enabledSensors= (enabledSensors|SENSOR_D_ACCEL_SR30);
+				} else {
+					signalNameArray[i+1]="ECG RA LL";
+					signalDataTypeArray[i+1] = "u12";
+					enabledSensors= (enabledSensors|SENSOR_ECG);
+				}
 				packetSize=packetSize+2;
-				enabledSensors= (enabledSensors|SENSOR_ECG);
+				
 			}
 			else if ((byte)signalid[i]==(byte)0x0A)
 			{
-				signalNameArray[i+1]="ECG LA LL";
-				signalDataTypeArray[i+1] = "u12";
-				packetSize=packetSize+2;
-				enabledSensors= (enabledSensors|SENSOR_ECG);
+				if(mShimmerVersion==4){
+					signalNameArray[i+1]="Magnetometer X";
+					signalDataTypeArray[i+1] = "i16";			
+					packetSize=packetSize+2;
+					enabledSensors= (enabledSensors|SENSOR_MAG_SR30);
+				} else {
+					signalNameArray[i+1]="ECG LA LL";
+					signalDataTypeArray[i+1] = "u12";
+					packetSize=packetSize+2;
+					enabledSensors= (enabledSensors|SENSOR_ECG);
+				}
 			}
 			else if ((byte)signalid[i]==(byte)0x0B)
 			{
-				signalNameArray[i+1]="GSR Raw";
-				signalDataTypeArray[i+1] = "u16";
-				packetSize=packetSize+2;
-				enabledSensors= (enabledSensors|SENSOR_GSR);
+				if(mShimmerVersion==4){
+					signalNameArray[i+1]="Magnetometer Y";
+					signalDataTypeArray[i+1] = "i16";			
+					packetSize=packetSize+2;
+					enabledSensors= (enabledSensors|SENSOR_MAG_SR30);
+				} else {
+					signalNameArray[i+1]="GSR Raw";
+					signalDataTypeArray[i+1] = "u16";
+					packetSize=packetSize+2;
+					enabledSensors= (enabledSensors|SENSOR_GSR);
+				}
 			}
 			else if ((byte)signalid[i]==(byte)0x0C)
 			{
-				signalNameArray[i+1]="GSR Res";
-				signalDataTypeArray[i+1] = "u16";
-				packetSize=packetSize+2;
-				enabledSensors= (enabledSensors|SENSOR_GSR);
+				if(mShimmerVersion==4){
+					signalNameArray[i+1]="Magnetometer Z";
+					signalDataTypeArray[i+1] = "i16";			
+					packetSize=packetSize+2;
+					enabledSensors= (enabledSensors|SENSOR_MAG_SR30);
+				} else {
+					signalNameArray[i+1]="GSR Res";
+					signalDataTypeArray[i+1] = "u16";
+					packetSize=packetSize+2;
+					enabledSensors= (enabledSensors|SENSOR_GSR);
+				}
 			}
 			else if ((byte)signalid[i]==(byte)0x0D)
 			{
@@ -1735,6 +2099,10 @@ private class ConnectThreadArduino extends Thread {
 				packetSize=packetSize+2;
 			}
 		}
+		
+		
+		
+		
 		mSignalNameArray=signalNameArray;
 		mSignalDataTypeArray=signalDataTypeArray;
 		mPacketSize=packetSize;
@@ -1929,240 +2297,420 @@ private class ConnectThreadArduino extends Thread {
 	   	double [] calibratedData=new double[mNChannels + 1]; //plus 1 because of the time stamp
 	   	int[] newPacketInt=parsedData(newPacket,mSignalDataTypeArray);
 	   	double[] tempData=new double[3];
+	   	Vector3d accelerometer = new Vector3d();
+	   	Vector3d magnetometer = new Vector3d();
+	   	Vector3d gyroscope = new Vector3d();
 	   	mTempPacketCountforBatt=mTempPacketCountforBatt+1;
 	   	for (int i=0;i<Instructions.length;i++) {
 	   		if ((Instructions[i]=="a" || Instructions[i]=="c")) {
 	   			int iTimeStamp=getSignalIndex("TimeStamp"); //find index
 	   			tempData[0]=(double)newPacketInt[1];
 	   			objectCluster.mPropertyCluster.put("Timestamp",new FormatCluster("RAW","no units",(double)newPacketInt[iTimeStamp]));
-				    objectCluster.mPropertyCluster.put("Timestamp",new FormatCluster("CAL","mSecs",calibrateTimeStamp((double)newPacketInt[iTimeStamp])));
+				objectCluster.mPropertyCluster.put("Timestamp",new FormatCluster("CAL","mSecs",calibrateTimeStamp((double)newPacketInt[iTimeStamp])));
 					
-	   		    if (((mEnabledSensors & 0xFF)& SENSOR_ACCEL) > 0){
-				    int iAccelX=getSignalIndex("Accelerometer X"); //find index
-				    int iAccelY=getSignalIndex("Accelerometer Y"); //find index
-				    int iAccelZ=getSignalIndex("Accelerometer Z"); //find index
-				    tempData[0]=(double)newPacketInt[iAccelX];
-				    tempData[1]=(double)newPacketInt[iAccelY];
-				    tempData[2]=(double)newPacketInt[iAccelZ];
-				    double[] accelCalibratedData=calibrateInertialSensorData(tempData, AlignmentMatrixAccel, SensitivityMatrixAccel, OffsetVectorAccel);
-				    calibratedData[iAccelX]=accelCalibratedData[0];
-				    calibratedData[iAccelY]=accelCalibratedData[1];
-				    calibratedData[iAccelZ]=accelCalibratedData[2];
-				    
-				    objectCluster.mPropertyCluster.put("Accelerometer X",new FormatCluster("RAW","no units",(double)newPacketInt[iAccelX]));
-				    objectCluster.mPropertyCluster.put("Accelerometer Y",new FormatCluster("RAW","no units",(double)newPacketInt[iAccelY]));
-				    objectCluster.mPropertyCluster.put("Accelerometer Z",new FormatCluster("RAW","no units",(double)newPacketInt[iAccelZ]));
-				    if (mDefaultCalibrationParametersAccel == true) {
-    				    objectCluster.mPropertyCluster.put("Accelerometer X",new FormatCluster("CAL","m/(sec^2)*",accelCalibratedData[0]));
-    				    objectCluster.mPropertyCluster.put("Accelerometer Y",new FormatCluster("CAL","m/(sec^2)*",accelCalibratedData[1]));
-    				    objectCluster.mPropertyCluster.put("Accelerometer Z",new FormatCluster("CAL","m/(sec^2)*",accelCalibratedData[2]));
-				    } else {
-				    	objectCluster.mPropertyCluster.put("Accelerometer X",new FormatCluster("CAL","m/(sec^2)",accelCalibratedData[0]));
-	   				    objectCluster.mPropertyCluster.put("Accelerometer Y",new FormatCluster("CAL","m/(sec^2)",accelCalibratedData[1]));
-	   				    objectCluster.mPropertyCluster.put("Accelerometer Z",new FormatCluster("CAL","m/(sec^2)",accelCalibratedData[2]));
-				    }
-				    	
-				}
-	   		    
-				if (((mEnabledSensors & 0xFF)& SENSOR_GYRO) > 0) {
-				    int iGyroX=getSignalIndex("Gyroscope X");
-				    int iGyroY=getSignalIndex("Gyroscope Y");
-				    int iGyroZ=getSignalIndex("Gyroscope Z");
-				    tempData[0]=(double)newPacketInt[iGyroX];
-				    tempData[1]=(double)newPacketInt[iGyroY];
-				    tempData[2]=(double)newPacketInt[iGyroZ];
-				    double[] gyroCalibratedData=calibrateInertialSensorData(tempData, AlignmentMatrixGyro, SensitivityMatrixGyro, OffsetVectorGyro);
-				    calibratedData[iGyroX]=gyroCalibratedData[0];
-				    calibratedData[iGyroY]=gyroCalibratedData[1];
-				    calibratedData[iGyroZ]=gyroCalibratedData[2];
-			    
-				    objectCluster.mPropertyCluster.put("Gyroscope X",new FormatCluster("RAW","no units",(double)newPacketInt[iGyroX]));
-				    objectCluster.mPropertyCluster.put("Gyroscope Y",new FormatCluster("RAW","no units",(double)newPacketInt[iGyroY]));
-				    objectCluster.mPropertyCluster.put("Gyroscope Z",new FormatCluster("RAW","no units",(double)newPacketInt[iGyroZ]));
-				    if (mDefaultCalibrationParametersGyro == true) {
-    				    objectCluster.mPropertyCluster.put("Gyroscope X",new FormatCluster("CAL","deg/sec*",gyroCalibratedData[0]));
-    				    objectCluster.mPropertyCluster.put("Gyroscope Y",new FormatCluster("CAL","deg/sec*",gyroCalibratedData[1]));
-    				    objectCluster.mPropertyCluster.put("Gyroscope Z",new FormatCluster("CAL","deg/sec*",gyroCalibratedData[2]));
-				    } else {
-    				    objectCluster.mPropertyCluster.put("Gyroscope X",new FormatCluster("CAL","deg/sec",gyroCalibratedData[0]));
-    				    objectCluster.mPropertyCluster.put("Gyroscope Y",new FormatCluster("CAL","deg/sec",gyroCalibratedData[1]));
-    				    objectCluster.mPropertyCluster.put("Gyroscope Z",new FormatCluster("CAL","deg/sec",gyroCalibratedData[2]));
-				    } 
-				    
-				}
-				if (((mEnabledSensors & 0xFF)& SENSOR_MAG) > 0) {
-				    int iMagX=getSignalIndex("Magnetometer X");
-				    int iMagY=getSignalIndex("Magnetometer Y");
-				    int iMagZ=getSignalIndex("Magnetometer Z");
-				    tempData[0]=(double)newPacketInt[iMagX];
-				    tempData[1]=(double)newPacketInt[iMagY];
-				    tempData[2]=(double)newPacketInt[iMagZ];
-				    double[] magCalibratedData=calibrateInertialSensorData(tempData, AlignmentMatrixMag, SensitivityMatrixMag, OffsetVectorMag);
-				    calibratedData[iMagX]=magCalibratedData[0];
-				    calibratedData[iMagY]=magCalibratedData[1];
-				    calibratedData[iMagZ]=magCalibratedData[2];
-				    
-				    objectCluster.mPropertyCluster.put("Magnetometer X",new FormatCluster("RAW","no units",(double)newPacketInt[iMagX]));
-				    objectCluster.mPropertyCluster.put("Magnetometer Y",new FormatCluster("RAW","no units",(double)newPacketInt[iMagY]));
-				    objectCluster.mPropertyCluster.put("Magnetometer Z",new FormatCluster("RAW","no units",(double)newPacketInt[iMagZ]));
-				    if (mDefaultCalibrationParametersMag == true) {
-	    				    objectCluster.mPropertyCluster.put("Magnetometer X",new FormatCluster("CAL","local*",magCalibratedData[0]));
-	    				    objectCluster.mPropertyCluster.put("Magnetometer Y",new FormatCluster("CAL","local*",magCalibratedData[1]));
-	    				    objectCluster.mPropertyCluster.put("Magnetometer Z",new FormatCluster("CAL","local*",magCalibratedData[2]));
-				    } else {
-				    		objectCluster.mPropertyCluster.put("Magnetometer X",new FormatCluster("CAL","local",magCalibratedData[0]));
-	    				    objectCluster.mPropertyCluster.put("Magnetometer Y",new FormatCluster("CAL","local",magCalibratedData[1]));
-	    				    objectCluster.mPropertyCluster.put("Magnetometer Z",new FormatCluster("CAL","local",magCalibratedData[2]));
-				    }
-				}
-				if (((mEnabledSensors & 0xFF) & SENSOR_GSR) > 0) {
-				    int iGSR = getSignalIndex("GSR Raw");
-				    tempData[0] = (double)newPacketInt[iGSR];
-				    int newGSRRange = -1; // initialized to -1 so it will only come into play if mGSRRange = 4  
-				    
-				    double p1=0,p2=0;//,p3=0,p4=0,p5=0;
-		    		if (mGSRRange==4){
-		    		    newGSRRange=(49152 & (int)tempData[0])>>14; 
-		    		}
-	                if (mGSRRange==0 || newGSRRange==0) { //Note that from FW 1.0 onwards the MSB of the GSR data contains the range
-	                   // the polynomial function used for calibration has been deprecated, it is replaced with a linear function
-	                	/* p1 = 6.5995E-9;
-	                    p2 = -6.895E-5;
-	                    p3 = 2.699E-1;
-	                    p4 = -4.769835E+2;
-	                    p5 = 3.403513341E+5;*/
-	                	p1 = 0.0373;
-	                	p2 = -24.9915;
-	                } else if (mGSRRange==1 || newGSRRange==1) {
-	                    /*p1 = 1.3569627E-8;
-	                    p2 = -1.650399E-4;
-	                    p3 = 7.54199E-1;
-	                    p4 = -1.5726287856E+3;
-	                    p5 = 1.367507927E+6;*/
-	                	p1 = 0.0054;
-	                	p2 = -3.5194;
-	                } else if (mGSRRange==2 || newGSRRange==2) {
-	                    /*p1 = 2.550036498E-8;
-	                    p2 = -3.3136E-4;
-	                    p3 = 1.6509426597E+0;
-	                    p4 = -3.833348044E+3;
-	                    p5 = 3.8063176947E+6;*/
-	                	p1 = 0.0015;
-	                	p2 = -1.0163;
-	                } else if (mGSRRange==3  || newGSRRange==3) {
-	                    /*p1 = 3.7153627E-7;
-	                    p2 = -4.239437E-3;
-	                    p3 = 1.7905709E+1;
-	                    p4 = -3.37238657E+4;
-	                    p5 = 2.53680446279E+7;*/
-	                	p1 = 4.5580e-04;
-	                	p2 = -0.3014;
-	                }
-				    
-	                calibratedData[iGSR] = calibrateGsrData(tempData[0],p1,p2);
-	                objectCluster.mPropertyCluster.put("GSR",new FormatCluster("RAW","no units",(double)newPacketInt[iGSR]));
-				    objectCluster.mPropertyCluster.put("GSR",new FormatCluster("CAL","kOhms",calibratedData[iGSR]));
-				}
-				if (((mEnabledSensors & 0xFF) & SENSOR_ECG) > 0) {
-				    int iECGRALL = getSignalIndex("ECG RA LL");
-				    int iECGLALL = getSignalIndex("ECG LA LL");
-				    tempData[0] = (double)newPacketInt[iECGRALL];
-				    tempData[1] = (double)newPacketInt[iECGLALL];
-				    calibratedData[iECGRALL]=calibrateU12AdcValue(tempData[0],OffsetECGRALL,3,GainECGRALL);
-				    calibratedData[iECGLALL]=calibrateU12AdcValue(tempData[1],OffsetECGLALL,3,GainECGLALL);
-				    objectCluster.mPropertyCluster.put("ECG RA-LL",new FormatCluster("RAW","no units",(double)newPacketInt[iECGRALL]));
-				    objectCluster.mPropertyCluster.put("ECG LA-LL",new FormatCluster("RAW","no units",(double)newPacketInt[iECGLALL]));
-				    if (mDefaultCalibrationParametersECG == true) {
-				    	objectCluster.mPropertyCluster.put("ECG RA-LL",new FormatCluster("CAL","mVolts*",calibratedData[iECGRALL]));
-				    	objectCluster.mPropertyCluster.put("ECG LA-LL",new FormatCluster("CAL","mVolts*",calibratedData[iECGLALL]));
-				    } else {
-				    	objectCluster.mPropertyCluster.put("ECG RA-LL",new FormatCluster("CAL","mVolts",calibratedData[iECGRALL]));
-				    	objectCluster.mPropertyCluster.put("ECG LA-LL",new FormatCluster("CAL","mVolts",calibratedData[iECGLALL]));
-				    }
-				}
-				if (((mEnabledSensors & 0xFF) & SENSOR_EMG) > 0) {
-				    int iEMG = getSignalIndex("EMG");
-				    tempData[0] = (double)newPacketInt[iEMG];
-				    calibratedData[iEMG]=calibrateU12AdcValue(tempData[0],OffsetEMG,3,GainEMG);
-				    objectCluster.mPropertyCluster.put("EMG",new FormatCluster("RAW","no units",(double)newPacketInt[iEMG]));
-				    
-				    if (mDefaultCalibrationParametersEMG == true){
-				    	objectCluster.mPropertyCluster.put("EMG",new FormatCluster("CAL","mVolts*",calibratedData[iEMG]));
-				    } else {
-				    	objectCluster.mPropertyCluster.put("EMG",new FormatCluster("CAL","mVolts",calibratedData[iEMG]));
-				    }
-				}
-				if (((mEnabledSensors & 0xFF00) & SENSOR_STRAIN) > 0) {
-				    int iSGHigh = getSignalIndex("Strain Gauge High");
-				    int iSGLow = getSignalIndex("Strain Gauge Low");
-				    tempData[0] = (double)newPacketInt[iSGHigh];
-				    tempData[1] = (double)newPacketInt[iSGLow];
-				    calibratedData[iSGHigh]=calibrateU12AdcValue(tempData[0],60,3,551*2.8);
-				    calibratedData[iSGLow]=calibrateU12AdcValue(tempData[0],1950,3,183.7*2.8);
-				    objectCluster.mPropertyCluster.put("Strain Gauge High",new FormatCluster("RAW","no units",(double)newPacketInt[iSGHigh]));
-				    objectCluster.mPropertyCluster.put("Strain Gauge High",new FormatCluster("CAL","mVolts",calibratedData[iSGHigh]));
-				    objectCluster.mPropertyCluster.put("Strain Gauge Low",new FormatCluster("RAW","no units",(double)newPacketInt[iSGLow]));
-				    objectCluster.mPropertyCluster.put("Strain Gauge Low",new FormatCluster("CAL","mVolts",calibratedData[iSGLow]));
-				}
-				if (((mEnabledSensors & 0xFF00) & SENSOR_HEART) > 0) {
-				    int iHeartRate = getSignalIndex("Heart Rate");
-				    tempData[0] = (double)newPacketInt[iHeartRate];
-				    calibratedData[iHeartRate]=tempData[0];
-				    if (mFWVersion==0.1){
-				    
-				    } else {
-				    	if (tempData[0]==0){
-				    		calibratedData[iHeartRate]=	mLastKnownHeartRate;
-				    	} else {
-				    		calibratedData[iHeartRate]=(int)(1024/tempData[0]*60);
-				    		mLastKnownHeartRate=calibratedData[iHeartRate];
-				    	}
-				    }
-				    
-				    objectCluster.mPropertyCluster.put("Heart Rate",new FormatCluster("CAL","BPM",calibratedData[iHeartRate]));
-				    objectCluster.mPropertyCluster.put("Heart Rate",new FormatCluster("RAW","no units",tempData[0]));
-	    		}
-				if (((mEnabledSensors & 0xFF) & SENSOR_EXP_BOARD_A0) > 0) {
-				    int iA0 = getSignalIndex("Exp Board A0");
-				    tempData[0] = (double)newPacketInt[iA0];
-				    if (getPMux()==0){
-					    calibratedData[iA0]=calibrateU12AdcValue(tempData[0],0,3,1);
-					    objectCluster.mPropertyCluster.put("ExpBoard A0",new FormatCluster("RAW","no units",(double)newPacketInt[iA0]));
-					    objectCluster.mPropertyCluster.put("ExpBoard A0",new FormatCluster("CAL","mVolts",calibratedData[iA0]));
-				    } else {
-				    	 calibratedData[iA0]=calibrateU12AdcValue(tempData[0],0,3,1)*1.988;
-				    	 objectCluster.mPropertyCluster.put("VSenseReg",new FormatCluster("RAW","no Units",(double)newPacketInt[iA0]));
-						 objectCluster.mPropertyCluster.put("VSenseReg",new FormatCluster("CAL","mVolts",calibratedData[iA0]));
-						 
-				    }
-				}
-				if (((mEnabledSensors & 0xFF) & SENSOR_EXP_BOARD_A7) > 0) {
-					int iA7 = getSignalIndex("Exp Board A7");
-				    tempData[0] = (double)newPacketInt[iA7];
-				    if (getPMux()==0){
-					    calibratedData[iA7]=calibrateU12AdcValue(tempData[0],0,3,1);
-					    objectCluster.mPropertyCluster.put("ExpBoard A7",new FormatCluster("RAW","no units",(double)newPacketInt[iA7]));
-					    objectCluster.mPropertyCluster.put("ExpBoard A7",new FormatCluster("CAL","mVolts",calibratedData[iA7]));
-				    } else {
-				    	calibratedData[iA7]=calibrateU12AdcValue(tempData[0],0,3,1)*2;
-					    objectCluster.mPropertyCluster.put("VSenseBatt",new FormatCluster("RAW","no units",(double)newPacketInt[iA7]));
-					    objectCluster.mPropertyCluster.put("VSenseBatt",new FormatCluster("CAL","mVolts",calibratedData[iA7]));
+				if (mShimmerVersion==4){
+		   		    if (((mEnabledSensors & 0xFF)& SENSOR_A_ACCEL_SR30) > 0){
+					    int iAccelX=getSignalIndex("Low Noise Accelerometer X"); //find index
+					    int iAccelY=getSignalIndex("Low Noise Accelerometer Y"); //find index
+					    int iAccelZ=getSignalIndex("Low Noise Accelerometer Z"); //find index
+					    tempData[0]=(double)newPacketInt[iAccelX];
+					    tempData[1]=(double)newPacketInt[iAccelY];
+					    tempData[2]=(double)newPacketInt[iAccelZ];
+					    double[] accelCalibratedData=calibrateInertialSensorData(tempData, AlignmentMatrixAccel, SensitivityMatrixAccel, OffsetVectorAccel);
+					    calibratedData[iAccelX]=accelCalibratedData[0];
+					    calibratedData[iAccelY]=accelCalibratedData[1];
+					    calibratedData[iAccelZ]=accelCalibratedData[2];
 					    
-						 mVSenseBattMA.addValue(calibratedData[iA7]);
-						 if (!mWaitForAck) {
-						 
-							 if (mVSenseBattMA.getMean()<mLowBattLimit*1000) {
-						    	if (mCurrentLEDStatus!=1) {
-						    		writeLEDCommand(1);
-						    	}
-						    } else if(mVSenseBattMA.getMean()>mLowBattLimit*1000+100) { //+100 is to make sure the limits are different to prevent excessive switching when the batt value is at the threshold
-						    	if (mCurrentLEDStatus!=0) {
-						    		writeLEDCommand(0);
-						    	}
-						    }
+					    objectCluster.mPropertyCluster.put("Low Noise Accelerometer X",new FormatCluster("RAW","no units",(double)newPacketInt[iAccelX]));
+					    objectCluster.mPropertyCluster.put("Low Noise Accelerometer Y",new FormatCluster("RAW","no units",(double)newPacketInt[iAccelY]));
+					    objectCluster.mPropertyCluster.put("Low Noise Accelerometer Z",new FormatCluster("RAW","no units",(double)newPacketInt[iAccelZ]));
+					    if (mDefaultCalibrationParametersAccel == true) {
+	    				    objectCluster.mPropertyCluster.put("Low Noise Accelerometer X",new FormatCluster("CAL","m/(sec^2)*",accelCalibratedData[0]));
+	    				    objectCluster.mPropertyCluster.put("Low Noise Accelerometer Y",new FormatCluster("CAL","m/(sec^2)*",accelCalibratedData[1]));
+	    				    objectCluster.mPropertyCluster.put("Low Noise Accelerometer Z",new FormatCluster("CAL","m/(sec^2)*",accelCalibratedData[2]));
+					    } else {
+					    	objectCluster.mPropertyCluster.put("Low Noise Accelerometer X",new FormatCluster("CAL","m/(sec^2)",accelCalibratedData[0]));
+		   				    objectCluster.mPropertyCluster.put("Low Noise Accelerometer Y",new FormatCluster("CAL","m/(sec^2)",accelCalibratedData[1]));
+		   				    objectCluster.mPropertyCluster.put("Low Noise Accelerometer Z",new FormatCluster("CAL","m/(sec^2)",accelCalibratedData[2]));
+					    }	
+					}
+		   		    if (((mEnabledSensors & 0xFF)& SENSOR_D_ACCEL_SR30) > 0){
+					    int iAccelX=getSignalIndex("High Range Accelerometer X"); //find index
+					    int iAccelY=getSignalIndex("High Range Accelerometer Y"); //find index
+					    int iAccelZ=getSignalIndex("High Range Accelerometer Z"); //find index
+					    tempData[0]=(double)newPacketInt[iAccelX];
+					    tempData[1]=(double)newPacketInt[iAccelY];
+					    tempData[2]=(double)newPacketInt[iAccelZ];
+					    double[] accelCalibratedData=calibrateInertialSensorData(tempData, AlignmentMatrixAccel, SensitivityMatrixAccel, OffsetVectorAccel);
+					    calibratedData[iAccelX]=accelCalibratedData[0];
+					    calibratedData[iAccelY]=accelCalibratedData[1];
+					    calibratedData[iAccelZ]=accelCalibratedData[2];
+					    
+					    objectCluster.mPropertyCluster.put("High Range Accelerometer X",new FormatCluster("RAW","no units",(double)newPacketInt[iAccelX]));
+					    objectCluster.mPropertyCluster.put("High Range Accelerometer Y",new FormatCluster("RAW","no units",(double)newPacketInt[iAccelY]));
+					    objectCluster.mPropertyCluster.put("High Range Accelerometer Z",new FormatCluster("RAW","no units",(double)newPacketInt[iAccelZ]));
+					    if (mDefaultCalibrationParametersAccel == true) {
+	    				    objectCluster.mPropertyCluster.put("High Range Accelerometer X",new FormatCluster("CAL","m/(sec^2)*",accelCalibratedData[0]));
+	    				    objectCluster.mPropertyCluster.put("High Range Accelerometer Y",new FormatCluster("CAL","m/(sec^2)*",accelCalibratedData[1]));
+	    				    objectCluster.mPropertyCluster.put("High Range Accelerometer Z",new FormatCluster("CAL","m/(sec^2)*",accelCalibratedData[2]));
+					    } else {
+					    	objectCluster.mPropertyCluster.put("High Range Accelerometer X",new FormatCluster("CAL","m/(sec^2)",accelCalibratedData[0]));
+		   				    objectCluster.mPropertyCluster.put("High Range Accelerometer Y",new FormatCluster("CAL","m/(sec^2)",accelCalibratedData[1]));
+		   				    objectCluster.mPropertyCluster.put("High Range Accelerometer Z",new FormatCluster("CAL","m/(sec^2)",accelCalibratedData[2]));
+					    }	
+					}
+		   		    
+		   		 if (((mEnabledSensors & 0xFF)& SENSOR_GYRO_SR30) > 0) {
+					    int iGyroX=getSignalIndex("Gyroscope X");
+					    int iGyroY=getSignalIndex("Gyroscope Y");
+					    int iGyroZ=getSignalIndex("Gyroscope Z");
+					    tempData[0]=(double)newPacketInt[iGyroX];
+					    tempData[1]=(double)newPacketInt[iGyroY];
+					    tempData[2]=(double)newPacketInt[iGyroZ];
+					    double[] gyroCalibratedData=calibrateInertialSensorData(tempData, AlignmentMatrixGyro, SensitivityMatrixGyro, OffsetVectorGyro);
+					    calibratedData[iGyroX]=gyroCalibratedData[0];
+					    calibratedData[iGyroY]=gyroCalibratedData[1];
+					    calibratedData[iGyroZ]=gyroCalibratedData[2];
+				    
+					    objectCluster.mPropertyCluster.put("Gyroscope X",new FormatCluster("RAW","no units",(double)newPacketInt[iGyroX]));
+					    objectCluster.mPropertyCluster.put("Gyroscope Y",new FormatCluster("RAW","no units",(double)newPacketInt[iGyroY]));
+					    objectCluster.mPropertyCluster.put("Gyroscope Z",new FormatCluster("RAW","no units",(double)newPacketInt[iGyroZ]));
+					    if (mDefaultCalibrationParametersGyro == true) {
+	    				    objectCluster.mPropertyCluster.put("Gyroscope X",new FormatCluster("CAL","deg/sec*",gyroCalibratedData[0]));
+	    				    objectCluster.mPropertyCluster.put("Gyroscope Y",new FormatCluster("CAL","deg/sec*",gyroCalibratedData[1]));
+	    				    objectCluster.mPropertyCluster.put("Gyroscope Z",new FormatCluster("CAL","deg/sec*",gyroCalibratedData[2]));
+					    } else {
+	    				    objectCluster.mPropertyCluster.put("Gyroscope X",new FormatCluster("CAL","deg/sec",gyroCalibratedData[0]));
+	    				    objectCluster.mPropertyCluster.put("Gyroscope Y",new FormatCluster("CAL","deg/sec",gyroCalibratedData[1]));
+	    				    objectCluster.mPropertyCluster.put("Gyroscope Z",new FormatCluster("CAL","deg/sec",gyroCalibratedData[2]));
+					    } 
+					    
+					}
+					if (((mEnabledSensors & 0xFF)& SENSOR_MAG_SR30) > 0) {
+					    int iMagX=getSignalIndex("Magnetometer X");
+					    int iMagY=getSignalIndex("Magnetometer Y");
+					    int iMagZ=getSignalIndex("Magnetometer Z");
+					    tempData[0]=(double)newPacketInt[iMagX];
+					    tempData[1]=(double)newPacketInt[iMagY];
+					    tempData[2]=(double)newPacketInt[iMagZ];
+					    double[] magCalibratedData=calibrateInertialSensorData(tempData, AlignmentMatrixMag, SensitivityMatrixMag, OffsetVectorMag);
+					    calibratedData[iMagX]=magCalibratedData[0];
+					    calibratedData[iMagY]=magCalibratedData[1];
+					    calibratedData[iMagZ]=magCalibratedData[2];
+					    
+					    objectCluster.mPropertyCluster.put("Magnetometer X",new FormatCluster("RAW","no units",(double)newPacketInt[iMagX]));
+					    objectCluster.mPropertyCluster.put("Magnetometer Y",new FormatCluster("RAW","no units",(double)newPacketInt[iMagY]));
+					    objectCluster.mPropertyCluster.put("Magnetometer Z",new FormatCluster("RAW","no units",(double)newPacketInt[iMagZ]));
+					    if (mDefaultCalibrationParametersMag == true) {
+		    				    objectCluster.mPropertyCluster.put("Magnetometer X",new FormatCluster("CAL","local*",magCalibratedData[0]));
+		    				    objectCluster.mPropertyCluster.put("Magnetometer Y",new FormatCluster("CAL","local*",magCalibratedData[1]));
+		    				    objectCluster.mPropertyCluster.put("Magnetometer Z",new FormatCluster("CAL","local*",magCalibratedData[2]));
+					    } else {
+					    		objectCluster.mPropertyCluster.put("Magnetometer X",new FormatCluster("CAL","local",magCalibratedData[0]));
+		    				    objectCluster.mPropertyCluster.put("Magnetometer Y",new FormatCluster("CAL","local",magCalibratedData[1]));
+		    				    objectCluster.mPropertyCluster.put("Magnetometer Z",new FormatCluster("CAL","local",magCalibratedData[2]));
+					    }
+					}
+					
+					if (((mEnabledSensors & 0xFF) & SENSOR_VBATT_SR30) > 0) {
+					    int iA0 = getSignalIndex("VSenseBatt");
+					    tempData[0] = (double)newPacketInt[iA0];
+				    	 calibratedData[iA0]=calibrateU12AdcValue(tempData[0],0,3,1)*1.988;
+				    	 objectCluster.mPropertyCluster.put("VSenseBatt",new FormatCluster("RAW","no Units",(double)newPacketInt[iA0]));
+						 objectCluster.mPropertyCluster.put("VSenseBatt",new FormatCluster("CAL","mVolts",calibratedData[iA0]));
 							 
-						 }
-				    }
+				
+					}
+		   		    
+				} else {
+					
+		   		    if (((mEnabledSensors & 0xFF)& SENSOR_ACCEL) > 0){
+					    int iAccelX=getSignalIndex("Accelerometer X"); //find index
+					    int iAccelY=getSignalIndex("Accelerometer Y"); //find index
+					    int iAccelZ=getSignalIndex("Accelerometer Z"); //find index
+					    tempData[0]=(double)newPacketInt[iAccelX];
+					    tempData[1]=(double)newPacketInt[iAccelY];
+					    tempData[2]=(double)newPacketInt[iAccelZ];
+					    double[] accelCalibratedData=calibrateInertialSensorData(tempData, AlignmentMatrixAccel, SensitivityMatrixAccel, OffsetVectorAccel);
+					    calibratedData[iAccelX]=accelCalibratedData[0];
+					    calibratedData[iAccelY]=accelCalibratedData[1];
+					    calibratedData[iAccelZ]=accelCalibratedData[2];
+					    
+					    objectCluster.mPropertyCluster.put("Accelerometer X",new FormatCluster("RAW","no units",(double)newPacketInt[iAccelX]));
+					    objectCluster.mPropertyCluster.put("Accelerometer Y",new FormatCluster("RAW","no units",(double)newPacketInt[iAccelY]));
+					    objectCluster.mPropertyCluster.put("Accelerometer Z",new FormatCluster("RAW","no units",(double)newPacketInt[iAccelZ]));
+					    if (mDefaultCalibrationParametersAccel == true) {
+	    				    objectCluster.mPropertyCluster.put("Accelerometer X",new FormatCluster("CAL","m/(sec^2)*",accelCalibratedData[0]));
+	    				    objectCluster.mPropertyCluster.put("Accelerometer Y",new FormatCluster("CAL","m/(sec^2)*",accelCalibratedData[1]));
+	    				    objectCluster.mPropertyCluster.put("Accelerometer Z",new FormatCluster("CAL","m/(sec^2)*",accelCalibratedData[2]));
+	    				    accelerometer.x=accelCalibratedData[0];
+		   				    accelerometer.y=accelCalibratedData[1];
+		   				    accelerometer.z=accelCalibratedData[2];
+					    } else {
+					    	objectCluster.mPropertyCluster.put("Accelerometer X",new FormatCluster("CAL","m/(sec^2)",accelCalibratedData[0]));
+		   				    objectCluster.mPropertyCluster.put("Accelerometer Y",new FormatCluster("CAL","m/(sec^2)",accelCalibratedData[1]));
+		   				    objectCluster.mPropertyCluster.put("Accelerometer Z",new FormatCluster("CAL","m/(sec^2)",accelCalibratedData[2]));
+		   				    accelerometer.x=accelCalibratedData[0];
+		   				    accelerometer.y=accelCalibratedData[1];
+		   				    accelerometer.z=accelCalibratedData[2];
+					    }
+					    	
+					}
+		   		    
+					if (((mEnabledSensors & 0xFF)& SENSOR_GYRO) > 0) {
+					    int iGyroX=getSignalIndex("Gyroscope X");
+					    int iGyroY=getSignalIndex("Gyroscope Y");
+					    int iGyroZ=getSignalIndex("Gyroscope Z");
+					    tempData[0]=(double)newPacketInt[iGyroX];
+					    tempData[1]=(double)newPacketInt[iGyroY];
+					    tempData[2]=(double)newPacketInt[iGyroZ];
+					    double[] gyroCalibratedData=calibrateInertialSensorData(tempData, AlignmentMatrixGyro, SensitivityMatrixGyro, OffsetVectorGyro);
+					    calibratedData[iGyroX]=gyroCalibratedData[0];
+					    calibratedData[iGyroY]=gyroCalibratedData[1];
+					    calibratedData[iGyroZ]=gyroCalibratedData[2];
+				    
+					    objectCluster.mPropertyCluster.put("Gyroscope X",new FormatCluster("RAW","no units",(double)newPacketInt[iGyroX]));
+					    objectCluster.mPropertyCluster.put("Gyroscope Y",new FormatCluster("RAW","no units",(double)newPacketInt[iGyroY]));
+					    objectCluster.mPropertyCluster.put("Gyroscope Z",new FormatCluster("RAW","no units",(double)newPacketInt[iGyroZ]));
+					    if (mDefaultCalibrationParametersGyro == true) {
+	    				    objectCluster.mPropertyCluster.put("Gyroscope X",new FormatCluster("CAL","deg/sec*",gyroCalibratedData[0]));
+	    				    objectCluster.mPropertyCluster.put("Gyroscope Y",new FormatCluster("CAL","deg/sec*",gyroCalibratedData[1]));
+	    				    objectCluster.mPropertyCluster.put("Gyroscope Z",new FormatCluster("CAL","deg/sec*",gyroCalibratedData[2]));
+	    				    gyroscope.x=gyroCalibratedData[0]*Math.PI/180;
+		   				    gyroscope.y=gyroCalibratedData[1]*Math.PI/180;
+		   				    gyroscope.z=gyroCalibratedData[2]*Math.PI/180;
+					    } else {
+	    				    objectCluster.mPropertyCluster.put("Gyroscope X",new FormatCluster("CAL","deg/sec",gyroCalibratedData[0]));
+	    				    objectCluster.mPropertyCluster.put("Gyroscope Y",new FormatCluster("CAL","deg/sec",gyroCalibratedData[1]));
+	    				    objectCluster.mPropertyCluster.put("Gyroscope Z",new FormatCluster("CAL","deg/sec",gyroCalibratedData[2]));
+		   				    gyroscope.x=gyroCalibratedData[0]*Math.PI/180;
+		   				    gyroscope.y=gyroCalibratedData[1]*Math.PI/180;
+		   				    gyroscope.z=gyroCalibratedData[2]*Math.PI/180;
+		   				    if (mEnableOntheFlyGyroOVCal){
+		   				    	mGyroX.addValue(gyroCalibratedData[0]);
+		   				    	mGyroY.addValue(gyroCalibratedData[1]);
+		   				    	mGyroZ.addValue(gyroCalibratedData[2]);
+		   				    	mGyroXRaw.addValue((double)newPacketInt[iGyroX]);
+		   				    	mGyroYRaw.addValue((double)newPacketInt[iGyroY]);
+		   				    	mGyroZRaw.addValue((double)newPacketInt[iGyroZ]);
+		   				    	if (mGyroX.getStandardDeviation()<mGyroOVCalThreshold && mGyroY.getStandardDeviation()<mGyroOVCalThreshold && mGyroZ.getStandardDeviation()<mGyroOVCalThreshold){
+		   				    		OffsetVectorGyro[0][0]=mGyroXRaw.getMean();
+		   				    		OffsetVectorGyro[1][0]=mGyroYRaw.getMean();
+		   				    		OffsetVectorGyro[2][0]=mGyroZRaw.getMean();
+		   				    	}
+		   				    }
+					    } 
+					    
+					}
+					if (((mEnabledSensors & 0xFF)& SENSOR_MAG) > 0) {
+					    int iMagX=getSignalIndex("Magnetometer X");
+					    int iMagY=getSignalIndex("Magnetometer Y");
+					    int iMagZ=getSignalIndex("Magnetometer Z");
+					    tempData[0]=(double)newPacketInt[iMagX];
+					    tempData[1]=(double)newPacketInt[iMagY];
+					    tempData[2]=(double)newPacketInt[iMagZ];
+					    double[] magCalibratedData=calibrateInertialSensorData(tempData, AlignmentMatrixMag, SensitivityMatrixMag, OffsetVectorMag);
+					    calibratedData[iMagX]=magCalibratedData[0];
+					    calibratedData[iMagY]=magCalibratedData[1];
+					    calibratedData[iMagZ]=magCalibratedData[2];
+					    
+					    objectCluster.mPropertyCluster.put("Magnetometer X",new FormatCluster("RAW","no units",(double)newPacketInt[iMagX]));
+					    objectCluster.mPropertyCluster.put("Magnetometer Y",new FormatCluster("RAW","no units",(double)newPacketInt[iMagY]));
+					    objectCluster.mPropertyCluster.put("Magnetometer Z",new FormatCluster("RAW","no units",(double)newPacketInt[iMagZ]));
+					    if (mDefaultCalibrationParametersMag == true) {
+		    				    objectCluster.mPropertyCluster.put("Magnetometer X",new FormatCluster("CAL","local*",magCalibratedData[0]));
+		    				    objectCluster.mPropertyCluster.put("Magnetometer Y",new FormatCluster("CAL","local*",magCalibratedData[1]));
+		    				    objectCluster.mPropertyCluster.put("Magnetometer Z",new FormatCluster("CAL","local*",magCalibratedData[2]));
+		    				    magnetometer.x=magCalibratedData[0];
+		    				    magnetometer.y=magCalibratedData[1];
+		    				    magnetometer.z=magCalibratedData[2];
+					    } else {
+					    		objectCluster.mPropertyCluster.put("Magnetometer X",new FormatCluster("CAL","local",magCalibratedData[0]));
+		    				    objectCluster.mPropertyCluster.put("Magnetometer Y",new FormatCluster("CAL","local",magCalibratedData[1]));
+		    				    objectCluster.mPropertyCluster.put("Magnetometer Z",new FormatCluster("CAL","local",magCalibratedData[2]));
+		    				    magnetometer.x=magCalibratedData[0];
+		    				    magnetometer.y=magCalibratedData[1];
+		    				    magnetometer.z=magCalibratedData[2];
+					    }
+					}
+					
+					
+					if (((mEnabledSensors & 0xFF)& SENSOR_ACCEL) > 0 && ((mEnabledSensors & 0xFF)& SENSOR_GYRO) > 0 && ((mEnabledSensors & 0xFF)& SENSOR_MAG) > 0 && mOrientationEnabled ){
+					
+						Quaternion q = mOrientationAlgo.update(accelerometer.x,accelerometer.y,accelerometer.z, gyroscope.x,gyroscope.y,gyroscope.z, magnetometer.x,magnetometer.y,magnetometer.z);
+	
+						
+						double theta, Rx, Ry, Rz, rho;
+                        rho = Math.acos(q.q1);
+                        theta = rho * 2;
+                        Rx = q.q2 / Math.sin(rho);
+                        Ry = q.q3 / Math.sin(rho);
+                        Rz = q.q4 / Math.sin(rho);
+						
+
+						objectCluster.mPropertyCluster.put("Axis Angle A",new FormatCluster("CAL","local",theta));
+    				    objectCluster.mPropertyCluster.put("Axis Angle X",new FormatCluster("CAL","local",Rx));
+    				    objectCluster.mPropertyCluster.put("Axis Angle Y",new FormatCluster("CAL","local",Ry));
+    				    objectCluster.mPropertyCluster.put("Axis Angle Z",new FormatCluster("CAL","local",Rz));
+    				   
+    				    
+    				    objectCluster.mPropertyCluster.put("Quartenion 0",new FormatCluster("CAL","local",q.q1));
+    				    objectCluster.mPropertyCluster.put("Quartenion 1",new FormatCluster("CAL","local",q.q2));
+    				    objectCluster.mPropertyCluster.put("Quartenion 2",new FormatCluster("CAL","local",q.q3));
+    				    objectCluster.mPropertyCluster.put("Quartenion 3",new FormatCluster("CAL","local",q.q4));
+					}
+					
+					
+					
+					if (((mEnabledSensors & 0xFF) & SENSOR_GSR) > 0) {
+					    int iGSR = getSignalIndex("GSR Raw");
+					    tempData[0] = (double)newPacketInt[iGSR];
+					    int newGSRRange = -1; // initialized to -1 so it will only come into play if mGSRRange = 4  
+					    
+					    double p1=0,p2=0;//,p3=0,p4=0,p5=0;
+			    		if (mGSRRange==4){
+			    		    newGSRRange=(49152 & (int)tempData[0])>>14; 
+			    		}
+		                if (mGSRRange==0 || newGSRRange==0) { //Note that from FW 1.0 onwards the MSB of the GSR data contains the range
+		                   // the polynomial function used for calibration has been deprecated, it is replaced with a linear function
+		                	/* p1 = 6.5995E-9;
+		                    p2 = -6.895E-5;
+		                    p3 = 2.699E-1;
+		                    p4 = -4.769835E+2;
+		                    p5 = 3.403513341E+5;*/
+		                	p1 = 0.0373;
+		                	p2 = -24.9915;
+		                } else if (mGSRRange==1 || newGSRRange==1) {
+		                    /*p1 = 1.3569627E-8;
+		                    p2 = -1.650399E-4;
+		                    p3 = 7.54199E-1;
+		                    p4 = -1.5726287856E+3;
+		                    p5 = 1.367507927E+6;*/
+		                	p1 = 0.0054;
+		                	p2 = -3.5194;
+		                } else if (mGSRRange==2 || newGSRRange==2) {
+		                    /*p1 = 2.550036498E-8;
+		                    p2 = -3.3136E-4;
+		                    p3 = 1.6509426597E+0;
+		                    p4 = -3.833348044E+3;
+		                    p5 = 3.8063176947E+6;*/
+		                	p1 = 0.0015;
+		                	p2 = -1.0163;
+		                } else if (mGSRRange==3  || newGSRRange==3) {
+		                    /*p1 = 3.7153627E-7;
+		                    p2 = -4.239437E-3;
+		                    p3 = 1.7905709E+1;
+		                    p4 = -3.37238657E+4;
+		                    p5 = 2.53680446279E+7;*/
+		                	p1 = 4.5580e-04;
+		                	p2 = -0.3014;
+		                }
+					    
+		                calibratedData[iGSR] = calibrateGsrData(tempData[0],p1,p2);
+		                objectCluster.mPropertyCluster.put("GSR",new FormatCluster("RAW","no units",(double)newPacketInt[iGSR]));
+					    objectCluster.mPropertyCluster.put("GSR",new FormatCluster("CAL","kOhms",calibratedData[iGSR]));
+					}
+					if (((mEnabledSensors & 0xFF) & SENSOR_ECG) > 0) {
+					    int iECGRALL = getSignalIndex("ECG RA LL");
+					    int iECGLALL = getSignalIndex("ECG LA LL");
+					    tempData[0] = (double)newPacketInt[iECGRALL];
+					    tempData[1] = (double)newPacketInt[iECGLALL];
+					    calibratedData[iECGRALL]=calibrateU12AdcValue(tempData[0],OffsetECGRALL,3,GainECGRALL);
+					    calibratedData[iECGLALL]=calibrateU12AdcValue(tempData[1],OffsetECGLALL,3,GainECGLALL);
+					    objectCluster.mPropertyCluster.put("ECG RA-LL",new FormatCluster("RAW","no units",(double)newPacketInt[iECGRALL]));
+					    objectCluster.mPropertyCluster.put("ECG LA-LL",new FormatCluster("RAW","no units",(double)newPacketInt[iECGLALL]));
+					    if (mDefaultCalibrationParametersECG == true) {
+					    	objectCluster.mPropertyCluster.put("ECG RA-LL",new FormatCluster("CAL","mVolts*",calibratedData[iECGRALL]));
+					    	objectCluster.mPropertyCluster.put("ECG LA-LL",new FormatCluster("CAL","mVolts*",calibratedData[iECGLALL]));
+					    } else {
+					    	objectCluster.mPropertyCluster.put("ECG RA-LL",new FormatCluster("CAL","mVolts",calibratedData[iECGRALL]));
+					    	objectCluster.mPropertyCluster.put("ECG LA-LL",new FormatCluster("CAL","mVolts",calibratedData[iECGLALL]));
+					    }
+					}
+					if (((mEnabledSensors & 0xFF) & SENSOR_EMG) > 0) {
+					    int iEMG = getSignalIndex("EMG");
+					    tempData[0] = (double)newPacketInt[iEMG];
+					    calibratedData[iEMG]=calibrateU12AdcValue(tempData[0],OffsetEMG,3,GainEMG);
+					    objectCluster.mPropertyCluster.put("EMG",new FormatCluster("RAW","no units",(double)newPacketInt[iEMG]));
+					    
+					    if (mDefaultCalibrationParametersEMG == true){
+					    	objectCluster.mPropertyCluster.put("EMG",new FormatCluster("CAL","mVolts*",calibratedData[iEMG]));
+					    } else {
+					    	objectCluster.mPropertyCluster.put("EMG",new FormatCluster("CAL","mVolts",calibratedData[iEMG]));
+					    }
+					}
+					if (((mEnabledSensors & 0xFF00) & SENSOR_STRAIN) > 0) {
+					    int iSGHigh = getSignalIndex("Strain Gauge High");
+					    int iSGLow = getSignalIndex("Strain Gauge Low");
+					    tempData[0] = (double)newPacketInt[iSGHigh];
+					    tempData[1] = (double)newPacketInt[iSGLow];
+					    calibratedData[iSGHigh]=calibrateU12AdcValue(tempData[0],60,3,551*2.8);
+					    calibratedData[iSGLow]=calibrateU12AdcValue(tempData[0],1950,3,183.7*2.8);
+					    objectCluster.mPropertyCluster.put("Strain Gauge High",new FormatCluster("RAW","no units",(double)newPacketInt[iSGHigh]));
+					    objectCluster.mPropertyCluster.put("Strain Gauge High",new FormatCluster("CAL","mVolts",calibratedData[iSGHigh]));
+					    objectCluster.mPropertyCluster.put("Strain Gauge Low",new FormatCluster("RAW","no units",(double)newPacketInt[iSGLow]));
+					    objectCluster.mPropertyCluster.put("Strain Gauge Low",new FormatCluster("CAL","mVolts",calibratedData[iSGLow]));
+					}
+					if (((mEnabledSensors & 0xFF00) & SENSOR_HEART) > 0) {
+					    int iHeartRate = getSignalIndex("Heart Rate");
+					    tempData[0] = (double)newPacketInt[iHeartRate];
+					    calibratedData[iHeartRate]=tempData[0];
+					    if (mFWVersion==0.1){
+					    
+					    } else {
+					    	if (tempData[0]==0){
+					    		calibratedData[iHeartRate]=	mLastKnownHeartRate;
+					    	} else {
+					    		calibratedData[iHeartRate]=(int)(1024/tempData[0]*60);
+					    		mLastKnownHeartRate=calibratedData[iHeartRate];
+					    	}
+					    }
+					    
+					    objectCluster.mPropertyCluster.put("Heart Rate",new FormatCluster("CAL","BPM",calibratedData[iHeartRate]));
+					    objectCluster.mPropertyCluster.put("Heart Rate",new FormatCluster("RAW","no units",tempData[0]));
+		    		}
+					if (((mEnabledSensors & 0xFF) & SENSOR_EXP_BOARD_A0) > 0) {
+					    int iA0 = getSignalIndex("Exp Board A0");
+					    tempData[0] = (double)newPacketInt[iA0];
+					    if (getPMux()==0){
+						    calibratedData[iA0]=calibrateU12AdcValue(tempData[0],0,3,1);
+						    objectCluster.mPropertyCluster.put("ExpBoard A0",new FormatCluster("RAW","no units",(double)newPacketInt[iA0]));
+						    objectCluster.mPropertyCluster.put("ExpBoard A0",new FormatCluster("CAL","mVolts",calibratedData[iA0]));
+					    } else {
+					    	 calibratedData[iA0]=calibrateU12AdcValue(tempData[0],0,3,1)*1.988;
+					    	 objectCluster.mPropertyCluster.put("VSenseReg",new FormatCluster("RAW","no Units",(double)newPacketInt[iA0]));
+							 objectCluster.mPropertyCluster.put("VSenseReg",new FormatCluster("CAL","mVolts",calibratedData[iA0]));
+							 
+					    }
+					}
+					if (((mEnabledSensors & 0xFF) & SENSOR_EXP_BOARD_A7) > 0) {
+						int iA7 = getSignalIndex("Exp Board A7");
+					    tempData[0] = (double)newPacketInt[iA7];
+					    if (getPMux()==0){
+						    calibratedData[iA7]=calibrateU12AdcValue(tempData[0],0,3,1);
+						    objectCluster.mPropertyCluster.put("ExpBoard A7",new FormatCluster("RAW","no units",(double)newPacketInt[iA7]));
+						    objectCluster.mPropertyCluster.put("ExpBoard A7",new FormatCluster("CAL","mVolts",calibratedData[iA7]));
+					    } else {
+					    	calibratedData[iA7]=calibrateU12AdcValue(tempData[0],0,3,1)*2;
+						    objectCluster.mPropertyCluster.put("VSenseBatt",new FormatCluster("RAW","no units",(double)newPacketInt[iA7]));
+						    objectCluster.mPropertyCluster.put("VSenseBatt",new FormatCluster("CAL","mVolts",calibratedData[iA7]));
+						    
+							 mVSenseBattMA.addValue(calibratedData[iA7]);
+							 if (!mWaitForAck) {
+							 
+								 if (mVSenseBattMA.getMean()<mLowBattLimit*1000) {
+							    	if (mCurrentLEDStatus!=1) {
+							    		writeLEDCommand(1);
+							    	}
+							    } else if(mVSenseBattMA.getMean()>mLowBattLimit*1000+100) { //+100 is to make sure the limits are different to prevent excessive switching when the batt value is at the threshold
+							    	if (mCurrentLEDStatus!=0) {
+							    		writeLEDCommand(0);
+							    	}
+							    }
+								 
+							 }
+					    }
+					}
 				}
 			}
 	   	}
@@ -2184,38 +2732,7 @@ private class ConnectThreadArduino extends Thread {
    	 * Configure/Read Settings Methods
    	 * */
    	
-   	/**
-   	 * Transmits a command to the Shimmer device to enable the sensors. To enable multiple sensors an or operator should be used (e.g. writeEnabledSensors(Shimmer.SENSOR_ACCEL|Shimmer.SENSOR_GYRO|Shimmer.SENSOR_MAG)). Command should not be used consecutively. Valid values are SENSOR_ACCEL, SENSOR_GYRO, SENSOR_MAG, SENSOR_ECG, SENSOR_EMG, SENSOR_GSR, SENSOR_EXP_BOARD_A7, SENSOR_EXP_BOARD_A0, SENSOR_STRAIN and SENSOR_HEART.
-    SENSOR_BATT
-   	 * @param enabledSensors e.g SENSOR_ACCEL|SENSOR_GYRO|SENSOR_MAG
-   	 */
-   	public synchronized void writeEnabledSensors(int enabledSensors) {
-   		//sensor conflict check
-   		if(mSetSensorsComplete==false) {
-   			Log.d("Shimmer","Do not use writeEnabledSensors consecutively");
-   		} else { 
-   			while(getInstructionStatus()==false) {}
-   			if (!sensorConflictCheck(enabledSensors)){ //
-   	    		
-   	    	} else {
-   	    		//check if the batt volt is enabled 
-   	    		if (((enabledSensors & 0xFFFFF) & SENSOR_BATT) > 0){
-   	    			enabledSensors = enabledSensors & 0xFFFF;
-   	    			enabledSensors = enabledSensors|SENSOR_EXP_BOARD_A0|SENSOR_EXP_BOARD_A7;
-   	    		}
-   	    		
-		   		mSetSensorsComplete=false; // needs an extra variable because the inquiry command is executed after 
-		    	byte highByte=(byte)((enabledSensors&65280)>>8);
-		    	byte lowByte=(byte)(enabledSensors & 0xFF);
-		    	mCurrentCommand=SET_SENSORS_COMMAND;
-		    	write(new byte[]{SET_SENSORS_COMMAND,(byte) lowByte, highByte});
-		    	mTempIntValue=enabledSensors;
-		    	mWaitForAck=true;
-		    	mTransactionCompleted=false;
-		    	responseTimer(ACK_TIMER_DURATION+10); // This command takes a little longer for the shimmer device to process thus a longer timer duration
-   	    	}
-   		}
-	}
+ 
         
    	public boolean sensorConflictCheck(int enabledSensors){
    		boolean pass=true;
@@ -2361,53 +2878,212 @@ private class ConnectThreadArduino extends Thread {
      * @param range is a numeric value defining the desired accelerometer range. Valid range setting values for the Shimmer 2 are 0 (+/- 1.5g), 1 (+/- 2g), 2 (+/- 4g) and 3 (+/- 6g). Valid range setting values for the Shimmer 2r are 0 (+/- 1.5g) and 3 (+/- 6g).
      */
     public void writeAccelRange(int range) {
-    	while(getInstructionStatus()==false) {};
-    	mCurrentCommand=SET_ACCEL_SENSITIVITY_COMMAND;
-        write(new byte[]{SET_ACCEL_SENSITIVITY_COMMAND, (byte)range});
-        mTransactionCompleted=false;
-        responseTimer(ACK_TIMER_DURATION);
-        mTempIntValue=range;
-        mWaitForAck=true;
+    	mListofInstructions.add(new byte[]{SET_ACCEL_SENSITIVITY_COMMAND, (byte)range});
     }
     
-
-    public void writeLEDCommand(int command) {
+    /**
+	 * @param rate Defines the sampling rate to be set (e.g.51.2 sets the sampling rate to 51.2Hz). User should refer to the document Sampling Rate Table to see all possible values.
+	 */
+	public void writeSamplingRate(double rate) {
+    	if (getShimmerState() == STATE_CONNECTED) {
+			rate=1024/rate; //the equivalent hex setting
+			mListofInstructions.add(new byte[]{SET_SAMPLING_RATE_COMMAND, (byte)Math.rint(rate), 0x00});
+			//check if low power mag mode is enabled
+		    if (!mLowPowerMag){
+    		    if (mSamplingRate>35){
+    		    	writeMagSamplingRate(6);
+    		    } else if (mSamplingRate>15) {
+    		    	writeMagSamplingRate(5);
+    		    } else if (mSamplingRate>7.5) {
+    		    	writeMagSamplingRate(4);
+    		    } else {
+    		    	writeMagSamplingRate(3);
+    		    }
+		    } else {
+		    	writeMagSamplingRate(4);
+		    }
+		}
+	}
+    
+    /**
+     * writeMagSamplingRate(range) sets the MagSamplingRate on the Shimmer to the value of the input range. When setting/changing the accel range, please ensure you have the correct calibration parameters. Note that the Shimmer device can only carry one set of accel calibration parameters at a single time.
+     * @param rate it is a value between 0 and 6; 0 = 0.5 Hz; 1 = 1.0 Hz; 2 = 2.0 Hz; 3 = 5.0 Hz; 4 = 10.0 Hz; 5 = 20.0 Hz; 6 = 50.0 Hz
+     */
+    private void writeMagSamplingRate(int rate) {
     	while(getInstructionStatus()==false) {};
-    	mCurrentCommand = SET_BLINK_LED;
-        write(new byte[]{SET_BLINK_LED, (byte)command});
-        mTransactionCompleted=false;
-        //responseTimer(ACK_TIMER_DURATION);
-        mTempIntValue=command;
-        mWaitForAck=true;
-
+    	if (mFWVersion==0.1 && mFWInternal==0){
+    		
+    	} else {
+    		mTempIntValue=rate;
+    	   	mListofInstructions.add(new byte[]{SET_MAG_SAMPLING_RATE_COMMAND, (byte)rate});
+    	   	mTransactionCompleted=false;
+    	   	responseTimer(ACK_TIMER_DURATION);
+    	   	
+    	}
+    }
+    
+    
+  	/**
+   	 * Transmits a command to the Shimmer device to enable the sensors. To enable multiple sensors an or operator should be used (e.g. writeEnabledSensors(Shimmer.SENSOR_ACCEL|Shimmer.SENSOR_GYRO|Shimmer.SENSOR_MAG)). Command should not be used consecutively. Valid values are SENSOR_ACCEL, SENSOR_GYRO, SENSOR_MAG, SENSOR_ECG, SENSOR_EMG, SENSOR_GSR, SENSOR_EXP_BOARD_A7, SENSOR_EXP_BOARD_A0, SENSOR_STRAIN and SENSOR_HEART.
+    SENSOR_BATT
+   	 * @param enabledSensors e.g SENSOR_ACCEL|SENSOR_GYRO|SENSOR_MAG
+   	 */
+   	public void writeEnabledSensors(int enabledSensors) {
+   		if (!sensorConflictCheck(enabledSensors)){ //sensor conflict check
+			Log.d("Shimmer","Sensor Conflict Error");
+    	} else {
+    		//check if the batt volt is enabled 
+    		if (((enabledSensors & 0xFFFFF) & SENSOR_BATT) > 0){
+    			enabledSensors = enabledSensors & 0xFFFF;
+    			enabledSensors = enabledSensors|SENSOR_EXP_BOARD_A0|SENSOR_EXP_BOARD_A7;
+    		}
+    		 
+	    	byte highByte=(byte)((enabledSensors&65280)>>8);
+	    	byte lowByte=(byte)(enabledSensors & 0xFF);
+	    	//write(new byte[]{SET_SENSORS_COMMAND,(byte) lowByte, highByte});
+	    	mListofInstructions.add(new byte[]{SET_SENSORS_COMMAND,(byte) lowByte, highByte});
+	    	inquiry();
+    	}
+   		
+	}
+    
+   	/**
+	 * @param sensor is a string value that defines the sensor. Accepted sensor values are "Accelerometer","Gyroscope","Magnetometer","ECG","EMG","All"
+	 */
+	public void readCalibrationParameters(String sensor) {
+    	if (getShimmerState() == STATE_CONNECTED) {
+    		if (!mInitialized){
+		    	if (mFWVersion==0.1 && mFWInternal==0) {
+		    		mFWVersionFullName="BoilerPlate 0.1.0";
+                	Message msg = mHandler.obtainMessage(MESSAGE_TOAST);
+          	        Bundle bundle = new Bundle();
+          	        bundle.putString(TOAST, "Firmware Version: " +mFWVersionFullName);
+          	        msg.setData(bundle);
+          	        mHandler.sendMessage(msg);
+          	    }	
+	    	}
+			if (sensor.equals("Accelerometer")) {
+				mListofInstructions.add(new byte[]{GET_ACCEL_CALIBRATION_COMMAND});
+				}
+			else if (sensor.equals("Gyroscope")) {
+				mListofInstructions.add(new byte[]{GET_GYRO_CALIBRATION_COMMAND});
+				}
+			else if (sensor.equals("Magnetometer")) {
+				mListofInstructions.add(new byte[]{GET_MAG_CALIBRATION_COMMAND});
+				}
+			else if (sensor.equals("All")){
+				if (mShimmerVersion!=4){
+					mListofInstructions.add(new byte[]{GET_ALL_CALIBRATION_COMMAND});
+				} else {
+					mListofInstructions.add(new byte[]{GET_ALL_CALIBRATION_COMMAND_SR30});
+				}
+			} 
+			else if (sensor.equals("ECG")){
+				mListofInstructions.add(new byte[]{GET_ECG_CALIBRATION_COMMAND});
+			} 
+			else if (sensor.equals("EMG")){
+				mListofInstructions.add(new byte[]{GET_EMG_CALIBRATION_COMMAND});
+			}
+		}
+	}
+   	
+   	
+    /**
+     * writeAccelRange(range) sets the Accelerometer range on the Shimmer to the value of the input range. When setting/changing the accel range, please ensure you have the correct calibration parameters. Note that the Shimmer device can only carry one set of accel calibration parameters at a single time.
+     * @param range is a numeric value defining the desired accelerometer range. Valid range setting values for the Shimmer 2 are 0 (+/- 1.5g), 1 (+/- 2g), 2 (+/- 4g) and 3 (+/- 6g). Valid range setting values for the Shimmer 2r are 0 (+/- 1.5g) and 3 (+/- 6g).
+     */
+    public void writeBufferSize(int size) {
+    	mListofInstructions.add(new byte[]{SET_BUFFER_SIZE_COMMAND, (byte)size});
+    }
+   		
+	public void readFWVersion() {
+		mDummy=false;//false
+		mListofInstructions.add(new byte[]{GET_FW_VERSION_COMMAND});
+	}
+	
+	/**
+	 * The reason for this is because sometimes the 1st response is not received by the phone
+	 */
+	private void dummyreadFWVersion() {
+		mDummy=true;
+		mListofInstructions.add(new byte[]{GET_FW_VERSION_COMMAND});
+	}
+	
+	/**
+	 * The reason for this is because sometimes the 1st response is not received by the phone
+	 */
+	private void dummyreadSamplingRate() {
+		mDummy=true;
+		mListofInstructions.add(new byte[]{GET_SAMPLING_RATE_COMMAND});
+	}
+	
+	public void stopStreaming() {
+		mListofInstructions.add(new byte[]{STOP_STREAMING_COMMAND});
+		mCurrentLEDStatus=-1;
+	}
+    
+	public void startStreaming() {
+		mTempPacketCountforBatt=0;
+		mPacketLossCount = 0;
+    	mPacketReceptionRate = 100;
+    	mFirstTimeCalTime=true;
+    	mLastReceivedCalibratedTimeStamp = -1;
+    	mOrientationAlgo = new GradDes3DOrientation(0.1, (double)1/mSamplingRate, 1, 0, 0,0);
+		mSync=true; // a backup sync done every time you start streaming
+		mListofInstructions.add(new byte[]{START_STREAMING_COMMAND});
+	}
+	
+	
+    /**
+     * writeGSRRange(range) sets the GSR range on the Shimmer to the value of the input range. 
+     * @param range numeric value defining the desired GSR range. Valid range settings are 0 (10kOhm to 56kOhm), 1 (56kOhm to 220kOhm), 2 (220kOhm to 680kOhm), 3 (680kOhm to 4.7MOhm) and 4 (Auto Range).
+     */
+    public void writeGSRRange(int range) {
+    	mListofInstructions.add(new byte[]{SET_GSR_RANGE_COMMAND, (byte)range});
+    }
+   	
+	public void readSamplingRate() {
+		mListofInstructions.add(new byte[]{GET_SAMPLING_RATE_COMMAND});
+	}
+    
+   	/**
+	 * An inquiry is used to request for the current configuration parameters from the Shimmer device (e.g. Accelerometer settings, Configuration Byte, Sampling Rate, Number of Enabled Sensors and Sensors which have been enabled). 
+	 */
+	public void inquiry() {
+		mListofInstructions.add(new byte[]{INQUIRY_COMMAND});
+    }
+   	
+    
+    /**
+     * writeMagRange(range) sets the MagSamplingRate on the Shimmer to the value of the input range. When setting/changing the accel range, please ensure you have the correct calibration parameters. Note that the Shimmer device can only carry one set of accel calibration parameters at a single time.
+     * @param rate it is a value between 0 and 6; 0 = 0.5 Hz; 1 = 1.0 Hz; 2 = 2.0 Hz; 3 = 5.0 Hz; 4 = 10.0 Hz; 5 = 20.0 Hz; 6 = 50.0 Hz
+     */
+    private void writeMagRange(int range) {
+    	
+    	if (mFWVersion==0.1 && mFWInternal==0){
+    		Log.d("Shimmer","Command not supported on this firmware version");
+    	} else {
+	    	mListofInstructions.add(new byte[]{SET_MAG_GAIN_COMMAND, (byte)range});
+	    }
+    }
+    
+    
+    public void writeLEDCommand(int command) {
+    	if (mFWVersion==0.1 && mFWInternal==0){
+    		Log.d("Shimmer","This Shimmer Version does not support the command");
+		} else {
+			mListofInstructions.add(new byte[]{SET_BLINK_LED, (byte)command});
+		}
     }
     
     /*public void writeGyroTempVref(int value){
     	
     }*/
     
-    /**
-     * writeGSRRange(range) sets the GSR range on the Shimmer to the value of the input range. 
-     * @param range numeric value defining the desired GSR range. Valid range settings are 0 (10kOhm to 56kOhm), 1 (56kOhm to 220kOhm), 2 (220kOhm to 680kOhm), 3 (680kOhm to 4.7MOhm) and 4 (Auto Range).
-     */
-    public void writeGSRRange(int range) {
-    	while(getInstructionStatus()==false) {};
-    	mCurrentCommand=SET_GSR_RANGE_COMMAND;
-    	write(new byte[]{SET_GSR_RANGE_COMMAND, (byte)range});
-    	mTransactionCompleted=false;
-    	responseTimer(ACK_TIMER_DURATION);
-    	mTempIntValue=range;
-    	mWaitForAck=true;
-    }
+
     
     public void writeECGCalibrationParameters(int offsetrall, int gainrall,int offsetlall, int gainlall) {
-    	while(getInstructionStatus()==false) {};
-    	mCurrentCommand=SET_ECG_CALIBRATION_COMMAND;
     	byte[] data = new byte[8];
-    	mTempDouble1 = (double) offsetrall;
-    	mTempDouble2 = (double) gainrall;
-    	mTempDouble3 = (double) offsetlall;
-    	mTempDouble4 = (double) gainlall;
     	data[0] = (byte) ((offsetlall>>8)& 0xFF); //MSB offset
     	data[1] = (byte) ((offsetlall)& 0xFF);
     	data[2] = (byte) ((gainlall>>8)& 0xFF); //MSB gain
@@ -2416,92 +3092,81 @@ private class ConnectThreadArduino extends Thread {
     	data[5] = (byte) ((offsetrall)& 0xFF);
     	data[6] = (byte) ((gainrall>>8)& 0xFF); //MSB gain
     	data[7] = (byte) ((gainrall)& 0xFF);
-    	write(new byte[]{SET_ECG_CALIBRATION_COMMAND,data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7]});
-    	mTransactionCompleted=false;
-    	responseTimer(ACK_TIMER_DURATION);
-    	mWaitForAck=true;
+    	if (mFWVersion==0.1 && mFWInternal==0){
+    		Log.d("Shimmer","This Shimmer Version does not support the command");
+		} else {
+			mListofInstructions.add(new byte[]{SET_ECG_CALIBRATION_COMMAND,data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7]});
+		}
     }
     
     public void writeEMGCalibrationParameters(int offset, int gain) {
-    	while(getInstructionStatus()==false) {};
-    	mCurrentCommand=SET_EMG_CALIBRATION_COMMAND;
     	byte[] data = new byte[4];
-    	mTempDouble1 = (double) offset;
-    	mTempDouble2 = (double) gain;
     	data[0] = (byte) ((offset>>8)& 0xFF); //MSB offset
     	data[1] = (byte) ((offset)& 0xFF);
     	data[2] = (byte) ((gain>>8)& 0xFF); //MSB gain
     	data[3] = (byte) ((gain)& 0xFF);
-    	write(new byte[]{SET_EMG_CALIBRATION_COMMAND,data[0],data[1],data[2],data[3]});
-    	mTransactionCompleted=false;
-    	responseTimer(ACK_TIMER_DURATION);
-    	mWaitForAck=true;
+    	if (mFWVersion==0.1 && mFWInternal==0){
+    		Log.d("Shimmer","This Shimmer Version does not support the command");
+		} else {
+			mListofInstructions.add(new byte[]{SET_EMG_CALIBRATION_COMMAND,data[0],data[1],data[2],data[3]});
+		}
     }
     
     public void readGSRRange() {
-    	while(getInstructionStatus()==false) {};
-    	mCurrentCommand=GET_GSR_RANGE_COMMAND;
-    	write(new byte[]{GET_GSR_RANGE_COMMAND});
-    	mTransactionCompleted=false;
-    	mWaitForAck=true;
-    	responseTimer(ACK_TIMER_DURATION);
+    	mListofInstructions.add(new byte[]{GET_GSR_RANGE_COMMAND});
     }
     
     public void readAccelRange() {
-    	while(getInstructionStatus()==false) {};
-    	mCurrentCommand=GET_ACCEL_SENSITIVITY_COMMAND;
-    	write(new byte[]{GET_ACCEL_SENSITIVITY_COMMAND});
-		mWaitForAck=true;
-		mTransactionCompleted=false;
-		responseTimer(ACK_TIMER_DURATION);
+    	mListofInstructions.add(new byte[]{GET_ACCEL_SENSITIVITY_COMMAND});
     }
     
+    public void readBufferSize() {
+    	mListofInstructions.add(new byte[]{GET_BUFFER_SIZE_COMMAND});
+    }
+    
+    public void readMagSamplingRate() {
+    	if (mFWVersion==0.1 && mFWInternal==0){
+    		Log.d("Shimmer","This Shimmer Version does not support the command");
+		} else {
+			mListofInstructions.add(new byte[]{GET_MAG_SAMPLING_RATE_COMMAND});
+		}
+	}
+
+    public void readMagRange() {
+    	mListofInstructions.add(new byte[]{GET_MAG_GAIN_COMMAND});
+	}
+    
     public void readBlinkLED() {
-    	while(getInstructionStatus()==false) {};
-    	mCurrentCommand=GET_BLINK_LED;
-    	write(new byte[]{GET_BLINK_LED});
-		mWaitForAck=true;
-		mTransactionCompleted=false;
-		responseTimer(ACK_TIMER_DURATION);
+    	mListofInstructions.add(new byte[]{GET_BLINK_LED});
     }
     
     
     public void readECGCalibrationParameters() {
-    	while(getInstructionStatus()==false) {};
-    	mCurrentCommand=GET_ECG_CALIBRATION_COMMAND;
-    	write(new byte[]{GET_ECG_CALIBRATION_COMMAND});
-		mWaitForAck=true;
-		mTransactionCompleted=false;
-		responseTimer(ACK_TIMER_DURATION);
+    	if (mFWVersion==0.1 && mFWInternal==0){
+    		Log.d("Shimmer","This Shimmer Version does not support the command");
+		} else {
+			mListofInstructions.add(new byte[]{GET_ECG_CALIBRATION_COMMAND});
+		}
     }
     
     public void readEMGCalibrationParameters() {
-    	while(getInstructionStatus()==false) {};
-    	mCurrentCommand=GET_EMG_CALIBRATION_COMMAND;
-    	write(new byte[]{GET_EMG_CALIBRATION_COMMAND});
-		mWaitForAck=true;
-		mTransactionCompleted=false;
-		responseTimer(ACK_TIMER_DURATION);
+    	if (mFWVersion==0.1 && mFWInternal==0){
+    		Log.d("Shimmer","This Shimmer Version does not support the command");
+		} else {
+			mListofInstructions.add(new byte[]{GET_EMG_CALIBRATION_COMMAND});
+		}
     }
     
-    
-    
     public void readShimmerVersion() {
-    	while(getInstructionStatus()==false) {};
-    	mCurrentCommand=GET_SHIMMER_VERSION_COMMAND;
-		write(new byte[]{GET_SHIMMER_VERSION_COMMAND});
-		mWaitForAck=true;
-		mTransactionCompleted=false;
-		responseTimer(ACK_TIMER_DURATION);	
+    	if (mFWVersion==0.1 && mFWInternal==0){
+    		Log.d("Shimmer","This Shimmer Version does not support the command");
+		} else {
+			mListofInstructions.add(new byte[]{GET_SHIMMER_VERSION_COMMAND});
+		}
 	}
 	
 	public void readConfigByte0() {
-    	while(getInstructionStatus()==false) {};
-    	responseTimer(ACK_TIMER_DURATION);
-    	mCurrentCommand=GET_CONFIG_BYTE0_COMMAND;
-    	write(new byte[]{GET_CONFIG_BYTE0_COMMAND});
-		mWaitForAck=true;
-		mTransactionCompleted=false;
+    	mListofInstructions.add(new byte[]{GET_CONFIG_BYTE0_COMMAND});
 	}
 	
 	/**
@@ -2509,100 +3174,25 @@ private class ConnectThreadArduino extends Thread {
 	 * @param configByte0 is an unsigned 8 bit value defining the desired config byte 0 value.
 	 */
 	public void writeConfigByte0(byte configByte0) {
-    	while(getInstructionStatus()==false) {};
+		mListofInstructions.add(new byte[]{SET_CONFIG_BYTE0_COMMAND,(byte) configByte0});
+	}
+
+	public void writeInstruction(){
 		if (getShimmerState() == STATE_CONNECTED) {
-			mCurrentCommand=SET_CONFIG_BYTE0_COMMAND;
-			write(new byte[]{SET_CONFIG_BYTE0_COMMAND,(byte) configByte0});
-			mTempByteValue=(byte) configByte0;
-			mWaitForAck=true;
-			mTransactionCompleted=false;
-			responseTimer(ACK_TIMER_DURATION);		
+			byte[] instruction = (byte[]) mListofInstructions.get(0);
+			write(instruction);
 		}
 	}
 
-	/**
-	 * @param rate Defines the sampling rate to be set (e.g.51.2 sets the sampling rate to 51.2Hz). User should refer to the document Sampling Rate Table to see all possible values.
-	 */
-	public synchronized void writeSamplingRate(double rate) {
-    	while(getInstructionStatus()==false) {};
-		if (getShimmerState() == STATE_CONNECTED) {
-			mCurrentCommand=SET_SAMPLING_RATE_COMMAND;
-			mWaitForAck=true;
-			mTempDoubleValue=rate;
-			Log.d("Shimmer","SR tx " + Double.toString(rate));
-			rate=1024/rate; //the equivalent hex setting
-			write(new byte[]{SET_SAMPLING_RATE_COMMAND, (byte)Math.rint(rate), 0x00}); // set to stream accel only;
-			responseTimer(ACK_TIMER_DURATION+2);
-			mTransactionCompleted=false;
-		}
-	}
 	
-	public void readSamplingRate() {
-    	while(getInstructionStatus()==false) {};
-    	mCurrentCommand=GET_SAMPLING_RATE_COMMAND;
-		mWaitForAck=true;
-		write(new byte[]{GET_SAMPLING_RATE_COMMAND});
-		mTransactionCompleted=false;
-		responseTimer(ACK_TIMER_DURATION);
-	}
 	
-	/**
-	 * @param sensor is a string value that defines the sensor. Accepted sensor values are "Accelerometer","Gyroscope","Magnetometer","ECG","EMG","All"
-	 */
-	public void readCalibrationParameters(String sensor) {
-    	while(getInstructionStatus()==false) {};
-		if (getShimmerState() == STATE_CONNECTED) {
-			mTransactionCompleted=false;
-			if (sensor.equals("Accelerometer")) {
-				mCurrentCommand=GET_ACCEL_CALIBRATION_COMMAND;
-				write(new byte[]{GET_ACCEL_CALIBRATION_COMMAND});
-				}
-			else if (sensor.equals("Gyroscope")) {
-				mCurrentCommand=GET_GYRO_CALIBRATION_COMMAND;
-				write(new byte[]{GET_GYRO_CALIBRATION_COMMAND});
-				}
-			else if (sensor.equals("Magnetometer")) {
-				mCurrentCommand=GET_MAG_CALIBRATION_COMMAND;
-				write(new byte[]{GET_MAG_CALIBRATION_COMMAND});
-				}
-			else if (sensor.equals("All")){
-				mCurrentCommand=GET_ALL_CALIBRATION_COMMAND;
-				write(new byte[]{GET_ALL_CALIBRATION_COMMAND});
-			} 
-			else if (sensor.equals("ECG")){
-				mCurrentCommand=GET_ECG_CALIBRATION_COMMAND;
-				write(new byte[]{GET_ECG_CALIBRATION_COMMAND});
-			} 
-			else if (sensor.equals("EMG")){
-				mCurrentCommand=GET_EMG_CALIBRATION_COMMAND;
-				write(new byte[]{GET_EMG_CALIBRATION_COMMAND});
-			}
-			mWaitForAck=true;
-			responseTimer(ACK_TIMER_DURATION+3);
-		}
-	}
 	
 	/**
 	 * Sets the Pmux bit value on the Shimmer to the value of the input SETBIT. The PMux bit is the 2nd MSB of config byte0.
 	 * @param setBit value defining the desired setting of the PMux (1=ON, 0=OFF).
 	 */
 	public void writePMux(int setBit) {
-    	while(getInstructionStatus()==false) {};
-			//Bit value defining the desired setting of the PMux (1=ON, 0=OFF).
-			byte newConfigByte0=(byte)mConfigByte0;
-			if (setBit==1) {
-				newConfigByte0=(byte) ((byte) (mConfigByte0|64)&(0xFF)); 
-			}
-			else if (setBit==0) {
-				newConfigByte0=(byte) ((byte)(mConfigByte0 & 191)&(0xFF));
-			}
-			mTempByteValue=newConfigByte0;
-			mCurrentCommand=SET_PMUX_COMMAND;
-			write(new byte[]{SET_PMUX_COMMAND,(byte) setBit});
-			mWaitForAck=true;
-			mTransactionCompleted=false;
-			responseTimer(ACK_TIMER_DURATION);
-    	
+    		mListofInstructions.add(new byte[]{SET_PMUX_COMMAND,(byte) setBit});
 	}
 	
 	/**
@@ -2630,31 +3220,10 @@ private class ConnectThreadArduino extends Thread {
 	 * @param setBit value defining the desired setting of the Volt regulator (1=ENABLED, 0=DISABLED).
 	 */
 	public void writeFiveVoltReg(int setBit) {
-    	while(getInstructionStatus()==false) {};
-    	//first check for any conflicts
-    	
-		//Bit value defining the desired setting of the 5VReg (1=ON, 0=OFF).
-		byte newConfigByte0=(byte)mConfigByte0;
-		if (setBit==1) {
-			newConfigByte0=(byte) (mConfigByte0|128); 
-		}
-		else if (setBit==0) {
-			newConfigByte0=(byte)(mConfigByte0 & 127);
-		}
-		mTempByteValue=newConfigByte0;
-		mCurrentCommand=SET_5V_REGULATOR_COMMAND;
-		write(new byte[]{SET_5V_REGULATOR_COMMAND,(byte) setBit});
-		mTransactionCompleted=false;
-		mWaitForAck=true;
-		responseTimer(ACK_TIMER_DURATION);	
-    	
+		mListofInstructions.add(new byte[]{SET_5V_REGULATOR_COMMAND,(byte) setBit});
 	}
 	public void toggleLed() {
-    	while(getInstructionStatus()==false) {};
-    	mCurrentCommand=TOGGLE_LED_COMMAND;
-		write(new byte[]{TOGGLE_LED_COMMAND});
-		mWaitForAck=true;
-		responseTimer(ACK_TIMER_DURATION);	
+		mListofInstructions.add(new byte[]{TOGGLE_LED_COMMAND});
 	}
 	
 	public String getDeviceName(){
@@ -2719,4 +3288,97 @@ private class ConnectThreadArduino extends Thread {
 		return mLowBattLimit;
 	}
 	
+	public int getShimmerVersion(){
+		return mShimmerVersion;
+	}
+	
+	public boolean isUsingDefaultAccelParam(){
+		return mDefaultCalibrationParametersAccel;
+	}
+	
+	public boolean isUsingDefaultGyroParam(){
+		return mDefaultCalibrationParametersGyro;
+	}
+	public boolean isUsingDefaultMagParam(){
+		return mDefaultCalibrationParametersMag;
+	}
+	public boolean isUsingDefaultECGParam(){
+		return mDefaultCalibrationParametersECG;
+	}
+	public boolean isUsingDefaultEMGParam(){
+		return mDefaultCalibrationParametersEMG;
+	}
+	
+	public void resetCalibratedTimeStamp(){
+		mLastReceivedCalibratedTimeStamp = -1;
+		mFirstTimeCalTime = true;
+		mCurrentTimeStampCycle = 0;
+	}
+	
+	public void enable3DOrientation(boolean enable){
+		if (enable){
+			//enable the sensors if they have not been enabled 
+			if (((mEnabledSensors & 0xFF)& SENSOR_ACCEL) > 0 && ((mEnabledSensors & 0xFF)& SENSOR_GYRO) > 0 && ((mEnabledSensors & 0xFF)& SENSOR_MAG) > 0 ){
+				
+			} else {
+				writeEnabledSensors(Shimmer.SENSOR_ACCEL|Shimmer.SENSOR_MAG|Shimmer.SENSOR_GYRO);
+			}
+			mOrientationEnabled = true;
+			
+		} else {
+			mOrientationEnabled = false;
+		}
+	}
+	
+	/**
+	 * This enables the low power mag option. When not enabled the sampling rate of the mag is set to the closest value to the actual sampling rate that it can achieve. In low power mode it defaults to 10Hz
+	 * @param enable
+	 */
+	public void enableLowPowerMag(boolean enable){
+		mLowPowerMag = enable;
+		if (!mLowPowerMag){
+			if (mSamplingRate>35){
+ 		    	writeMagSamplingRate(6);
+ 		    } else if (mSamplingRate>15) {
+ 		    	writeMagSamplingRate(5);
+ 		    } else if (mSamplingRate>7.5) {
+ 		    	writeMagSamplingRate(4);
+ 		    } else {
+ 		    	writeMagSamplingRate(3);
+ 		    }
+	    } else {
+	    	writeMagSamplingRate(4);
+	    }
+	}
+	
+	public boolean isLowPowerMagEnabled(){
+		return mLowPowerMag;
+	}
+	
+	
+	
+	/**
+	 * @param enable this enables the calibration of the gyroscope while streaming
+	 * @param bufferSize sets the buffersize of the window used to determine the new calibration parameters, see implementation for more details
+	 * @param threshold sets the threshold of when to use the incoming data to recalibrate gyroscope offset, this is in degrees, and the default value is 1.2
+	 */
+	public void enableOnTheFlyGyroCal(boolean enable,int bufferSize,double threshold){
+		if (enable){
+			mGyroOVCalThreshold=threshold;
+			mGyroX=new DescriptiveStatistics(bufferSize);
+			mGyroY=new DescriptiveStatistics(bufferSize);
+			mGyroZ=new DescriptiveStatistics(bufferSize);
+			mGyroXRaw=new DescriptiveStatistics(bufferSize);
+			mGyroYRaw=new DescriptiveStatistics(bufferSize);
+			mGyroZRaw=new DescriptiveStatistics(bufferSize);
+		}
+	}
+	
+	public boolean isGyroOnTheFlyCalEnabled(){
+		return mEnableOntheFlyGyroOVCal;
+	}
+	
+	public boolean is3DOrientatioEnabled(){
+		return mOrientationEnabled;
+	}
 }
