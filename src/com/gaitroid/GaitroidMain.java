@@ -75,10 +75,10 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 	static String mCurrentDevice=null;
 	int mCurrentSlot=-1;
 	static MultiShimmerPlayService mService;
-	private boolean mServiceBind=false;
-	private double mSamplingRate=-1;
-	private int mAccelRange=-1;
-	private int mGSRRange=-1;
+	private static boolean mServiceBind=false;
+	private static double mSamplingRate=-1;
+	private static int mAccelRange=-1;
+	private static int mGSRRange=-1;
 	private boolean mServiceFirstTime=true;
 	private static Context mCtx;
 	private static String mSensorView = ""; //The sensor device which should be viewed on the graph
@@ -464,8 +464,8 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 		              	
 		              	
 		              	// Bind service
-		              	//Intent intent=new Intent(GaitroidMain.this, MultiShimmerPlayService.class);
-		      			//getApplicationContext().bindService(intent,mTestServiceConnection, Context.BIND_AUTO_CREATE);
+		              	Intent intent=new Intent(mCtx, MultiShimmerPlayService.class);
+		              	mCtx.bindService(intent,mTestServiceConnection, Context.BIND_AUTO_CREATE);
 		      		    
 		      		    Intent mainCommandIntent=new Intent(getActivity(), DeviceListActivity.class);
 		      	 		startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_CONNECT_SHIMMER);
@@ -485,7 +485,7 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 	              @Override
 	              public void onClick(View v) {
 	            	  mService.startStreamingAllDevicesGetSensorNames();
-	            	  Intent mainCommandIntent=new Intent(mCtx,TrainActivity.class);
+	            	  Intent mainCommandIntent=new Intent(mCtx, TrainActivity.class);
 	   	 	      	  mainCommandIntent.putExtra("BluetoothAddress",mCurrentDevice);
 	            	  startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_GRAPH_SHIMMER);
 	              }
@@ -697,7 +697,7 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
     	}
     }
 	
-	private ServiceConnection mTestServiceConnection = new ServiceConnection() {
+	private static ServiceConnection mTestServiceConnection = new ServiceConnection() {
 
       	public void onServiceConnected(ComponentName arg0, IBinder service) {
       		// TODO Auto-generated method stub

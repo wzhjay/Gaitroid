@@ -22,6 +22,9 @@ containing a value of this type.
          */
         public static final int min=0x7f010000;
     }
+    public static final class color {
+        public static final int custom_theme_color=0x7f090000;
+    }
     public static final class dimen {
         /**  Default screen margins, per the Android Design guidelines. 
 
@@ -39,91 +42,91 @@ containing a value of this type.
         public static final int user=0x7f020003;
     }
     public static final class id {
-        public static final int accel_range=0x7f0a001b;
-        public static final int accel_range_spinner=0x7f0a001d;
-        public static final int accel_range_text=0x7f0a001c;
-        public static final int action_settings=0x7f0a0054;
-        public static final int age=0x7f0a0030;
-        public static final int btnLogin=0x7f0a0040;
-        public static final int btn_connect=0x7f0a0024;
-        public static final int btn_disconnect=0x7f0a0026;
-        public static final int btn_streaming=0x7f0a0027;
-        public static final int button_audio=0x7f0a0028;
-        public static final int button_scan=0x7f0a000f;
-        public static final int cancel_dialog_btn=0x7f0a0043;
-        public static final int checkBoxAccelerometer=0x7f0a0001;
-        public static final int checkBoxAccelerometerGraph=0x7f0a0046;
-        public static final int checkBoxECG=0x7f0a0007;
-        public static final int checkBoxECGGraph=0x7f0a004c;
-        public static final int checkBoxEMG=0x7f0a0008;
-        public static final int checkBoxEMGGraph=0x7f0a004d;
-        public static final int checkBoxExpBoardA0=0x7f0a0005;
-        public static final int checkBoxExpBoardA0Graph=0x7f0a004a;
-        public static final int checkBoxExpBoardA7=0x7f0a0006;
-        public static final int checkBoxExpBoardA7Graph=0x7f0a004b;
-        public static final int checkBoxGSR=0x7f0a000a;
-        public static final int checkBoxGSRGraph=0x7f0a004f;
-        public static final int checkBoxGyroscope=0x7f0a0002;
-        public static final int checkBoxGyroscopeGraph=0x7f0a0047;
-        public static final int checkBoxHeartRate=0x7f0a0009;
-        public static final int checkBoxHeartRateGraph=0x7f0a004e;
-        public static final int checkBoxMagnetometer=0x7f0a0003;
-        public static final int checkBoxMagnetometerGraph=0x7f0a0048;
-        public static final int checkBoxStrainGauge=0x7f0a0004;
-        public static final int checkBoxStrainGaugeGraph=0x7f0a0049;
-        public static final int checkBoxTimeStampGraph=0x7f0a0050;
-        public static final int chk_accel=0x7f0a0020;
-        public static final int chk_fsr_back=0x7f0a0023;
-        public static final int chk_fsr_front=0x7f0a0022;
-        public static final int chk_gyro=0x7f0a0021;
-        public static final int city=0x7f0a0033;
-        public static final int confure_btns=0x7f0a0025;
-        public static final int country=0x7f0a0032;
-        public static final int created_time=0x7f0a0036;
-        public static final int edit_user=0x7f0a0039;
-        public static final int email=0x7f0a002e;
-        public static final int enable_sensors_done=0x7f0a0000;
-        public static final int footer=0x7f0a003d;
-        public static final int gender=0x7f0a0031;
-        public static final int graph=0x7f0a003b;
-        public static final int graphics_frameLayout=0x7f0a0051;
-        public static final int graphics_glsurfaceview=0x7f0a0052;
-        public static final int header=0x7f0a003c;
-        public static final int linearLayout1=0x7f0a003e;
-        public static final int link_to_register=0x7f0a0041;
-        public static final int logging=0x7f0a0015;
-        public static final int logging_switch=0x7f0a0017;
-        public static final int logging_text=0x7f0a0016;
-        public static final int logout_btn=0x7f0a0038;
-        public static final int logout_dialog_btn=0x7f0a0042;
-        public static final int name=0x7f0a002c;
-        public static final int new_devices=0x7f0a000e;
-        public static final int number_picker=0x7f0a0045;
-        public static final int pager=0x7f0a003a;
-        public static final int pager_title_strip=0x7f0a0053;
-        public static final int paired_devices=0x7f0a000c;
-        public static final int password=0x7f0a003f;
-        public static final int phone=0x7f0a002f;
-        public static final int postcode=0x7f0a0035;
-        public static final int radio_fast=0x7f0a0014;
-        public static final int radio_normal=0x7f0a0013;
-        public static final int radio_slow=0x7f0a0012;
-        public static final int radio_speed_group=0x7f0a0011;
-        public static final int sample_rate=0x7f0a0018;
-        public static final int sample_rate_spinner=0x7f0a001a;
-        public static final int sample_rate_text=0x7f0a0019;
-        public static final int sensors=0x7f0a001e;
-        public static final int sensors_text=0x7f0a001f;
-        public static final int speed_text=0x7f0a0010;
-        public static final int street=0x7f0a0034;
-        public static final int text_dialog_message=0x7f0a0044;
-        public static final int title_new_devices=0x7f0a000d;
-        public static final int title_paired_devices=0x7f0a000b;
-        public static final int user_info_1=0x7f0a0029;
-        public static final int user_info_2=0x7f0a002d;
-        public static final int user_info_btn=0x7f0a0037;
-        public static final int user_photo=0x7f0a002a;
-        public static final int username=0x7f0a002b;
+        public static final int accel_range=0x7f0b001b;
+        public static final int accel_range_spinner=0x7f0b001d;
+        public static final int accel_range_text=0x7f0b001c;
+        public static final int action_settings=0x7f0b0054;
+        public static final int age=0x7f0b0030;
+        public static final int btnLogin=0x7f0b0040;
+        public static final int btn_connect=0x7f0b0024;
+        public static final int btn_disconnect=0x7f0b0026;
+        public static final int btn_streaming=0x7f0b0027;
+        public static final int button_audio=0x7f0b0028;
+        public static final int button_scan=0x7f0b000f;
+        public static final int cancel_dialog_btn=0x7f0b0043;
+        public static final int checkBoxAccelerometer=0x7f0b0001;
+        public static final int checkBoxAccelerometerGraph=0x7f0b0046;
+        public static final int checkBoxECG=0x7f0b0007;
+        public static final int checkBoxECGGraph=0x7f0b004c;
+        public static final int checkBoxEMG=0x7f0b0008;
+        public static final int checkBoxEMGGraph=0x7f0b004d;
+        public static final int checkBoxExpBoardA0=0x7f0b0005;
+        public static final int checkBoxExpBoardA0Graph=0x7f0b004a;
+        public static final int checkBoxExpBoardA7=0x7f0b0006;
+        public static final int checkBoxExpBoardA7Graph=0x7f0b004b;
+        public static final int checkBoxGSR=0x7f0b000a;
+        public static final int checkBoxGSRGraph=0x7f0b004f;
+        public static final int checkBoxGyroscope=0x7f0b0002;
+        public static final int checkBoxGyroscopeGraph=0x7f0b0047;
+        public static final int checkBoxHeartRate=0x7f0b0009;
+        public static final int checkBoxHeartRateGraph=0x7f0b004e;
+        public static final int checkBoxMagnetometer=0x7f0b0003;
+        public static final int checkBoxMagnetometerGraph=0x7f0b0048;
+        public static final int checkBoxStrainGauge=0x7f0b0004;
+        public static final int checkBoxStrainGaugeGraph=0x7f0b0049;
+        public static final int checkBoxTimeStampGraph=0x7f0b0050;
+        public static final int chk_accel=0x7f0b0020;
+        public static final int chk_fsr_back=0x7f0b0023;
+        public static final int chk_fsr_front=0x7f0b0022;
+        public static final int chk_gyro=0x7f0b0021;
+        public static final int city=0x7f0b0033;
+        public static final int confure_btns=0x7f0b0025;
+        public static final int country=0x7f0b0032;
+        public static final int created_time=0x7f0b0036;
+        public static final int edit_user=0x7f0b0039;
+        public static final int email=0x7f0b002e;
+        public static final int enable_sensors_done=0x7f0b0000;
+        public static final int footer=0x7f0b003d;
+        public static final int gender=0x7f0b0031;
+        public static final int graph=0x7f0b003b;
+        public static final int graphics_frameLayout=0x7f0b0051;
+        public static final int graphics_glsurfaceview=0x7f0b0052;
+        public static final int header=0x7f0b003c;
+        public static final int linearLayout1=0x7f0b003e;
+        public static final int link_to_register=0x7f0b0041;
+        public static final int logging=0x7f0b0015;
+        public static final int logging_switch=0x7f0b0017;
+        public static final int logging_text=0x7f0b0016;
+        public static final int logout_btn=0x7f0b0038;
+        public static final int logout_dialog_btn=0x7f0b0042;
+        public static final int name=0x7f0b002c;
+        public static final int new_devices=0x7f0b000e;
+        public static final int number_picker=0x7f0b0045;
+        public static final int pager=0x7f0b003a;
+        public static final int pager_title_strip=0x7f0b0053;
+        public static final int paired_devices=0x7f0b000c;
+        public static final int password=0x7f0b003f;
+        public static final int phone=0x7f0b002f;
+        public static final int postcode=0x7f0b0035;
+        public static final int radio_fast=0x7f0b0014;
+        public static final int radio_normal=0x7f0b0013;
+        public static final int radio_slow=0x7f0b0012;
+        public static final int radio_speed_group=0x7f0b0011;
+        public static final int sample_rate=0x7f0b0018;
+        public static final int sample_rate_spinner=0x7f0b001a;
+        public static final int sample_rate_text=0x7f0b0019;
+        public static final int sensors=0x7f0b001e;
+        public static final int sensors_text=0x7f0b001f;
+        public static final int speed_text=0x7f0b0010;
+        public static final int street=0x7f0b0034;
+        public static final int text_dialog_message=0x7f0b0044;
+        public static final int title_new_devices=0x7f0b000d;
+        public static final int title_paired_devices=0x7f0b000b;
+        public static final int user_info_1=0x7f0b0029;
+        public static final int user_info_2=0x7f0b002d;
+        public static final int user_info_btn=0x7f0b0037;
+        public static final int user_photo=0x7f0b002a;
+        public static final int username=0x7f0b002b;
     }
     public static final class layout {
         public static final int configure=0x7f030000;
@@ -145,7 +148,7 @@ containing a value of this type.
         public static final int viewpager=0x7f030010;
     }
     public static final class menu {
-        public static final int gaitroid_main=0x7f090000;
+        public static final int gaitroid_main=0x7f0a0000;
     }
     public static final class raw {
         public static final int start=0x7f040000;
@@ -196,6 +199,7 @@ containing a value of this type.
  All customizations that are NOT specific to a particular API-level can go here. 
          */
         public static final int AppTheme=0x7f080001;
+        public static final int CustomTheme=0x7f080002;
     }
     public static final class styleable {
         /**  note: to re-use an existing Android attribute not already used by the superclass, name should have prefix "android:" and do not define a format 
