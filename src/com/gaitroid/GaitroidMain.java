@@ -108,6 +108,8 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
      */
     ViewPager mViewPager;
     
+    static final String shimmerDeviceLeft = "LEFT";
+    static final String shimmerDeviceRight = "RIGHT";
     public void onCreate(Bundle savedInstanceState) {
     	// =============================================== tabs view ===================
         super.onCreate(savedInstanceState);
@@ -168,10 +170,8 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 
 		this.setVolumeControlStream(TTS_STREAM);
 		
-        // =============================================== test buttons ===================
-        final Context context = this;
-		//super.onCreate(savedInstanceState);
-		//setContentView(R.layout.gaitroid_main);
+        // =============================================== services ===================
+
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		if (!isMyServiceRunning())
 	    {
@@ -446,7 +446,7 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 	          .setOnClickListener(new View.OnClickListener() {
 	              @Override
 	              public void onClick(View v) {
-	            	  Log.d("Gaitroid", "click button_bluetooth");
+	            	  Log.d("Gaitroid", "click button_connect");
 		              	BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		                  if(mBluetoothAdapter == null) {
 		                	Context c = mCtx;
@@ -467,8 +467,8 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 		              	Intent intent=new Intent(mCtx, MultiShimmerPlayService.class);
 		              	mCtx.bindService(intent,mTestServiceConnection, Context.BIND_AUTO_CREATE);
 		      		    
-		      		    Intent mainCommandIntent=new Intent(getActivity(), DeviceListActivity.class);
-		      	 		startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_CONNECT_SHIMMER);
+		      		    Intent deviceListIntent=new Intent(getActivity(), DeviceListActivity.class);
+		      	 		startActivityForResult(deviceListIntent, GaitroidMain.REQUEST_CONNECT_SHIMMER);
 	              }
 	          });
             
@@ -518,7 +518,6 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
            
             return rootView;
         }
-
     }
     
     public static class Toaster implements Runnable
@@ -663,37 +662,50 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 		getMenuInflater().inflate(R.menu.gaitroid_main, menu);
 		return true;
 	}
-	
+
+      
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
     	switch (requestCode) {	
 	    	case GaitroidMain.REQUEST_CONNECT_SHIMMER:
 	        // When DeviceListActivity returns with a device to connect
 	        if (resultCode == Activity.RESULT_OK) {
-	            String address = data.getExtras()
-	                    .getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
-	           Log.d("Shimmer",address);
-	           Log.d("Shimmer",mCurrentDevice);
-	           
-	           Intent intent = new Intent();
-	           intent.putExtra("CurrentDevice", mCurrentDevice);
-	           intent.putExtra("Address", address);
-	           intent.putExtra("CurrentSlot", mCurrentSlot);
-	           setResult(Activity.RESULT_OK, intent);
-	
-	           finish();
+//	            String address = data.getExtras()
+//	                    .getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+//	           Log.d("Shimmer",address);
+//	           Log.d("Shimmer",mCurrentDevice);
+//	           
+//	           Intent intent = new Intent();
+//	           intent.putExtra("CurrentDevice", mCurrentDevice);
+//	           intent.putExtra("Address", address);
+//	           intent.putExtra("CurrentSlot", mCurrentSlot);
+//	           setResult(Activity.RESULT_OK, intent);
+//	
+//	           finish();
+
+	        		String address = data.getExtras()
+ 	                    .getString("Address");
+	   	            String currentDeviceName = data.getExtras().getString("CurrentDevice");
+	   	            int currentSlot = data.getExtras().getInt("CurrentSlot");
+	   	            Log.d("ShimmerMainActivity",address);
+	   	            Log.d("ShimmerMainActivity",currentDeviceName);
+	   	            Intent intent=new Intent(this, MultiShimmerPlayService.class);
+	   	            //currentSelectedBluetoothAddress = address;
+	   	            //currentSelectedDeviceName = currentDeviceName;
+	   	            if (!isMyServiceRunning())
+	   	            {	
+	   	            	intent.putExtra("BluetoothAddress", address);
+	   	            	intent.putExtra("DeviceName", currentDeviceName);
+	   	            	intent.putExtra("CurrentSlot",currentSlot);
+	   	            	startService(intent);
+	   	            	//getApplicationContext().bindService(intent,mTestServiceConnection, Context.BIND_AUTO_CREATE);
+	   	            } else {
+	   	          		mService.connectShimmer(address, GaitroidMain.shimmerDeviceLeft);
+	   	          		//getApplicationContext().unbindService(mTestServiceConnection);
+	   		            //
+	   		            //getApplicationContext().unbindService(mTestServiceConnection);
+	   	            }
 	        }
 	        break;
-	        
-	    	case GaitroidMain.REQUEST_CONFIGURE_SHIMMER:
-	    	if (resultCode == Activity.RESULT_OK) {
-//	    		if (mCurrentDevice.equals("All Devices")){
-	    			Log.d("Shimmer","Configure Sensors ALL Devices");
- 	    			mService.setAllEnabledSensors(data.getExtras().getInt(ConfigureActivity.mDone));	
-// 	    		} else {
-// 	    			mService.setEnabledSensors(data.getExtras().getInt(ConfigureActivity.mDone),mCurrentDevice);
-// 	    		}
-	    	}
-	    	break;
     	}
     }
 	

@@ -67,10 +67,10 @@ public class DeviceListActivity extends Activity {
     
     //==================================================
     private UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-    private android.bluetooth.BluetoothSocket mBluetoothSocket1;
+    //private android.bluetooth.BluetoothSocket mBluetoothSocket1;
     private android.bluetooth.BluetoothSocket mBluetoothSocket2;
 //    private BluetoothServerSocket serverSocket;
-    private String pairedDeviceBtAddr1 = "00:06:66:42:20:1A";
+    //private String pairedDeviceBtAddr1 = "00:06:66:42:20:1A";
     private String pairedDeviceBtAddr2 = "00:06:66:42:1F:0F";
     //==================================================
     @Override
@@ -121,10 +121,10 @@ public class DeviceListActivity extends Activity {
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
         
         //=======================================================
-        BluetoothDevice Device1 = mBtAdapter.getRemoteDevice(pairedDeviceBtAddr1);//server Bluetooth address
+        //BluetoothDevice Device1 = mBtAdapter.getRemoteDevice(pairedDeviceBtAddr1);//server Bluetooth address
         BluetoothDevice Device2 = mBtAdapter.getRemoteDevice(pairedDeviceBtAddr2);
         try {
-			mBluetoothSocket1 = Device1.createRfcommSocketToServiceRecord(uuid);
+			//mBluetoothSocket1 = Device1.createRfcommSocketToServiceRecord(uuid);
 			mBluetoothSocket2 = Device2.createRfcommSocketToServiceRecord(uuid);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -132,7 +132,7 @@ public class DeviceListActivity extends Activity {
 		}
         mBtAdapter.cancelDiscovery();
         try {
-			mBluetoothSocket1.connect();
+			//mBluetoothSocket1.connect();
 			mBluetoothSocket2.connect();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
