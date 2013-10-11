@@ -48,7 +48,7 @@ public class LoginActivity extends Activity {
         
         if(db.hasUser()) {
         	Log.d("Gaitroid", "Jumping...");
-        	i = new Intent(this, GaitroidMain.class);
+        	i = new Intent(this, MultiShimmerPlayActivity.class);
         	startActivity(i);
             finish();
         }
@@ -100,7 +100,7 @@ public class LoginActivity extends Activity {
 		        			Log.d("Gaitroid", log);
 	        			}
 	        			
-	        			Intent j = new Intent(LoginActivity.this, GaitroidMain.class);
+	        			Intent j = new Intent(LoginActivity.this, MultiShimmerPlayActivity.class);
 	        			startActivity(j);
 	        		} catch (Exception e) {
 	        			e.printStackTrace();

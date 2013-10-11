@@ -1,24 +1,6 @@
 package com.gaitroid;
-/*
- * Copyright (C) 2009 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
-
-import java.io.IOException;
 import java.util.Set;
-import java.util.UUID;
 
 
 
@@ -64,15 +46,6 @@ public class DeviceListActivity extends Activity {
     private ArrayAdapter<String> mPairedDevicesArrayAdapter;
     private ArrayAdapter<String> mNewDevicesArrayAdapter;
     //private String[] deviceAddresses={"","","","","","",""};
-    
-    //==================================================
-    private UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-    //private android.bluetooth.BluetoothSocket mBluetoothSocket1;
-    private android.bluetooth.BluetoothSocket mBluetoothSocket2;
-//    private BluetoothServerSocket serverSocket;
-    //private String pairedDeviceBtAddr1 = "00:06:66:42:20:1A";
-    private String pairedDeviceBtAddr2 = "00:06:66:42:1F:0F";
-    //==================================================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -119,41 +92,7 @@ public class DeviceListActivity extends Activity {
 
         // Get the local Bluetooth adapter
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
-        
-        //=======================================================
-        //BluetoothDevice Device1 = mBtAdapter.getRemoteDevice(pairedDeviceBtAddr1);//server Bluetooth address
-        BluetoothDevice Device2 = mBtAdapter.getRemoteDevice(pairedDeviceBtAddr2);
-        try {
-			//mBluetoothSocket1 = Device1.createRfcommSocketToServiceRecord(uuid);
-			mBluetoothSocket2 = Device2.createRfcommSocketToServiceRecord(uuid);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        mBtAdapter.cancelDiscovery();
-        try {
-			//mBluetoothSocket1.connect();
-			mBluetoothSocket2.connect();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        
-//        try {
-//			serverSocket = mBtAdapter.listenUsingRfcommWithServiceRecord("pairedDevice1", uuid);
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//        try {
-//			android.bluetooth.BluetoothSocket socket = serverSocket.accept();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-        
-        //========================================================
-        
+
         // Get a set of currently paired devices
         Set<BluetoothDevice> pairedDevices = mBtAdapter.getBondedDevices();
 
