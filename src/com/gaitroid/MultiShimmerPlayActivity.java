@@ -24,15 +24,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Message;
 import android.util.Log;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -53,7 +49,7 @@ public class MultiShimmerPlayActivity extends Activity {
 	private String currentSelectedDeviceName;
 	private int mCurrentSelectedSlot=-1;
 	ArrayList<String> Devices= new ArrayList<String>();
-	private String[] devices = new String [] {"Device","Device","Device","Device","Device","Device","Device","All Devices"};
+	private String[] devices = new String [] {"Left","Right","All Devices"};
 	boolean mServiceBind=false;
 	static final int REQUEST_ENABLE_BT = 1;
 	public final static int REQUEST_MAIN_COMMAND_SHIMMER=3;
@@ -143,7 +139,7 @@ public class MultiShimmerPlayActivity extends Activity {
 	
 	  
   public void updateListView(){
-	  devices = new String [] {"Device","Device","Device","Device","Device","Device","Device","All Devices"};
+	  devices = new String [] {"Left","Right","All Devices"};
 	  HashMap<String, Object> tempHMap=mService.mMultiShimmer;
 		Collection<Object> colS=tempHMap.values();
 		Iterator<Object> iterator = colS.iterator();

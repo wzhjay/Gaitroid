@@ -52,7 +52,7 @@
 			        android:layout_marginLeft="6dip"/>
 			</RadioGroup>
 	    
-	        <RelativeLayout android:orientation="vertical"
+	        <!-- <RelativeLayout android:orientation="vertical"
 			    android:layout_width="fill_parent"
 			    android:layout_height="wrap_content"
 			    android:id="@+id/logging"
@@ -80,9 +80,9 @@
 			        android:layout_marginRight="60dp"
 			        android:checked="true" />
 				
-			</RelativeLayout>
+			</RelativeLayout> -->
 			
-	        <RelativeLayout android:orientation="vertical"
+	        <!-- <RelativeLayout android:orientation="vertical"
 			    android:layout_width="fill_parent"
 			    android:layout_height="wrap_content"
 			    android:id="@+id/sample_rate"
@@ -111,9 +111,9 @@
 			        android:textSize="14sp"
 			        android:layout_marginLeft="150dp" />
 				
-			</RelativeLayout>
+			</RelativeLayout> -->
 			
-	        <RelativeLayout android:orientation="vertical"
+	        <!-- <RelativeLayout android:orientation="vertical"
 			    android:layout_width="fill_parent"
 			    android:layout_height="wrap_content"
 			    android:id="@+id/accel_range"
@@ -140,9 +140,9 @@
 			        android:textSize="14sp"
 			        android:layout_marginLeft="150dp" />
 				
-			</RelativeLayout>
+			</RelativeLayout> -->
 			
-	        <RelativeLayout android:orientation="vertical"
+	        <!-- <RelativeLayout android:orientation="vertical"
 			    android:layout_width="fill_parent"
 			    android:layout_height="wrap_content"
 			    android:id="@+id/sensors"
@@ -207,7 +207,7 @@
 			        android:layout_alignBottom="@+id/chk_gyro"
 			        android:text="Connect" />
 				
-			</RelativeLayout>
+			</RelativeLayout> -->
 			
 	        <LinearLayout
 		         android:id="@+id/confure_btns"
