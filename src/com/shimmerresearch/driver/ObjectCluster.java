@@ -20,6 +20,10 @@ public class ObjectCluster {
 		mBluetoothAddress=myBlueAdd;
 	}
 	
+	public String getBtAddressByName(String myName) {
+		return this.mBluetoothAddress;
+	}
+	
 /**
  * Takes in a collection of Format Clusters and returns the Format Cluster specified by the string format
  * @param collectionFormatCluster
