@@ -1,6 +1,8 @@
 package com.gaitroid;
 
+import java.util.Arrays;
 import java.util.Collection;
+
 
 
 import com.shimmerresearch.driver.FormatCluster;
@@ -9,6 +11,7 @@ import com.shimmerresearch.driver.Shimmer;
 import com.gaitroid.R;
 import com.shimmerresearch.service.MultiShimmerPlayService;
 import com.shimmerresearch.service.MultiShimmerPlayService.LocalBinder;
+
 
 
 import android.app.Activity;
@@ -132,7 +135,16 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
                 	    ObjectCluster objectCluster =  (ObjectCluster) msg.obj; 
                 	    
                 	   
-                	
+                	    // for gaitroid
+
+                        String[] sensor_acl = {"Accelerometer X", "Accelerometer Y", "Accelerometer Z"};
+                        String[] sensor_gyr = {"Gyroscope X", "Gyroscope Y", "Gyroscope Z"};
+                        String[] sensor_mag = {"Magnetometer X", "Magnetometer Y", "Magnetometer Z"};
+                        double[] cal_acl = new double[3];
+                        double[] cal_gyr = new double[3];
+                        double[] cal_mag = new double[3];
+
+
                 		int[] dataArray = new int[0];
                 		double[] calibratedDataArray = new double[0];
                 		String[] sensorName = new String[0];
@@ -265,10 +277,73 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
     				 	    	}
     				 	    	
     			            }
-    				 	   Log.d("ShimmerGraph","Received3");
-    				 	   mGraphDisplay.setDataWithAdjustment(dataArray,"","u16");
+    				 	   //Log.d("deviceName", objectCluster.mBluetoothAddress);
+    				 	   //Log.d("ShimmerSensor", Arrays.deepToString(sensorName));
+    				 	   //Log.d("ShimmerData", Arrays.toString(dataArray));
+    				 	   //Log.d("ShimmerGraph","Received3");
+    				 	   //mGraphDisplay.setDataWithAdjustment(dataArray,"","u16");
     				 	 
     					}
+
+
+                        // gaitroid, get all the sensor data
+                        if(objectCluster.mMyName.equals("0")) {
+                            //mService.setEnabledSensors(0, deviceName);
+                            //mService.setEnabledSensors(1, deviceName);
+                            //mService.setEnabledSensors(2, deviceName);
+                            // acl
+                            Collection<FormatCluster> gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_acl[0]);
+                            FormatCluster gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
+                            if (gaitroid_formatCluster != null ) {
+                                cal_acl[0] = gaitroid_formatCluster.mData;
+                            }
+                            gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_acl[1]);
+                            gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
+                            if (gaitroid_formatCluster != null ) {
+                                cal_acl[1] = gaitroid_formatCluster.mData;
+                            }
+                            gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_acl[2]);
+                            gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
+                            if (gaitroid_formatCluster != null ) {
+                                cal_acl[2] = gaitroid_formatCluster.mData;
+                            }
+
+                            // gyro
+                            gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_gyr[0]);
+                            gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
+                            if (gaitroid_formatCluster != null ) {
+                                cal_gyr[0] = gaitroid_formatCluster.mData;
+                            }
+                            gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_gyr[1]);
+                            gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
+                            if (gaitroid_formatCluster != null ) {
+                                cal_gyr[1] = gaitroid_formatCluster.mData;
+                            }
+                            gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_gyr[2]);
+                            gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
+                            if (gaitroid_formatCluster != null ) {
+                                cal_gyr[2] = gaitroid_formatCluster.mData;
+                            }
+
+                            // mag
+                            gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_mag[0]);
+                            gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
+                            if (gaitroid_formatCluster != null ) {
+                                cal_mag[0] = gaitroid_formatCluster.mData;
+                            }
+                            gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_mag[1]);
+                            gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
+                            if (gaitroid_formatCluster != null ) {
+                                cal_mag[1] = gaitroid_formatCluster.mData;
+                            }
+                            gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_mag[2]);
+                            gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
+                            if (gaitroid_formatCluster != null ) {
+                                cal_mag[2] = gaitroid_formatCluster.mData;
+                            }
+
+                            Log.d("gaitroid_data", "acl: " + Arrays.toString(cal_acl) + " gyr: " + Arrays.toString(cal_gyr) + " mag: " + Arrays.toString(cal_mag));
+                        }
                 	}
     				
                     break;

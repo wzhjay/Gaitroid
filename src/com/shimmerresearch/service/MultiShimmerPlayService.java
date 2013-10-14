@@ -10,9 +10,11 @@ import java.util.Iterator;
 
 
 
+
 import javax.vecmath.AxisAngle4d;
 import javax.vecmath.Matrix3d;
 
+import com.gaitroid.MyApplication;
 import com.gaitroid.MyGLSurfaceView;
 import com.google.common.collect.Multiset;
 import com.shimmerresearch.driver.*;
@@ -134,11 +136,13 @@ public class MultiShimmerPlayService extends Service {
 	
 	public void connectShimmer(String bluetoothAddress,String selectedDevice){
 		Log.d("Shimmer","net Connection");
+		
 		Shimmer shimmerDevice=new Shimmer(this, mHandler,selectedDevice,false);
 		mMultiShimmer.remove(bluetoothAddress);
 		if (mMultiShimmer.get(bluetoothAddress)==null){
 			mMultiShimmer.put(bluetoothAddress,shimmerDevice); 
 			((Shimmer) mMultiShimmer.get(bluetoothAddress)).connect(bluetoothAddress,"default");
+			((MyApplication) this.getApplication()).setBluetoothAddress(selectedDevice,bluetoothAddress);
 		}
 		
 		// For 3D Gyro
@@ -378,6 +382,8 @@ public class MultiShimmerPlayService extends Service {
 	            	   }
 	            	   }
 	            	   
+	            	   //Log.d("mActivatedSensorNamesArray_Gaitroid", Arrays.deepToString(mActivatedSensorNamesArray));
+	            	   //Log.d("mMaxData_Gaitroid", Arrays.deepToString(mMaxData));
 	            	   
 	            	}
 	                break;

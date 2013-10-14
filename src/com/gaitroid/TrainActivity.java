@@ -29,9 +29,12 @@ import android.widget.Toast;
 import root.gast.speech.SpeechRecognizingAndSpeakingActivity;
 
 public class TrainActivity extends SpeechRecognizingAndSpeakingActivity {
-	
+	private static String mSensorView = "";
 	int mEnabledSensors=0;
+	
 	String BluetoothAddress="";
+	String BluetoothAddress0="";
+	String BluetoothAddress1="";
 	boolean mServiceBind=false;
 	MultiShimmerPlayService mService;
 	/** The OpenGL View */
@@ -58,6 +61,11 @@ public class TrainActivity extends SpeechRecognizingAndSpeakingActivity {
 		Intent intent=new Intent(this, MultiShimmerPlayService.class);
 		getApplicationContext().bindService(intent,mTestServiceConnection, Context.BIND_AUTO_CREATE);
 	    
+		Bundle extras = getIntent().getExtras();
+	    BluetoothAddress = extras.getString("BluetoothAddress");
+		BluetoothAddress0 = ((MyApplication) this.getApplication()).getBluetoothAddress0();
+		BluetoothAddress1 = ((MyApplication) this.getApplication()).getBluetoothAddress1();
+		
 		setContentView(R.layout.training);
 		t= new MyGLSurfaceView(this);
 		//Create an Instance with this Activity
@@ -107,7 +115,7 @@ public class TrainActivity extends SpeechRecognizingAndSpeakingActivity {
       
       		LocalBinder binder = (LocalBinder) service;
       		mService = binder.getService();
-      		//Log.d("Shimmer","Connected on Graph" + " " +BluetoothAddress);
+      		Log.d("Shimmer","Connected on Graph" + " " +BluetoothAddress);
       		//update the view
       		mServiceBind=true;
       		mService.setGraphHandler(mHandler,BluetoothAddress);
@@ -129,7 +137,7 @@ public class TrainActivity extends SpeechRecognizingAndSpeakingActivity {
             case Shimmer.MESSAGE_READ:
             	if ((msg.obj instanceof ObjectCluster)){	// within each msg an object can be include, objectclusters are used to represent the data structure of the shimmer device
             	    ObjectCluster objectCluster =  (ObjectCluster) msg.obj;
-            	    BluetoothAddress = objectCluster.getBtAddressByName("0");
+            	    
             	    if (objectCluster.mMyName=="0"){
                 	    Collection<FormatCluster> accelXFormats = objectCluster.mPropertyCluster.get("Axis Angle A");  // first retrieve all the possible formats for the current sensor device
 			 	    	float angle = 0,x = 0,y=0,z=0;
@@ -170,6 +178,149 @@ public class TrainActivity extends SpeechRecognizingAndSpeakingActivity {
 			 	    		aa.set(fm3dtemp);
 			 	    		t.setAngleAxis((float) (aa.angle*180/Math.PI), (float)aa.x, (float)aa.y, (float)aa.z);
 			 	    	}
+			 	    	
+			 	    	
+			 	    	int[] dataArray = new int[0];
+                		double[] calibratedDataArray = new double[0];
+                		String[] sensorName = new String[0];
+                		String units="";
+                		String calibratedUnits="";
+                		//mSensorView determines which sensor to graph
+                		if (mSensorView.equals("Accelerometer")){
+                			sensorName = new String[3]; // for x y and z axis
+                			dataArray = new int[3];
+                			calibratedDataArray = new double[3];
+                			sensorName[0] = "Accelerometer X";
+                			sensorName[1] = "Accelerometer Y";
+                			sensorName[2] = "Accelerometer Z";
+                			Log.d("ShimmerGraph","Received1");
+                		}
+                		if (mSensorView.equals("Gyroscope")){
+                			sensorName = new String[3]; // for x y and z axis
+                			dataArray = new int[3];
+                			calibratedDataArray = new double[3];
+                			sensorName[0] = "Gyroscope X";
+                			sensorName[1] = "Gyroscope Y";
+                			sensorName[2] = "Gyroscope Z";
+                		}
+                		if (mSensorView.equals("Magnetometer")){
+                			sensorName = new String[3]; // for x y and z axis
+                			dataArray = new int[3];
+                			calibratedDataArray = new double[3];
+                			sensorName[0] = "Magnetometer X";
+                			sensorName[1] = "Magnetometer Y";
+                			sensorName[2] = "Magnetometer Z";
+                		}
+                		if (mSensorView.equals("GSR")){
+                			sensorName = new String[1]; 
+                			dataArray = new int[1];
+                			calibratedDataArray = new double[1];
+                			sensorName[0] = "GSR";
+                		}
+                		if (mSensorView.equals("EMG")){
+                			sensorName = new String[1]; 
+                			dataArray = new int[1];
+                			calibratedDataArray = new double[1];
+                			sensorName[0] = "EMG";
+                		}
+                		if (mSensorView.equals("ECG")){
+                			sensorName = new String[2]; 
+                			dataArray = new int[2];
+                			calibratedDataArray = new double[2];
+                			sensorName[0] = "ECG RA-LL";
+                			sensorName[1] = "ECG LA-LL";
+                		}
+                		if (mSensorView.equals("StrainGauge")){
+                			sensorName = new String[2]; 
+                			dataArray = new int[2];
+                			calibratedDataArray = new double[2];
+                			sensorName[0] = "Strain Gauge High";
+                			sensorName[1] = "Strain Gauge Low";
+                		}
+                		if (mSensorView.equals("HeartRate")){
+                			sensorName = new String[1]; 
+                			dataArray = new int[1];
+                			calibratedDataArray = new double[1];
+                			sensorName[0] = "Heart Rate";
+                		}
+                		if (mSensorView.equals("ExpBoardA0")){
+                			sensorName = new String[1]; 
+                			dataArray = new int[1];
+                			calibratedDataArray = new double[1];
+                			sensorName[0] = "ExpBoard A0";
+                		}
+                		if (mSensorView.equals("ExpBoardA7")){
+                			sensorName = new String[1]; 
+                			dataArray = new int[1];
+                			calibratedDataArray = new double[1];
+                			sensorName[0] = "ExpBoard A7";
+                		}
+                		if (mSensorView.equals("TimeStamp")){
+                			sensorName = new String[1]; 
+                			dataArray = new int[1];
+                			calibratedDataArray = new double[1];
+                			sensorName[0] = "Timestamp";
+                		}
+                		
+                		String deviceName = objectCluster.mBluetoothAddress;
+                		//log data
+                		
+                		if (sensorName.length!=0){  // Device 1 is the assigned user id, see constructor of the Shimmer
+    				 	    if (sensorName.length>0){
+    				 	    	Log.d("ShimmerGraph","Received2");
+    				 	    	Collection<FormatCluster> ofFormats = objectCluster.mPropertyCluster.get(sensorName[0]);  // first retrieve all the possible formats for the current sensor device
+    				 	    	FormatCluster formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(ofFormats,"CAL")); 
+    				 	    	if (formatCluster != null) {
+    				 	    		//Obtain data for text view
+    				 	    		calibratedDataArray[0] = formatCluster.mData;
+    				 	    		calibratedUnits = formatCluster.mUnits;
+    				 	    		
+    				 	    		//Obtain data for graph
+    					 	    	if (sensorName[0]=="Heart Rate"){ // Heart Rate has no uncalibrated data 
+    					 	    		dataArray[0] = (int)((FormatCluster)ObjectCluster.returnFormatCluster(ofFormats,"CAL")).mData; 
+    					 	    		units = ((FormatCluster)ObjectCluster.returnFormatCluster(ofFormats,"CAL")).mUnits; 
+    						 	 	} else {
+    						 	 		dataArray[0] = (int)((FormatCluster)ObjectCluster.returnFormatCluster(ofFormats,"RAW")).mData; 
+    							 	}
+    					 	    	units = ((FormatCluster)ObjectCluster.returnFormatCluster(ofFormats,"RAW")).mUnits; //TODO: Update data structure to include Max and Min values. This is to allow easy graph adjustments for the length and width
+    					 	    }
+    				 	    }
+    				 	    if (sensorName.length>1) {
+    				 	    	Collection<FormatCluster> ofFormats = objectCluster.mPropertyCluster.get(sensorName[1]);  // first retrieve all the possible formats for the current sensor device
+    				 	    	FormatCluster formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(ofFormats,"CAL"));
+    				 	    	if (formatCluster != null ) {
+    					 	    	calibratedDataArray[1] = formatCluster.mData;
+    					 	    	//Obtain data for text view
+    					 	    	
+    					 	    	//Obtain data for graph
+    					 	    	dataArray[1] =(int) ((FormatCluster)ObjectCluster.returnFormatCluster(ofFormats,"RAW")).mData; 
+    					 	    	units = ((FormatCluster)ObjectCluster.returnFormatCluster(ofFormats,"RAW")).mUnits; //TODO: Update data structure to include Max and Min values. This is to allow easy graph adjustments for the length and width
+
+    				 	    	}
+    				 	    }
+    				 	    if (sensorName.length>2){
+    				 	    
+    				 	    	Collection<FormatCluster> ofFormats = objectCluster.mPropertyCluster.get(sensorName[2]);  // first retrieve all the possible formats for the current sensor device
+    				 	    	FormatCluster formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(ofFormats,"CAL")); 
+    				 	    	if (formatCluster != null) {
+    				 	    		calibratedDataArray[2] = formatCluster.mData;
+    					 	    	
+    					 	   	    
+    				 	    		//Obtain data for graph
+    				 	    		dataArray[2] =(int) ((FormatCluster)ObjectCluster.returnFormatCluster(ofFormats,"RAW")).mData; 
+    					 	    	units = ((FormatCluster)ObjectCluster.returnFormatCluster(ofFormats,"RAW")).mUnits; //TODO: Update data structure to include Max and Min values. This is to allow easy graph adjustments for the length and width
+    				 	    	}
+    				 	    	
+    			            }
+    				 	   Log.d("ShimmerSensor", sensorName.toString());
+    				 	   Log.d("ShimmerDate", dataArray.toString());
+//    				 	   Log.d("ShimmerGraph","Received3");
+//    				 	   if (sensorName[0].equals("Magnetometer X")){
+//    				 		  mGraphDisplay.setDataWithAdjustment(dataArray,"","i16");
+//    				 	   } else {
+//    				 		   mGraphDisplay.setDataWithAdjustment(dataArray,"","u16");
+//    				 	   }
+    					}
 		 	    	}
             	}
                 break;

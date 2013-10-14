@@ -298,7 +298,7 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 	              @Override
 	              public void onClick(View v) {
 	            	  mService.startStreamingAllDevicesGetSensorNames();
-	            	  Intent mainCommandIntent=new Intent(mCtx, TrainActivity.class);
+	            	  Intent mainCommandIntent=new Intent(mCtx, GraphActivity.class);
 	   	 	      	  mainCommandIntent.putExtra("BluetoothAddress",mCurrentDevice);
 	            	  startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_GRAPH_SHIMMER);
 	              }
