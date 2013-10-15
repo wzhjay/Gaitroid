@@ -303,32 +303,6 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 	            	  startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_GRAPH_SHIMMER);
 	              }
 	          });
-//          rootView.findViewById(R.id.connect_socket)
-//	          .setOnClickListener(new View.OnClickListener() {
-//	              @Override
-//	              public void onClick(View v) {
-//	                  //Perform action on click
-//	              	Log.d("Gaitroid", "click button_socket");
-//	              	IOCallback io = new BasicExample();
-//	          		
-//	          		SocketIO socket = null ;
-//	          		try {
-//	          			socket = new SocketIO("http://192.168.237.150:3000/");
-//	          			socket.connect(io);
-//	          		} catch (MalformedURLException e) {
-//	          			// TODO Auto-generated catch block
-//	          			e.printStackTrace();
-//	          		}
-//	          		
-//	          		try {
-//	  					socket.emit("msg", new JSONObject().put("key", "hello world"));
-//	  				} catch (JSONException e) {
-//	  					// TODO Auto-generated catch block
-//	  					e.printStackTrace();
-//	  				}
-//	              }
-//	          });
-           
             return rootView;
         }
     }

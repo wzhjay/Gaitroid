@@ -1,6 +1,10 @@
 package com.gaitroid;
 
+import io.socket.IOCallback;
+import io.socket.SocketIO;
+
 import java.io.File;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -126,6 +130,30 @@ public class MultiShimmerPlayActivity extends Activity {
 		  }
 		});
 	
+	// connect socket button
+//	final Button button_socket = (Button) findViewById(R.id.button_socket);
+//	button_socket.setOnClickListener(new View.OnClickListener() {
+//		@Override
+//        public void onClick(View v) {
+//			IOCallback io = new BasicExample();
+//			SocketIO socket = null ;
+//			
+//			try {
+//    			socket = new SocketIO("http://192.168.237.150:3000/");
+//    			socket.connect(io);
+//    		} catch (MalformedURLException e) {
+//    			// TODO Auto-generated catch block
+//    			e.printStackTrace();
+//    		}
+//			
+//			try {
+//				socket.emit("msg", new JSONObject().put("key", "hello world"));
+//			} catch (JSONException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//        }
+//    });
 	
 	// Jump button
 	final Button button_start = (Button) findViewById(R.id.button_start);

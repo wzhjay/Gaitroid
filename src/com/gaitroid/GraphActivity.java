@@ -1,5 +1,9 @@
 package com.gaitroid;
 
+import io.socket.IOCallback;
+import io.socket.SocketIO;
+
+import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -7,12 +11,26 @@ import java.util.Collection;
 
 
 
+
+
+
+
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.shimmerresearch.driver.FormatCluster;
 import com.shimmerresearch.driver.ObjectCluster;
 import com.shimmerresearch.driver.Shimmer;
 import com.gaitroid.R;
 import com.shimmerresearch.service.MultiShimmerPlayService;
 import com.shimmerresearch.service.MultiShimmerPlayService.LocalBinder;
+
+
+
+
+
 
 
 
@@ -42,8 +60,12 @@ public class GraphActivity extends Activity{
 	   int mEnabledSensors=0;
 	   String BluetoothAddress="";
 	   String BluetoothAddress0="";
-		String BluetoothAddress1="";
-		private static GraphView mGraphDisplay;
+	   String BluetoothAddress1="";
+	   static String socketConnectPath = "";
+	   static IOCallback io;
+	   static SocketIO socket;
+	   
+	   private static GraphView mGraphDisplay;
 	   private static String mSensorView = ""; //The sensor device which should be viewed on the graph
 	public void onCreate(Bundle savedInstanceState) {
 	super.onCreate(savedInstanceState);
@@ -51,6 +73,17 @@ public class GraphActivity extends Activity{
 	
 	BluetoothAddress0 = ((MyApplication) this.getApplication()).getBluetoothAddress0();
 	BluetoothAddress1 = ((MyApplication) this.getApplication()).getBluetoothAddress1();
+	socketConnectPath = ((MyApplication) this.getApplication()).getSocketConnectPath();
+	io = new BasicExample();
+	socket = null ;
+	
+	try {
+		socket = new SocketIO(socketConnectPath);
+		socket.connect(io);
+	} catch (MalformedURLException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
 	
 	Bundle extras = getIntent().getExtras();
     BluetoothAddress = extras.getString("BluetoothAddress");
@@ -134,29 +167,31 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
         
         private static Handler mHandler = new Handler() {
         	   
-
+        	
     		public void handleMessage(Message msg) {
-            	
+    			
                 switch (msg.what) {
                 case Shimmer.MESSAGE_READ:
                 		Log.d("ShimmerGraph","Received");
                 	    if ((msg.obj instanceof ObjectCluster)){
                 	    	
                 	    ObjectCluster objectCluster =  (ObjectCluster) msg.obj; 
-                	    
-                	   
-                	    // for gaitroid
-
+            			
                         String[] sensor_acl = {"Accelerometer X", "Accelerometer Y", "Accelerometer Z"};
                         String[] sensor_gyr = {"Gyroscope X", "Gyroscope Y", "Gyroscope Z"};
                         String[] sensor_mag = {"Magnetometer X", "Magnetometer Y", "Magnetometer Z"};
+                        String sensor_exp_a0 = "ExpBoard A0";
+                        String sensor_exp_a7 = "ExpBoard A7";
                         double[] cal_acl_0 = new double[3];
                         double[] cal_gyr_0 = new double[3];
                         double[] cal_mag_0 = new double[3];
                         double[] cal_acl_1 = new double[3];
                         double[] cal_gyr_1 = new double[3];
                         double[] cal_mag_1 = new double[3];
-
+                        double cal_exp_a0_0 = 0.0;
+                        double cal_exp_a7_0 = 0.0;
+                        double cal_exp_a0_1 = 0.0;
+                        double cal_exp_a7_1 = 0.0;
 
                 		int[] dataArray = new int[0];
                 		double[] calibratedDataArray = new double[0];
@@ -352,8 +387,46 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
                             if (gaitroid_formatCluster != null ) {
                                 cal_mag_0[2] = gaitroid_formatCluster.mData;
                             }
+                            
+                            gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_exp_a0);
+                            gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
+                            if (gaitroid_formatCluster != null ) {
+                                cal_exp_a0_0 = gaitroid_formatCluster.mData;
+                            }
+                            
+                            gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_exp_a7);
+                            gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
+                            if (gaitroid_formatCluster != null ) {
+                                cal_exp_a7_0 = gaitroid_formatCluster.mData;
+                            }
+                            
+                            try {
+                            	JSONObject job = new JSONObject();
+                            	JSONObject acl = new JSONObject();
+                            	acl.put("acl_x", cal_acl_0[0]);
+                            	acl.put("acl_y", cal_acl_0[1]);
+                            	acl.put("acl_z", cal_acl_0[2]);
+                            	JSONObject gyr = new JSONObject();
+                            	gyr.put("gyr_x", cal_gyr_0[0]);
+                            	gyr.put("gyr_y", cal_gyr_0[1]);
+                            	gyr.put("gyr_z", cal_gyr_0[2]);
+                            	JSONObject mag = new JSONObject();
+                            	mag.put("mag_x", cal_mag_0[0]);
+                            	mag.put("mag_y", cal_mag_0[1]);
+                            	mag.put("mag_z", cal_mag_0[2]);
+                            	job.put("acl", acl);
+                            	job.put("gyr", gyr);
+                            	job.put("mag", mag);
+                            	job.put("exp_a0_0", cal_exp_a0_0);
+                            	job.put("exp_a7_0", cal_exp_a7_0);
+                            	Log.d("job 0", job.toString());
+                				socket.emit("gaitroid_data_0", job);
+                			} catch (JSONException e) {
+                				// TODO Auto-generated catch block
+                				e.printStackTrace();
+                			}
 
-                            Log.d("gaitroid_data", "acl: " + Arrays.toString(cal_acl_0) + " gyr: " + Arrays.toString(cal_gyr_0) + " mag: " + Arrays.toString(cal_mag_0));
+                            Log.d("gaitroid_data", "acl: " + Arrays.toString(cal_acl_0) + " gyr: " + Arrays.toString(cal_gyr_0) + " mag: " + Arrays.toString(cal_mag_0) + " exp_a0_0: " + cal_exp_a0_0 + " exp_a7_0: " + cal_exp_a7_0);
                         }
                         
                      // gaitroid, get all the sensor data
@@ -409,8 +482,46 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
                             if (gaitroid_formatCluster != null ) {
                                 cal_mag_1[2] = gaitroid_formatCluster.mData;
                             }
-
-                            Log.d("gaitroid_data", "acl: " + Arrays.toString(cal_acl_1) + " gyr: " + Arrays.toString(cal_gyr_1) + " mag: " + Arrays.toString(cal_mag_1));
+                            
+                            gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_exp_a0);
+                            gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
+                            if (gaitroid_formatCluster != null ) {
+                                cal_exp_a0_1 = gaitroid_formatCluster.mData;
+                            }
+                            
+                            gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_exp_a7);
+                            gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
+                            if (gaitroid_formatCluster != null ) {
+                                cal_exp_a7_1 = gaitroid_formatCluster.mData;
+                            }
+                            
+                            try {
+                            	JSONObject job = new JSONObject();
+                            	JSONObject acl = new JSONObject();
+                            	acl.put("acl_x", cal_acl_1[0]);
+                            	acl.put("acl_y", cal_acl_1[1]);
+                            	acl.put("acl_z", cal_acl_1[2]);
+                            	JSONObject gyr = new JSONObject();
+                            	gyr.put("gyr_x", cal_gyr_1[0]);
+                            	gyr.put("gyr_y", cal_gyr_1[1]);
+                            	gyr.put("gyr_z", cal_gyr_1[2]);
+                            	JSONObject mag = new JSONObject();
+                            	mag.put("mag_x", cal_mag_1[0]);
+                            	mag.put("mag_y", cal_mag_1[1]);
+                            	mag.put("mag_z", cal_mag_1[2]);
+                            	job.put("acl", acl);
+                            	job.put("gyr", gyr);
+                            	job.put("mag", mag);
+                            	job.put("exp_a0_1", cal_exp_a0_1);
+                            	job.put("exp_a7_1", cal_exp_a7_1);
+                            	Log.d("job 1", job.toString());
+                				socket.emit("gaitroid_data_1", job);
+                			} catch (JSONException e) {
+                				// TODO Auto-generated catch block
+                				e.printStackTrace();
+                			}
+                            
+                            Log.d("gaitroid_data", "acl: " + Arrays.toString(cal_acl_1) + " gyr: " + Arrays.toString(cal_gyr_1) + " mag: " + Arrays.toString(cal_mag_1) + " exp_a0_1: " + cal_exp_a0_1 + " exp_a7_1: " + cal_exp_a7_1);
                         }
                 	}
     				
