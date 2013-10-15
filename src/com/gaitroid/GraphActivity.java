@@ -5,12 +5,16 @@ import java.util.Collection;
 
 
 
+
+
 import com.shimmerresearch.driver.FormatCluster;
 import com.shimmerresearch.driver.ObjectCluster;
 import com.shimmerresearch.driver.Shimmer;
 import com.gaitroid.R;
 import com.shimmerresearch.service.MultiShimmerPlayService;
 import com.shimmerresearch.service.MultiShimmerPlayService.LocalBinder;
+
+
 
 
 
@@ -37,11 +41,16 @@ public class GraphActivity extends Activity{
 	   MultiShimmerPlayService mService;
 	   int mEnabledSensors=0;
 	   String BluetoothAddress="";
+	   String BluetoothAddress0="";
+		String BluetoothAddress1="";
 		private static GraphView mGraphDisplay;
 	   private static String mSensorView = ""; //The sensor device which should be viewed on the graph
 	public void onCreate(Bundle savedInstanceState) {
 	super.onCreate(savedInstanceState);
 	setContentView(R.layout.graph_view);
+	
+	BluetoothAddress0 = ((MyApplication) this.getApplication()).getBluetoothAddress0();
+	BluetoothAddress1 = ((MyApplication) this.getApplication()).getBluetoothAddress1();
 	
 	Bundle extras = getIntent().getExtras();
     BluetoothAddress = extras.getString("BluetoothAddress");
@@ -90,6 +99,7 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
       		Log.d("Shimmer","Connected on Graph" + " " +BluetoothAddress);
       		//update the view
       		mServiceBind=true;
+      		// modify the service, the BluetoothAddress will not affect the handler
       		mService.setGraphHandler(mHandler,BluetoothAddress);
       		mService.enableGraphingHandler(true);
       		mEnabledSensors=mService.getEnabledSensors(BluetoothAddress);
@@ -140,9 +150,12 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
                         String[] sensor_acl = {"Accelerometer X", "Accelerometer Y", "Accelerometer Z"};
                         String[] sensor_gyr = {"Gyroscope X", "Gyroscope Y", "Gyroscope Z"};
                         String[] sensor_mag = {"Magnetometer X", "Magnetometer Y", "Magnetometer Z"};
-                        double[] cal_acl = new double[3];
-                        double[] cal_gyr = new double[3];
-                        double[] cal_mag = new double[3];
+                        double[] cal_acl_0 = new double[3];
+                        double[] cal_gyr_0 = new double[3];
+                        double[] cal_mag_0 = new double[3];
+                        double[] cal_acl_1 = new double[3];
+                        double[] cal_gyr_1 = new double[3];
+                        double[] cal_mag_1 = new double[3];
 
 
                 		int[] dataArray = new int[0];
@@ -285,64 +298,119 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
     				 	 
     					}
 
-
+                		
                         // gaitroid, get all the sensor data
                         if(objectCluster.mMyName.equals("0")) {
-                            //mService.setEnabledSensors(0, deviceName);
-                            //mService.setEnabledSensors(1, deviceName);
-                            //mService.setEnabledSensors(2, deviceName);
+                        	Log.d("gaitroid_data", "deveice: 0");
                             // acl
                             Collection<FormatCluster> gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_acl[0]);
                             FormatCluster gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
                             if (gaitroid_formatCluster != null ) {
-                                cal_acl[0] = gaitroid_formatCluster.mData;
+                                cal_acl_0[0] = gaitroid_formatCluster.mData;
                             }
                             gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_acl[1]);
                             gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
                             if (gaitroid_formatCluster != null ) {
-                                cal_acl[1] = gaitroid_formatCluster.mData;
+                                cal_acl_0[1] = gaitroid_formatCluster.mData;
                             }
                             gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_acl[2]);
                             gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
                             if (gaitroid_formatCluster != null ) {
-                                cal_acl[2] = gaitroid_formatCluster.mData;
+                                cal_acl_0[2] = gaitroid_formatCluster.mData;
                             }
 
                             // gyro
                             gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_gyr[0]);
                             gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
                             if (gaitroid_formatCluster != null ) {
-                                cal_gyr[0] = gaitroid_formatCluster.mData;
+                                cal_gyr_0[0] = gaitroid_formatCluster.mData;
                             }
                             gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_gyr[1]);
                             gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
                             if (gaitroid_formatCluster != null ) {
-                                cal_gyr[1] = gaitroid_formatCluster.mData;
+                                cal_gyr_0[1] = gaitroid_formatCluster.mData;
                             }
                             gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_gyr[2]);
                             gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
                             if (gaitroid_formatCluster != null ) {
-                                cal_gyr[2] = gaitroid_formatCluster.mData;
+                                cal_gyr_0[2] = gaitroid_formatCluster.mData;
                             }
 
                             // mag
                             gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_mag[0]);
                             gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
                             if (gaitroid_formatCluster != null ) {
-                                cal_mag[0] = gaitroid_formatCluster.mData;
+                                cal_mag_0[0] = gaitroid_formatCluster.mData;
                             }
                             gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_mag[1]);
                             gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
                             if (gaitroid_formatCluster != null ) {
-                                cal_mag[1] = gaitroid_formatCluster.mData;
+                                cal_mag_0[1] = gaitroid_formatCluster.mData;
                             }
                             gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_mag[2]);
                             gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
                             if (gaitroid_formatCluster != null ) {
-                                cal_mag[2] = gaitroid_formatCluster.mData;
+                                cal_mag_0[2] = gaitroid_formatCluster.mData;
                             }
 
-                            Log.d("gaitroid_data", "acl: " + Arrays.toString(cal_acl) + " gyr: " + Arrays.toString(cal_gyr) + " mag: " + Arrays.toString(cal_mag));
+                            Log.d("gaitroid_data", "acl: " + Arrays.toString(cal_acl_0) + " gyr: " + Arrays.toString(cal_gyr_0) + " mag: " + Arrays.toString(cal_mag_0));
+                        }
+                        
+                     // gaitroid, get all the sensor data
+                        if(objectCluster.mMyName.equals("1")) {
+                        	Log.d("gaitroid_data", "deveice: 1");
+                            // acl
+                            Collection<FormatCluster> gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_acl[0]);
+                            FormatCluster gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
+                            if (gaitroid_formatCluster != null ) {
+                                cal_acl_1[0] = gaitroid_formatCluster.mData;
+                            }
+                            gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_acl[1]);
+                            gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
+                            if (gaitroid_formatCluster != null ) {
+                                cal_acl_1[1] = gaitroid_formatCluster.mData;
+                            }
+                            gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_acl[2]);
+                            gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
+                            if (gaitroid_formatCluster != null ) {
+                                cal_acl_1[2] = gaitroid_formatCluster.mData;
+                            }
+
+                            // gyro
+                            gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_gyr[0]);
+                            gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
+                            if (gaitroid_formatCluster != null ) {
+                                cal_gyr_1[0] = gaitroid_formatCluster.mData;
+                            }
+                            gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_gyr[1]);
+                            gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
+                            if (gaitroid_formatCluster != null ) {
+                                cal_gyr_1[1] = gaitroid_formatCluster.mData;
+                            }
+                            gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_gyr[2]);
+                            gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
+                            if (gaitroid_formatCluster != null ) {
+                                cal_gyr_1[2] = gaitroid_formatCluster.mData;
+                            }
+
+                            // mag
+                            gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_mag[0]);
+                            gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
+                            if (gaitroid_formatCluster != null ) {
+                                cal_mag_1[0] = gaitroid_formatCluster.mData;
+                            }
+                            gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_mag[1]);
+                            gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
+                            if (gaitroid_formatCluster != null ) {
+                                cal_mag_1[1] = gaitroid_formatCluster.mData;
+                            }
+                            gaitroid_ofFormats = objectCluster.mPropertyCluster.get(sensor_mag[2]);
+                            gaitroid_formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(gaitroid_ofFormats,"CAL"));
+                            if (gaitroid_formatCluster != null ) {
+                                cal_mag_1[2] = gaitroid_formatCluster.mData;
+                            }
+
+                            Log.d("gaitroid_data", "acl: " + Arrays.toString(cal_acl_1) + " gyr: " + Arrays.toString(cal_gyr_1) + " mag: " + Arrays.toString(cal_mag_1));
                         }
                 	}
     				

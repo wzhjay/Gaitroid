@@ -243,7 +243,9 @@ public class MultiShimmerPlayService extends Service {
 		            	   }
 	            	   }
 	            	   
-	            	   if (mGraphing==true && objectCluster.mBluetoothAddress.equals(mGraphBluetoothAddress)){
+	            	   //if (mGraphing==true && objectCluster.mBluetoothAddress.equals(mGraphBluetoothAddress)){
+	            	   // no need to check the bluetooth address, send all the device data
+	            	   if (mGraphing==true){
 	            		   Log.d("ShimmerGraph","Sending");
 	            		   mHandlerGraph.obtainMessage(Shimmer.MESSAGE_READ, objectCluster)
                	        .sendToTarget();
