@@ -122,11 +122,20 @@ public class MultiShimmerPlayActivity extends Activity {
 		    Object o = listViewDevices.getItemAtPosition(position);
 		    Log.d("Shimmer",o.toString());
 		    mCurrentSelectedSlot = position;
-		    Intent mainCommandIntent=new Intent(MultiShimmerPlayActivity.this,MainCommandsActivity.class);
-		    mainCommandIntent.putExtra("LocalDeviceID",o.toString());
-		    mainCommandIntent.putExtra("CurrentSlot", position);
-		    mainCommandIntent.putExtra("requestCode", REQUEST_MAIN_COMMAND_SHIMMER);   
-     		startActivityForResult(mainCommandIntent, REQUEST_MAIN_COMMAND_SHIMMER);
+		    if(position == 2) {   
+		    	Intent mainCommandIntent=new Intent(MultiShimmerPlayActivity.this,MainCommandsActivity.class);
+			    mainCommandIntent.putExtra("LocalDeviceID",o.toString());
+			    mainCommandIntent.putExtra("CurrentSlot", position);
+			    mainCommandIntent.putExtra("requestCode", REQUEST_MAIN_COMMAND_SHIMMER);
+     			startActivityForResult(mainCommandIntent, REQUEST_MAIN_COMMAND_SHIMMER);
+     		}
+     		else {
+     			Intent leftRightCommandIntent=new Intent(MultiShimmerPlayActivity.this,LeftRightCommandsActivity.class);
+			    leftRightCommandIntent.putExtra("LocalDeviceID",o.toString());
+			    leftRightCommandIntent.putExtra("CurrentSlot", position);
+			    leftRightCommandIntent.putExtra("requestCode", REQUEST_MAIN_COMMAND_SHIMMER);
+     			startActivityForResult(leftRightCommandIntent, REQUEST_MAIN_COMMAND_SHIMMER);
+     		}
 		  }
 		});
 	

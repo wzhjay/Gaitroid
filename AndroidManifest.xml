@@ -38,6 +38,11 @@
                   android:label="Main Commands">
         </activity>
         
+        <activity android:name="com.gaitroid.LeftRightCommandsActivity"
+                  android:theme="@android:style/Theme.Dialog"
+                  android:label="Main Commands">
+        </activity>
+
         <activity android:name="com.gaitroid.CommandsSub"
              	  android:theme="@android:style/Theme.Dialog" 
              	  android:label="SubCommands">

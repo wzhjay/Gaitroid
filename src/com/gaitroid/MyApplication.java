@@ -5,8 +5,8 @@ import android.util.Log;
 
 public class MyApplication extends Application {
 
-    private String BaseAPIPath = "http://192.168.1.101:3000/api/";
-    private String SocketConnectPath = "http://192.168.1.101:3000/";
+    private String BaseAPIPath = "http://192.168.1.100:3000/api/";
+    private String SocketConnectPath = "http://192.168.1.100:3000/";
     private String[] BluetoothAddress = {"", ""};
     
     public String getBaseAPIPath() {
