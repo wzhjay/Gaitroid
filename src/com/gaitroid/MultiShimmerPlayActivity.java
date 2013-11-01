@@ -54,6 +54,7 @@ public class MultiShimmerPlayActivity extends Activity {
 	private int mCurrentSelectedSlot=-1;
 	ArrayList<String> Devices= new ArrayList<String>();
 	private String[] devices = new String [] {"Left","Right","All Devices"};
+
 	boolean mServiceBind=false;
 	static final int REQUEST_ENABLE_BT = 1;
 	public final static int REQUEST_MAIN_COMMAND_SHIMMER=3;
@@ -92,16 +93,28 @@ public class MultiShimmerPlayActivity extends Activity {
     
     mCtx=this;
     registerReceiver(myReceiver,new IntentFilter("com.shimmerresearch.service.MultiShimmerService"));
-    final ListView listViewDevices = (ListView) findViewById(R.id.listView1);
+    //final ListView listViewDevices = (ListView) findViewById(R.id.listView1);
 
     
-	ArrayList<String> devicesList = new ArrayList<String>();  
-	devicesList.addAll( Arrays.asList(devices) );  
-    ArrayAdapter<String> sR = new ArrayAdapter<String>(this, R.layout.commands_name,devicesList);
-	listViewDevices.setAdapter(sR);
+	// ArrayList<String> devicesList = new ArrayList<String>();  
+	// devicesList.addAll( Arrays.asList(devices) );  
+ //    ArrayAdapter<String> sR = new ArrayAdapter<String>(this, R.layout.commands_name,devicesList);
+	// listViewDevices.setAdapter(sR);
 	
+
+	// gaitroid customize listview
+    Model.LoadModel();
+    final ListView listViewDevices = (ListView) findViewById(R.id.listView_connect_main);
+    String[] ids = new String[Model.Items.size()];
+    for (int i= 0; i < ids.length; i++){
+
+        ids[i] = Integer.toString(i+1);
+    }
     
-	
+    ItemAdapter adapter = new ItemAdapter(this,R.layout.commands_name, R.id.rowTextView, ids);
+    listViewDevices.setAdapter(adapter);
+
+
     BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     if(mBluetoothAdapter == null) {
     	Toast.makeText(this, "Device does not support Bluetooth\nExiting...", Toast.LENGTH_LONG).show();
@@ -117,27 +130,33 @@ public class MultiShimmerPlayActivity extends Activity {
 	
 	listViewDevices.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
-		  public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
-
-		    Object o = listViewDevices.getItemAtPosition(position);
-		    Log.d("Shimmer",o.toString());
+		@Override
+		public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
+			//Object o = listViewDevices.getItemAtPosition(position);
+		    //Log.d("Shimmer",o.toString());
 		    mCurrentSelectedSlot = position;
 		    if(position == 2) {   
 		    	Intent mainCommandIntent=new Intent(MultiShimmerPlayActivity.this,MainCommandsActivity.class);
-			    mainCommandIntent.putExtra("LocalDeviceID",o.toString());
+			    mainCommandIntent.putExtra("LocalDeviceID","All Devices");
 			    mainCommandIntent.putExtra("CurrentSlot", position);
 			    mainCommandIntent.putExtra("requestCode", REQUEST_MAIN_COMMAND_SHIMMER);
      			startActivityForResult(mainCommandIntent, REQUEST_MAIN_COMMAND_SHIMMER);
      		}
      		else {
+     			String deviceName;
+     			if(position == 1)
+     				deviceName = "Right";
+     			else
+     				deviceName = "Left";
      			Intent leftRightCommandIntent=new Intent(MultiShimmerPlayActivity.this,LeftRightCommandsActivity.class);
-			    leftRightCommandIntent.putExtra("LocalDeviceID",o.toString());
+			    leftRightCommandIntent.putExtra("LocalDeviceID", deviceName);
 			    leftRightCommandIntent.putExtra("CurrentSlot", position);
 			    leftRightCommandIntent.putExtra("requestCode", REQUEST_MAIN_COMMAND_SHIMMER);
      			startActivityForResult(leftRightCommandIntent, REQUEST_MAIN_COMMAND_SHIMMER);
      		}
-		  }
-		});
+			
+		}
+	});
 	
 	// connect socket button
 //	final Button button_socket = (Button) findViewById(R.id.button_socket);
@@ -186,11 +205,21 @@ public class MultiShimmerPlayActivity extends Activity {
 			devices[Integer.parseInt(stemp.getDeviceName())]=stemp.getBluetoothAddress(); //check name which is a number sequence?
 			i++;
 		}
-	  final ListView listViewDevices = (ListView) findViewById(R.id.listView1);
-	  ArrayList<String> devicesList = new ArrayList<String>();  
-	  devicesList.addAll( Arrays.asList(devices) );  
-	  ArrayAdapter<String> sR = new ArrayAdapter<String>(this, R.layout.commands_name,devicesList);
-	  listViewDevices.setAdapter(sR);
+	  // final ListView listViewDevices = (ListView) findViewById(R.id.listView1);
+	  // ArrayList<String> devicesList = new ArrayList<String>();  
+	  // devicesList.addAll( Arrays.asList(devices) );  
+	  // ArrayAdapter<String> sR = new ArrayAdapter<String>(this, R.layout.commands_name,devicesList);
+	  // listViewDevices.setAdapter(sR);
+		Model.LoadModel();
+	    final ListView listViewDevices = (ListView) findViewById(R.id.listView_connect_main);
+	    String[] ids = new String[Model.Items.size()];
+	    for (int j= 0; j < ids.length; j++){
+
+	        ids[j] = Integer.toString(j+1);
+	    }
+	    
+	    ItemAdapter adapter = new ItemAdapter(this,R.layout.commands_name, R.id.rowTextView, ids);
+	    listViewDevices.setAdapter(adapter);
   }
   
   public void onPause(){

@@ -14,38 +14,43 @@
         android:id="@+id/checkBoxAccelerometer"
         android:layout_width="215dp"
         android:layout_height="wrap_content"
+        android:checked="true"
         android:text="Accelerometer" />
 
     <CheckBox
         android:id="@+id/checkBoxGyroscope"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:checked="true"
         android:text="Gyroscope" />
     
     <CheckBox
         android:id="@+id/checkBoxMagnetometer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:checked="true"
         android:text="Magnetometer" />
         
-    <CheckBox
+<!--     <CheckBox
         android:id="@+id/checkBoxStrainGauge"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Strain Gauge" />
+        android:text="Strain Gauge" /> -->
     
 	<CheckBox
         android:id="@+id/checkBoxExpBoardA0"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:checked="true"
         android:text="ExpBoardA0" />
         
     <CheckBox
         android:id="@+id/checkBoxExpBoardA7"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:checked="true"
         android:text="ExpBoardA7" />
-    
+<!--     
     <CheckBox
         android:id="@+id/checkBoxECG"
         android:layout_width="wrap_content"
@@ -68,7 +73,7 @@
         android:id="@+id/checkBoxGSR"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="GSR" />
+        android:text="GSR" /> -->
     
 </LinearLayout>
 </ScrollView>

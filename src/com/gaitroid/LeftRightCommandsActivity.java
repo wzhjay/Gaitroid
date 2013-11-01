@@ -60,7 +60,7 @@ public class LeftRightCommandsActivity extends Activity{
 		    
 			ArrayList<String> commandsList = new ArrayList<String>();  
 			commandsList.addAll( Arrays.asList(commands) );  
-		    ArrayAdapter<String> sR = new ArrayAdapter<String>(this, R.layout.commands_name,commandsList);
+		    ArrayAdapter<String> sR = new ArrayAdapter<String>(this, R.layout.sensor_commands_name,commandsList);
 			listViewCommands.setAdapter(sR);
 		    
 		    

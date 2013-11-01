@@ -36,11 +36,11 @@ public class ConfigureActivity extends Activity{
  	   final CheckBox cboxGyro = (CheckBox) findViewById(R.id.checkBoxGyroscope);
  	   final CheckBox cboxAccel = (CheckBox) findViewById(R.id.checkBoxAccelerometer);
  	   final CheckBox cboxMag = (CheckBox) findViewById(R.id.checkBoxMagnetometer);
- 	   final CheckBox cboxSG = (CheckBox) findViewById(R.id.checkBoxStrainGauge);
- 	   final CheckBox cboxECG = (CheckBox) findViewById(R.id.checkBoxECG);
- 	   final CheckBox cboxEMG = (CheckBox) findViewById(R.id.checkBoxEMG);
- 	   final CheckBox cboxGSR = (CheckBox) findViewById(R.id.checkBoxGSR);
- 	   final CheckBox cboxHR = (CheckBox) findViewById(R.id.checkBoxHeartRate);
+ 	   // final CheckBox cboxSG = (CheckBox) findViewById(R.id.checkBoxStrainGauge);
+ 	   // final CheckBox cboxECG = (CheckBox) findViewById(R.id.checkBoxECG);
+ 	   // final CheckBox cboxEMG = (CheckBox) findViewById(R.id.checkBoxEMG);
+ 	   // final CheckBox cboxGSR = (CheckBox) findViewById(R.id.checkBoxGSR);
+ 	   // final CheckBox cboxHR = (CheckBox) findViewById(R.id.checkBoxHeartRate);
  	   final CheckBox cboxA7 = (CheckBox) findViewById(R.id.checkBoxExpBoardA7);
  	   final CheckBox cboxA0 = (CheckBox) findViewById(R.id.checkBoxExpBoardA0);
  	   
@@ -57,21 +57,21 @@ public class ConfigureActivity extends Activity{
 	    		   if (cboxMag.isChecked()) {
 	    			   mReturnEnabledSensors=mReturnEnabledSensors | SENSOR_MAG;
 	    		   }
-	    		   if (cboxSG.isChecked()) {
-	    			   mReturnEnabledSensors=mReturnEnabledSensors | SENSOR_STRAIN_GAUGE;
-	    		   }
-	    		   if (cboxECG.isChecked()) {
-	    			   mReturnEnabledSensors=mReturnEnabledSensors | SENSOR_ECG;
-	    		   }
-	    		   if (cboxEMG.isChecked()) {
-	    			   mReturnEnabledSensors=mReturnEnabledSensors | SENSOR_EMG;
-	    		   }
-	    		   if (cboxGSR.isChecked()) {
-	    			   mReturnEnabledSensors=mReturnEnabledSensors | SENSOR_GSR;
-	    		   }
-	    		   if (cboxHR.isChecked()) {
-	    			   mReturnEnabledSensors=mReturnEnabledSensors | SENSOR_HEART_RATE;
-	    		   }
+	    		   // if (cboxSG.isChecked()) {
+	    			  //  mReturnEnabledSensors=mReturnEnabledSensors | SENSOR_STRAIN_GAUGE;
+	    		   // }
+	    		   // if (cboxECG.isChecked()) {
+	    			  //  mReturnEnabledSensors=mReturnEnabledSensors | SENSOR_ECG;
+	    		   // }
+	    		   // if (cboxEMG.isChecked()) {
+	    			  //  mReturnEnabledSensors=mReturnEnabledSensors | SENSOR_EMG;
+	    		   // }
+	    		   // if (cboxGSR.isChecked()) {
+	    			  //  mReturnEnabledSensors=mReturnEnabledSensors | SENSOR_GSR;
+	    		   // }
+	    		   // if (cboxHR.isChecked()) {
+	    			  //  mReturnEnabledSensors=mReturnEnabledSensors | SENSOR_HEART_RATE;
+	    		   // }
 	    		   if (cboxA7.isChecked()) {
 	    			   mReturnEnabledSensors=mReturnEnabledSensors | SENSOR_EXP_BOARD_A7;
 	    		   }
@@ -103,10 +103,10 @@ public class ConfigureActivity extends Activity{
 	    	public void onClick(View v) {
 	    		if (cboxGyro.isChecked() || cboxMag.isChecked()  )
 	    		{
-	    			cboxSG.setChecked(false);
-	    			cboxGSR.setChecked(false);
-	    			cboxECG.setChecked(false);
-	    			cboxEMG.setChecked(false);
+	    			// cboxSG.setChecked(false);
+	    			// cboxGSR.setChecked(false);
+	    			// cboxECG.setChecked(false);
+	    			// cboxEMG.setChecked(false);
 	    		} 
 	    	}
 	    });
@@ -115,86 +115,86 @@ public class ConfigureActivity extends Activity{
 	    	public void onClick(View v) {
 	    		if (cboxGyro.isChecked() || cboxMag.isChecked()  )
 	    		{
-	    			cboxSG.setChecked(false);
-	    			cboxGSR.setChecked(false);
-	    			cboxECG.setChecked(false);
-	    			cboxEMG.setChecked(false);
+	    			// cboxSG.setChecked(false);
+	    			// cboxGSR.setChecked(false);
+	    			// cboxECG.setChecked(false);
+	    			// cboxEMG.setChecked(false);
 	    		} 
 	    	
 	    	}
 	    });
 	   
-	   cboxSG.setOnClickListener(new OnClickListener() {
-	    	public void onClick(View v) {
-	    		if (cboxSG.isChecked())
-	    		{
-	    			cboxGyro.setChecked(false);
-	    			cboxMag.setChecked(false);
-	    			cboxECG.setChecked(false);
-	    			cboxEMG.setChecked(false);
-	    			cboxGSR.setChecked(false);
-	    		} 
+	   // cboxSG.setOnClickListener(new OnClickListener() {
+	   //  	public void onClick(View v) {
+	   //  		if (cboxSG.isChecked())
+	   //  		{
+	   //  			cboxGyro.setChecked(false);
+	   //  			cboxMag.setChecked(false);
+	   //  			cboxECG.setChecked(false);
+	   //  			cboxEMG.setChecked(false);
+	   //  			cboxGSR.setChecked(false);
+	   //  		} 
 	    	
-	    	}
-	    });
+	   //  	}
+	   //  });
 	   
-	   cboxGSR.setOnClickListener(new OnClickListener() {
-	    	public void onClick(View v) {
-	    		if (cboxGSR.isChecked())
-	    		{
-	    			cboxGyro.setChecked(false);
-	    			cboxMag.setChecked(false);
-	    			cboxECG.setChecked(false);
-	    			cboxEMG.setChecked(false);
-	    			cboxSG.setChecked(false);
-	    		}
+	   // cboxGSR.setOnClickListener(new OnClickListener() {
+	   //  	public void onClick(View v) {
+	   //  		if (cboxGSR.isChecked())
+	   //  		{
+	   //  			cboxGyro.setChecked(false);
+	   //  			cboxMag.setChecked(false);
+	   //  			cboxECG.setChecked(false);
+	   //  			cboxEMG.setChecked(false);
+	   //  			cboxSG.setChecked(false);
+	   //  		}
 	    	
-	    	}
-	    });
+	   //  	}
+	   //  });
 	   
-	   cboxECG.setOnClickListener(new OnClickListener() {
-	    	public void onClick(View v) {
-	    		if (cboxECG.isChecked())
-	    		{
-	    			cboxGyro.setChecked(false);
-	    			cboxMag.setChecked(false);
-	    			cboxGSR.setChecked(false);
-	    			cboxEMG.setChecked(false);
-	    			cboxSG.setChecked(false);
-	    		}
+	   // cboxECG.setOnClickListener(new OnClickListener() {
+	   //  	public void onClick(View v) {
+	   //  		if (cboxECG.isChecked())
+	   //  		{
+	   //  			cboxGyro.setChecked(false);
+	   //  			cboxMag.setChecked(false);
+	   //  			cboxGSR.setChecked(false);
+	   //  			cboxEMG.setChecked(false);
+	   //  			cboxSG.setChecked(false);
+	   //  		}
 	    	
-	    	}
-	    });
+	   //  	}
+	   //  });
 	   
-	   cboxEMG.setOnClickListener(new OnClickListener() {
-	    	public void onClick(View v) {
-	    		if (cboxEMG.isChecked())
-	    		{
-	    			cboxGyro.setChecked(false);
-	    			cboxMag.setChecked(false);
-	    			cboxGSR.setChecked(false);
-	    			cboxECG.setChecked(false);
-	    			cboxSG.setChecked(false);
-	    		}
+	   // cboxEMG.setOnClickListener(new OnClickListener() {
+	   //  	public void onClick(View v) {
+	   //  		if (cboxEMG.isChecked())
+	   //  		{
+	   //  			cboxGyro.setChecked(false);
+	   //  			cboxMag.setChecked(false);
+	   //  			cboxGSR.setChecked(false);
+	   //  			cboxECG.setChecked(false);
+	   //  			cboxSG.setChecked(false);
+	   //  		}
 	    	
-	    	}
-	    });
+	   //  	}
+	   //  });
 	   
-	   cboxHR.setOnClickListener(new OnClickListener() {
-	    	public void onClick(View v) {
-	    		if (cboxHR.isChecked())
-	    		{
-	    			cboxA0.setChecked(false);
-	    			cboxA7.setChecked(false);
-	    			}
-	    	}
-	    });
+	   // cboxHR.setOnClickListener(new OnClickListener() {
+	   //  	public void onClick(View v) {
+	   //  		if (cboxHR.isChecked())
+	   //  		{
+	   //  			cboxA0.setChecked(false);
+	   //  			cboxA7.setChecked(false);
+	   //  			}
+	   //  	}
+	   //  });
 	   
 	   cboxA0.setOnClickListener(new OnClickListener() {
 	    	public void onClick(View v) {
 	    		if (cboxA0.isChecked() || cboxA7.isChecked())
 	    		{
-	    			cboxHR.setChecked(false);
+	    			// cboxHR.setChecked(false);
 	    			}
 	    	}
 	    });
@@ -203,7 +203,7 @@ public class ConfigureActivity extends Activity{
 	    	public void onClick(View v) {
 	    		if (cboxA0.isChecked() || cboxA7.isChecked())
 	    		{
-	    			cboxHR.setChecked(false);
+	    			// cboxHR.setChecked(false);
 	    			}
 	    	}
 	    });

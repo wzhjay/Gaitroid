@@ -35,7 +35,7 @@ public class MainCommandsActivity extends Activity{
 	int mCurrentSlot=-1;
 	MultiShimmerPlayService mService;
 	private boolean mServiceBind=false;
-	private String[] commands = new String [] {"Start Streaming","Stop Streaming","Enable Sensors","Sub Commands","View Graph","Log Options","Connect","Disconnect","Configure Sounds"};
+	private String[] commands = new String [] {"Start Streaming","Stop Streaming","Enable Sensors","Sub Commands","View Graph","Log Options","Disconnect","Configure Sounds"};
 	private double mSamplingRate=-1;
 	private int mAccelRange=-1;
 	private int mGSRRange=-1;
@@ -60,7 +60,7 @@ public class MainCommandsActivity extends Activity{
 		    
 			ArrayList<String> commandsList = new ArrayList<String>();  
 			commandsList.addAll( Arrays.asList(commands) );  
-		    ArrayAdapter<String> sR = new ArrayAdapter<String>(this, R.layout.commands_name,commandsList);
+		    ArrayAdapter<String> sR = new ArrayAdapter<String>(this, R.layout.sensor_commands_name,commandsList);
 			listViewCommands.setAdapter(sR);
 		    
 		    
@@ -74,11 +74,13 @@ public class MainCommandsActivity extends Activity{
 						  mainCommandIntent.putExtra("Position", mCurrentSlot);
 						  startActivityForResult(mainCommandIntent, -1);
 						  
-					  }else if (position==6){
-								// TODO Auto-generated method stub
-								Intent mainCommandIntent=new Intent(MainCommandsActivity.this,DeviceListActivity.class);
-					     		startActivityForResult(mainCommandIntent, MultiShimmerPlayActivity.REQUEST_CONNECT_SHIMMER);
-					  } else if (position==3){
+					  }
+					  // else if (position==6){
+							// 	// TODO Auto-generated method stub
+							// 	Intent mainCommandIntent=new Intent(MainCommandsActivity.this,DeviceListActivity.class);
+					  //    		startActivityForResult(mainCommandIntent, MultiShimmerPlayActivity.REQUEST_CONNECT_SHIMMER);
+					  // }
+					  else if (position==3){
 							// TODO Auto-generated method stub
 						  	mSamplingRate=mService.getSamplingRate(mCurrentDevice);
 				      		mAccelRange=mService.getAccelRange(mCurrentDevice);

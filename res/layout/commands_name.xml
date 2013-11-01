@@ -1,7 +1,27 @@
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"  
- android:id="@+id/rowTextView"   
- android:layout_width="fill_parent"   
- android:layout_height="wrap_content"  
- android:padding="10dp"  
- android:textSize="16sp" >  
-</TextView>  
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:minHeight="64dp">
+
+    <ImageView
+            android:id="@+id/rowImageView"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_alignParentLeft="true"
+            android:layout_marginLeft="10dp"
+            android:layout_alignParentTop="true"/>
+    <TextView
+            android:layout_alignBottom="@+id/rowImageView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/rowTextView"
+            android:layout_alignParentLeft="true"
+            android:layout_marginLeft="150dp"
+            android:layout_alignParentRight="true"
+            android:gravity="center_vertical"/>
+
+</RelativeLayout>
+

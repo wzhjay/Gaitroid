@@ -27,11 +27,11 @@ public class SensorViewActivity extends Activity{
     	final CheckBox accelCheckBox = (CheckBox) findViewById(R.id.checkBoxAccelerometerGraph);
     	final CheckBox gyroCheckBox = (CheckBox) findViewById(R.id.checkBoxGyroscopeGraph);
     	final CheckBox magCheckBox = (CheckBox) findViewById(R.id.checkBoxMagnetometerGraph);
- 	    final CheckBox emgCheckBox = (CheckBox) findViewById(R.id.checkBoxEMGGraph); 
- 	    final CheckBox strainGaugeCheckBox = (CheckBox) findViewById(R.id.checkBoxStrainGaugeGraph);
- 	    final CheckBox ecgCheckBox = (CheckBox) findViewById(R.id.checkBoxECGGraph);
- 	    final CheckBox gsrCheckBox = (CheckBox) findViewById(R.id.checkBoxGSRGraph);  
- 	    final CheckBox heartRateCheckBox = (CheckBox) findViewById(R.id.checkBoxHeartRateGraph);
+ 	    // final CheckBox emgCheckBox = (CheckBox) findViewById(R.id.checkBoxEMGGraph); 
+ 	    // final CheckBox strainGaugeCheckBox = (CheckBox) findViewById(R.id.checkBoxStrainGaugeGraph);
+ 	    // final CheckBox ecgCheckBox = (CheckBox) findViewById(R.id.checkBoxECGGraph);
+ 	    // final CheckBox gsrCheckBox = (CheckBox) findViewById(R.id.checkBoxGSRGraph);  
+ 	    // final CheckBox heartRateCheckBox = (CheckBox) findViewById(R.id.checkBoxHeartRateGraph);
  	    final CheckBox expBoardA0CheckBox = (CheckBox) findViewById(R.id.checkBoxExpBoardA0Graph);
  	    final CheckBox expBoardA7CheckBox = (CheckBox) findViewById(R.id.checkBoxExpBoardA7Graph);
  	    final CheckBox timeStampCheckBox = (CheckBox) findViewById(R.id.checkBoxTimeStampGraph);
@@ -54,33 +54,33 @@ public class SensorViewActivity extends Activity{
 		} else {
 			magCheckBox.setEnabled(false);
 		}
-		if (((enabledSensors & 0xFF) & Shimmer.SENSOR_GSR) > 0) {	
-			gsrCheckBox.setEnabled(true);
-		} else {
-			gsrCheckBox.setEnabled(false);
-		}
+		// if (((enabledSensors & 0xFF) & Shimmer.SENSOR_GSR) > 0) {	
+		// 	gsrCheckBox.setEnabled(true);
+		// } else {
+		// 	gsrCheckBox.setEnabled(false);
+		// }
 		
-		if (((enabledSensors & 0xFF) & Shimmer.SENSOR_ECG) > 0) {	
-			ecgCheckBox.setEnabled(true);
-		} else {
-			ecgCheckBox.setEnabled(false);
-		}
+		// if (((enabledSensors & 0xFF) & Shimmer.SENSOR_ECG) > 0) {	
+		// 	ecgCheckBox.setEnabled(true);
+		// } else {
+		// 	ecgCheckBox.setEnabled(false);
+		// }
 		
-		if (((enabledSensors & 0xFF) & Shimmer.SENSOR_EMG) > 0)  {	
-			emgCheckBox.setEnabled(true);
-		} else {
-			emgCheckBox.setEnabled(false);
-		}
-		if (((enabledSensors & 0xFF00) & Shimmer.SENSOR_STRAIN) > 0)  {	
-			strainGaugeCheckBox.setEnabled(true);
-		} else {
-			strainGaugeCheckBox.setEnabled(false);
-		}
-		if (((enabledSensors & 0xFF00) & Shimmer.SENSOR_HEART) > 0)  {	
-			heartRateCheckBox.setEnabled(true);
-		} else {
-			heartRateCheckBox.setEnabled(false);
-		}
+		// if (((enabledSensors & 0xFF) & Shimmer.SENSOR_EMG) > 0)  {	
+		// 	emgCheckBox.setEnabled(true);
+		// } else {
+		// 	emgCheckBox.setEnabled(false);
+		// }
+		// if (((enabledSensors & 0xFF00) & Shimmer.SENSOR_STRAIN) > 0)  {	
+		// 	strainGaugeCheckBox.setEnabled(true);
+		// } else {
+		// 	strainGaugeCheckBox.setEnabled(false);
+		// }
+		// if (((enabledSensors & 0xFF00) & Shimmer.SENSOR_HEART) > 0)  {	
+		// 	heartRateCheckBox.setEnabled(true);
+		// } else {
+		// 	heartRateCheckBox.setEnabled(false);
+		// }
 		
 		if (((enabledSensors & 0xFF) & Shimmer.SENSOR_EXP_BOARD_A0) > 0)  {	
 			expBoardA0CheckBox.setEnabled(true);
@@ -132,64 +132,64 @@ public class SensorViewActivity extends Activity{
 	    });
 	   
 
-	   emgCheckBox.setOnClickListener(new OnClickListener() {
-	    	public void onClick(View v) {
-	    		mSensorName="EMG";
-	            Intent intent = new Intent();
-	            intent.putExtra(mDone, mSensorName);
-	            // Set result and finish this Activity
-	            setResult(Activity.RESULT_OK, intent);
-	        	finish();
-	        }
-	    });
+	   // emgCheckBox.setOnClickListener(new OnClickListener() {
+	   //  	public void onClick(View v) {
+	   //  		mSensorName="EMG";
+	   //          Intent intent = new Intent();
+	   //          intent.putExtra(mDone, mSensorName);
+	   //          // Set result and finish this Activity
+	   //          setResult(Activity.RESULT_OK, intent);
+	   //      	finish();
+	   //      }
+	   //  });
 	   
 
-	   strainGaugeCheckBox.setOnClickListener(new OnClickListener() {
-	    	public void onClick(View v) {
-	    		mSensorName="StrainGauge";
-	            //Log.d("SG",Integer.toString(mReturnEnabledSensors) + " " + Integer.toString(SENSOR_STRAIN_GAUGE));
-	            Intent intent = new Intent();
-	            intent.putExtra(mDone, mSensorName);
-	            // Set result and finish this Activity
-	            setResult(Activity.RESULT_OK, intent);
-	        	finish();
-	        }
-	    });
+	   // strainGaugeCheckBox.setOnClickListener(new OnClickListener() {
+	   //  	public void onClick(View v) {
+	   //  		mSensorName="StrainGauge";
+	   //          //Log.d("SG",Integer.toString(mReturnEnabledSensors) + " " + Integer.toString(SENSOR_STRAIN_GAUGE));
+	   //          Intent intent = new Intent();
+	   //          intent.putExtra(mDone, mSensorName);
+	   //          // Set result and finish this Activity
+	   //          setResult(Activity.RESULT_OK, intent);
+	   //      	finish();
+	   //      }
+	   //  });
 	   
 	   
-	   ecgCheckBox.setOnClickListener(new OnClickListener() {
-	    	public void onClick(View v) {
-	    		mSensorName="ECG";
-	            Intent intent = new Intent();
-	            intent.putExtra(mDone, mSensorName);
-	            // Set result and finish this Activity
-	            setResult(Activity.RESULT_OK, intent);
-	        	finish();
-	        }
-	    });
+	   // ecgCheckBox.setOnClickListener(new OnClickListener() {
+	   //  	public void onClick(View v) {
+	   //  		mSensorName="ECG";
+	   //          Intent intent = new Intent();
+	   //          intent.putExtra(mDone, mSensorName);
+	   //          // Set result and finish this Activity
+	   //          setResult(Activity.RESULT_OK, intent);
+	   //      	finish();
+	   //      }
+	   //  });
 	   
 
-	   gsrCheckBox.setOnClickListener(new OnClickListener() {
-	    	public void onClick(View v) {
-	    		mSensorName="GSR";
-	            Intent intent = new Intent();
-	            intent.putExtra(mDone, mSensorName);
-	            // Set result and finish this Activity
-	            setResult(Activity.RESULT_OK, intent);
-	        	finish();
-	        }
-	    });
+	   // gsrCheckBox.setOnClickListener(new OnClickListener() {
+	   //  	public void onClick(View v) {
+	   //  		mSensorName="GSR";
+	   //          Intent intent = new Intent();
+	   //          intent.putExtra(mDone, mSensorName);
+	   //          // Set result and finish this Activity
+	   //          setResult(Activity.RESULT_OK, intent);
+	   //      	finish();
+	   //      }
+	   //  });
 
-	   heartRateCheckBox.setOnClickListener(new OnClickListener() {
-	    	public void onClick(View v) {
-	    		mSensorName="HeartRate";
-	            Intent intent = new Intent();
-	            intent.putExtra(mDone, mSensorName);
-	            // Set result and finish this Activity
-	            setResult(Activity.RESULT_OK, intent);
-	        	finish();
-	        }
-	    });
+	   // heartRateCheckBox.setOnClickListener(new OnClickListener() {
+	   //  	public void onClick(View v) {
+	   //  		mSensorName="HeartRate";
+	   //          Intent intent = new Intent();
+	   //          intent.putExtra(mDone, mSensorName);
+	   //          // Set result and finish this Activity
+	   //          setResult(Activity.RESULT_OK, intent);
+	   //      	finish();
+	   //      }
+	   //  });
 
 	   expBoardA0CheckBox.setOnClickListener(new OnClickListener() {
 	    	public void onClick(View v) {
