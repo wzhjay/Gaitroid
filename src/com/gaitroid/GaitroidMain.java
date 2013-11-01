@@ -40,6 +40,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.speech.tts.TextToSpeech;
@@ -309,7 +310,7 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
             
             String[] fileNames = FileManager.getAllDataFiles();
             FileModel.LoadModel(fileNames);
-            final ListView listViewDevices = (ListView) rootView.findViewById(R.id.data_file_listview);
+            final ListView listViewFiles = (ListView) rootView.findViewById(R.id.data_file_listview);
             String[] ids = new String[FileModel.Items.size()];
             for (int i= 0; i < ids.length; i++){
 
@@ -317,8 +318,17 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
             }
             
             FileAdapter adapter = new FileAdapter(mCtx,R.layout.data_file_name, R.id.rowFileTextView, ids);
-            listViewDevices.setAdapter(adapter);
+            listViewFiles.setAdapter(adapter);
             
+            listViewFiles.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+        		@Override
+        		public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
+        		    Intent fileCommandIntent=new Intent(mCtx, DataFileCommandsActivity.class);
+        		    fileCommandIntent.putExtra("fileName",  FileModel.GetbyId(position+1).Name);
+             		startActivity(fileCommandIntent);
+        		}
+        	});
             
             return rootView;
         }

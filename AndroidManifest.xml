@@ -44,6 +44,11 @@
                   android:label="Main Commands">
         </activity>
 
+        <activity android:name="com.gaitroid.DataFileCommandsActivity"
+                  android:theme="@android:style/Theme.Dialog"
+                  android:label="Main Commands">
+        </activity>
+
         <activity android:name="com.gaitroid.CommandsSub"
              	  android:theme="@android:style/Theme.Dialog" 
              	  android:label="SubCommands">
