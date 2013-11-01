@@ -114,7 +114,11 @@ public class MultiShimmerPlayActivity extends Activity {
     ItemAdapter adapter = new ItemAdapter(this,R.layout.commands_name, R.id.rowTextView, ids);
     listViewDevices.setAdapter(adapter);
 
-
+    // test on file searching
+    String[] fileNames = FileManager.getAllDataFiles();
+    Log.d("MyApp", Arrays.toString(fileNames));
+    
+    
     BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     if(mBluetoothAdapter == null) {
     	Toast.makeText(this, "Device does not support Bluetooth\nExiting...", Toast.LENGTH_LONG).show();

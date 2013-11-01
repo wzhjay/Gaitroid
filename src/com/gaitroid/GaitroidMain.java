@@ -1,6 +1,7 @@
 package com.gaitroid;
 
 import java.net.MalformedURLException;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -39,10 +40,12 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.Engine;
 import android.media.AudioManager;
+
 import java.util.HashMap;
 
 public class GaitroidMain extends FragmentActivity implements ActionBar.TabListener {
@@ -293,7 +296,7 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 	              }
 	          });
             
-          rootView.findViewById(R.id.btn_streaming)
+            rootView.findViewById(R.id.btn_streaming)
 	          .setOnClickListener(new View.OnClickListener() {
 	              @Override
 	              public void onClick(View v) {
@@ -303,6 +306,20 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 	            	  startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_GRAPH_SHIMMER);
 	              }
 	          });
+            
+            String[] fileNames = FileManager.getAllDataFiles();
+            FileModel.LoadModel(fileNames);
+            final ListView listViewDevices = (ListView) rootView.findViewById(R.id.data_file_listview);
+            String[] ids = new String[FileModel.Items.size()];
+            for (int i= 0; i < ids.length; i++){
+
+                ids[i] = Integer.toString(i+1);
+            }
+            
+            FileAdapter adapter = new FileAdapter(mCtx,R.layout.data_file_name, R.id.rowFileTextView, ids);
+            listViewDevices.setAdapter(adapter);
+            
+            
             return rootView;
         }
     }

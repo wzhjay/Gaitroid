@@ -25,4 +25,8 @@ public class Model {
         return null;
     }
 
+    public static void LoadFildModel(String[] fileNames) {
+        Items = new ArrayList<Item>();
+    }
+
 }

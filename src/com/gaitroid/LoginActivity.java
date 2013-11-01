@@ -1,6 +1,7 @@
 package com.gaitroid;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
@@ -17,6 +18,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.StrictMode;
 import android.util.Log;
 import android.view.View;
@@ -31,6 +33,19 @@ public class LoginActivity extends Activity {
         Intent i;
         // if user had login before and never logout, jump to home page
         
+        /* save the folder in internal memory of phone */
+        File storagePath = new File(Environment.getExternalStorageDirectory()+ "/Gaitroid");
+        boolean success = true;
+        if (!storagePath.exists()) {
+            success = storagePath.mkdir();
+        }
+        if (success) {
+            // Do something on success
+        } else {
+            // Do something else on failure 
+        }
+        
+        Log.d("MyApp", storagePath.toURI().toString());
         
         StrictMode.ThreadPolicy policy = new StrictMode.
         ThreadPolicy.Builder().permitAll().build();
