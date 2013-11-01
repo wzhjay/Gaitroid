@@ -214,8 +214,8 @@ public class MultiShimmerPlayActivity extends Activity {
 	    final ListView listViewDevices = (ListView) findViewById(R.id.listView_connect_main);
 	    String[] ids = new String[Model.Items.size()];
 	    for (int j= 0; j < ids.length; j++){
-
 	        ids[j] = Integer.toString(j+1);
+	        Model.GetbyId(j+1).Name = devices[j];
 	    }
 	    
 	    ItemAdapter adapter = new ItemAdapter(this,R.layout.commands_name, R.id.rowTextView, ids);
