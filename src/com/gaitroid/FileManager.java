@@ -1,9 +1,14 @@
 package com.gaitroid;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.util.Arrays;
 
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Environment;
 import android.util.Log;
 
@@ -28,5 +33,49 @@ public class FileManager {
 		String listOfFileNames[] = storage.list(dataFilter);
 		
 		return listOfFileNames;
+	}
+	
+	public static boolean uploadFile(String filePath, Context ctx){
+		boolean uploaded = false;
+		try {
+		    // Set your file path here
+		    FileInputStream fstrm = new FileInputStream(filePath);
+
+		    // Set your server page url (and the file title/description)
+		    HttpFileUpload hfu = new HttpFileUpload(
+		    		MyApplication.getBaseAPIPath() + "/dataFileUpload",	// upload url
+		    		"title",		// title
+		    		"description"	// description
+		    	);
+
+		    hfu.Send_Now(fstrm);
+		    uploaded = true;
+		  } catch (FileNotFoundException e) {
+		    // Error: File not found
+			  AlertDialog diaBox = fileUploadFailed(ctx);
+			  diaBox.show();
+			  uploaded = false;
+		  }
+		return uploaded;
+	}
+	
+	private static AlertDialog fileUploadFailed(Context ctx)
+	{
+	    AlertDialog fileUploadFailedDialogBox = new AlertDialog.Builder(ctx) 
+	        //set message, title, and icon
+	        .setTitle("Alert") 
+	        .setMessage("Sorry, Data file upload failed!") 
+	        .setIcon(R.drawable.delete)
+
+	        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+
+	            public void onClick(DialogInterface dialog, int whichButton) { 
+	                dialog.dismiss();
+	            }   
+
+	        })
+	        .create();
+	        return fileUploadFailedDialogBox;
+
 	}
 }

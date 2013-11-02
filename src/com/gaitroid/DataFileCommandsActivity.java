@@ -73,7 +73,9 @@ public class DataFileCommandsActivity extends Activity{
 					  }
 
 					  if (position==1){
-						  // summit and delete
+						  // summit and delete file
+						  AlertDialog diaBox = AskSubmitOption(fileName);
+						  diaBox.show();
 					  }
 				  }
 				});
@@ -91,11 +93,46 @@ public class DataFileCommandsActivity extends Activity{
 	        .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
 
 	            public void onClick(DialogInterface dialog, int whichButton) { 
-	            	File f = new File(Environment.getExternalStorageDirectory()+File.separator+"Gaitroid"+File.separator+fileName);
+	            	String filePath = Environment.getExternalStorageDirectory()+File.separator+"Gaitroid"+File.separator+fileName;
+	            	File f = new File(filePath);
 	            	boolean deleted = f.delete();
 	            	AlertDialog deleteFeedbackDialogBox = deleteFeedback(deleted);
 	            	deleteFeedbackDialogBox.show();
 	                dialog.dismiss();
+	            }   
+
+	        })
+
+	        .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+	            public void onClick(DialogInterface dialog, int which) {
+
+	                dialog.dismiss();
+
+	            }
+	        })
+	        .create();
+	        return myQuittingDialogBox;
+
+	}
+	
+	private AlertDialog AskSubmitOption(String fn)
+	{
+		final String fileName = fn;
+	    AlertDialog myQuittingDialogBox =new AlertDialog.Builder(this) 
+	        //set message, title, and icon
+	        .setTitle("Submit") 
+	        .setMessage("Do you want to submit and delete this data log?") 
+	        .setIcon(R.drawable.submit)
+
+	        .setPositiveButton("Summit", new DialogInterface.OnClickListener() {
+
+	            public void onClick(DialogInterface dialog, int whichButton) { 
+	            	String filePath = Environment.getExternalStorageDirectory()+File.separator+"Gaitroid"+File.separator+fileName;
+	            	File f = new File(filePath);
+	            	boolean uploaded = FileManager.uploadFile(filePath, getApplicationContext());
+					// delete file
+	            	AlertDialog submitFeedbackDialogBox = submitFeedback(filePath, uploaded);
+	            	submitFeedbackDialogBox.show();
 	            }   
 
 	        })
@@ -128,6 +165,31 @@ public class DataFileCommandsActivity extends Activity{
 	        })
 	        .create();
 	    return deleteFeedbackDialogBox;
+
+	}
+	
+	private AlertDialog submitFeedback(String filePath, boolean submitted)
+	{
+		boolean deleted = false;
+		if(submitted){
+			File f = new File(filePath);
+	    	deleted = f.delete();
+		}
+		
+		String alertMsg = deleted ? "You have submitted the data log file successfully!" : "submitted failed!";
+
+	    AlertDialog submitFeedbackDialogBox =new AlertDialog.Builder(this) 
+	        .setMessage(alertMsg) 
+	        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+
+	            public void onClick(DialogInterface dialog, int whichButton) { 
+
+	                dialog.dismiss();
+	            }   
+
+	        })
+	        .create();
+	    return submitFeedbackDialogBox;
 
 	}
 
