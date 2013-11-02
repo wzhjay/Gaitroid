@@ -1,18 +1,26 @@
 package com.gaitroid;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+
+
+
+
 
 
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningServiceInfo;
+import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
@@ -58,21 +66,72 @@ public class DataFileCommandsActivity extends Activity{
 				  public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
 
 					  if (position==0){
-								// TODO Auto-generated method stub
-								// Intent mainCommandIntent=new Intent(LeftRightCommandsActivity.this,DeviceListActivity.class);
-					   //   		startActivityForResult(mainCommandIntent, MultiShimmerPlayActivity.REQUEST_CONNECT_SHIMMER);
+							// delete the file
+					  		AlertDialog diaBox = AskOption(fileName);
+							diaBox.show();
+										
 					  }
 
 					  if (position==1){
-								// TODO Auto-generated method stub
-								// Intent mainCommandIntent=new Intent(LeftRightCommandsActivity.this,DeviceListActivity.class);
-					   //   		startActivityForResult(mainCommandIntent, MultiShimmerPlayActivity.REQUEST_CONNECT_SHIMMER);
+						  // summit and delete
 					  }
 				  }
 				});
 	 }
 	 
-	 	
+	private AlertDialog AskOption(String fn)
+	{
+		final String fileName = fn;
+	    AlertDialog myQuittingDialogBox =new AlertDialog.Builder(this) 
+	        //set message, title, and icon
+	        .setTitle("Delete") 
+	        .setMessage("Do you want to Delete") 
+	        .setIcon(R.drawable.delete)
+
+	        .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+
+	            public void onClick(DialogInterface dialog, int whichButton) { 
+	            	File f = new File(Environment.getExternalStorageDirectory()+File.separator+"Gaitroid"+File.separator+fileName);
+	            	boolean deleted = f.delete();
+	            	AlertDialog deleteFeedbackDialogBox = deleteFeedback(deleted);
+	            	deleteFeedbackDialogBox.show();
+	                dialog.dismiss();
+	            }   
+
+	        })
+
+	        .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+	            public void onClick(DialogInterface dialog, int which) {
+
+	                dialog.dismiss();
+
+	            }
+	        })
+	        .create();
+	        return myQuittingDialogBox;
+
+	}
+
+	private AlertDialog deleteFeedback(boolean deleted)
+	{
+		String alertMsg = deleted ? "You have deleted the data log file successfully!" : "deleted failed!";
+
+	    AlertDialog deleteFeedbackDialogBox =new AlertDialog.Builder(this) 
+	        .setMessage(alertMsg) 
+	        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+
+	            public void onClick(DialogInterface dialog, int whichButton) { 
+
+	                dialog.dismiss();
+	            }   
+
+	        })
+	        .create();
+	    return deleteFeedbackDialogBox;
+
+	}
+
+
 	    public void onPause(){
 	  	  super.onPause();
 	  	  
