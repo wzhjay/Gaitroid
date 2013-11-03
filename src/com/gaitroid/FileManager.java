@@ -43,7 +43,7 @@ public class FileManager {
 
 		    // Set your server page url (and the file title/description)
 		    HttpFileUpload hfu = new HttpFileUpload(
-		    		MyApplication.getBaseAPIPath() + "/dataFileUpload",	// upload url
+		    		MyApplication.getBaseAPIPath() + "dataFileUpload",	// upload url
 		    		"title",		// title
 		    		"description"	// description
 		    	);

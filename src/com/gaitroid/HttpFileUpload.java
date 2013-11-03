@@ -33,7 +33,7 @@ public class HttpFileUpload implements Runnable{
         }
 	
         void Sending(){
-                String iFileName = "ovicam_temp_vid.mp4";
+                String iFileName = "test.dat";
                 String lineEnd = "\r\n";
                 String twoHyphens = "--";
                 String boundary = "*****";
