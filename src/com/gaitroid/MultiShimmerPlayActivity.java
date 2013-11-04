@@ -286,12 +286,8 @@ public void onResume(){
 	            	intent.putExtra("DeviceName", currentDeviceName);
 	            	intent.putExtra("CurrentSlot",currentSlot);
 	            	startService(intent);
-	            	//getApplicationContext().bindService(intent,mTestServiceConnection, Context.BIND_AUTO_CREATE);
 	            } else {
 	          		mService.connectShimmer(currentSelectedBluetoothAddress, Integer.toString(mCurrentSelectedSlot));
-	          		//getApplicationContext().unbindService(mTestServiceConnection);
-		            //
-		            //getApplicationContext().unbindService(mTestServiceConnection);
 	            }
     		 }
 

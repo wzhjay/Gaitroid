@@ -222,9 +222,6 @@ public class DataFileCommandsActivity extends Activity{
 	      		Log.d("Shimmer","Connected on COmmands");
 	      		//update the view
 	      		mServiceBind=true;
-//	      		mSamplingRate=mService.getSamplingRate(mCurrentDevice);
-//	      		mAccelRange=mService.getAccelRange(mCurrentDevice);
-//	      		mGSRRange=mService.getGSRRange(mCurrentDevice);
 	      	}
 
 	      	public void onServiceDisconnected(ComponentName arg0) {

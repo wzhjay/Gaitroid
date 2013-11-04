@@ -375,12 +375,9 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
                 public void onClick(View view) {
                 	Intent i = new Intent(GaitroidMain.mCtx, LogoutActivity.class);
                 	startActivity(i);
-//                	userDBHandler.deleteUser();
-//                	Intent i = new Intent(GaitroidMain.mCtx, LoginActivity.class);
-//                	startActivity(i);
                 }
             });
-            //task.execute();
+
             User user = userDBHandler.getUser();
             t =(TextView)rootView.findViewById(R.id.username);
             t.setText(user.getUsername().toString());
@@ -440,18 +437,7 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 	    	case GaitroidMain.REQUEST_CONNECT_SHIMMER:
 	        // When DeviceListActivity returns with a device to connect
 	        if (resultCode == Activity.RESULT_OK) {
-//	            String address = data.getExtras()
-//	                    .getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
-//	           Log.d("Shimmer",address);
-//	           Log.d("Shimmer",mCurrentDevice);
-//	           
-//	           Intent intent = new Intent();
-//	           intent.putExtra("CurrentDevice", mCurrentDevice);
-//	           intent.putExtra("Address", address);
-//	           intent.putExtra("CurrentSlot", mCurrentSlot);
-//	           setResult(Activity.RESULT_OK, intent);
-//	
-//	           finish();
+
 
 	        		String address = data.getExtras()
  	                    .getString("Address");
@@ -460,20 +446,16 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 	   	            Log.d("ShimmerMainActivity",address);
 	   	            Log.d("ShimmerMainActivity",currentDeviceName);
 	   	            Intent intent=new Intent(this, MultiShimmerPlayService.class);
-	   	            //currentSelectedBluetoothAddress = address;
-	   	            //currentSelectedDeviceName = currentDeviceName;
+
 	   	            if (!isMyServiceRunning())
 	   	            {	
 	   	            	intent.putExtra("BluetoothAddress", address);
 	   	            	intent.putExtra("DeviceName", currentDeviceName);
 	   	            	intent.putExtra("CurrentSlot",currentSlot);
 	   	            	startService(intent);
-	   	            	//getApplicationContext().bindService(intent,mTestServiceConnection, Context.BIND_AUTO_CREATE);
+
 	   	            } else {
 	   	          		mService.connectShimmer(address, GaitroidMain.shimmerDeviceLeft);
-	   	          		//getApplicationContext().unbindService(mTestServiceConnection);
-	   		            //
-	   		            //getApplicationContext().unbindService(mTestServiceConnection);
 	   	            }
 	        }
 	        break;
