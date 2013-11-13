@@ -128,8 +128,7 @@ public class DataFileCommandsActivity extends Activity{
 
 	            public void onClick(DialogInterface dialog, int whichButton) { 
 	            	String filePath = Environment.getExternalStorageDirectory()+File.separator+"Gaitroid"+File.separator+fileName;
-	            	File f = new File(filePath);
-	            	boolean uploaded = FileManager.uploadFile(filePath, getApplicationContext());
+	            	boolean uploaded = FileManager.uploadFile(filePath, getApplicationContext(), fileName);
 					// delete file
 	            	AlertDialog submitFeedbackDialogBox = submitFeedback(filePath, uploaded);
 	            	submitFeedbackDialogBox.show();

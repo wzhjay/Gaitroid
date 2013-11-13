@@ -14,14 +14,16 @@ public class HttpFileUpload implements Runnable{
         String responseString;
         String Title;
         String Description;
+        String fileName = "";
         byte[ ] dataToServer;
         FileInputStream fileInputStream = null;
 
-        HttpFileUpload(String urlString, String vTitle, String vDesc){
+        HttpFileUpload(String urlString, String vTitle, String vDesc, String fn){
                 try{
                         connectURL = new URL(urlString);
                         Title= vTitle;
                         Description = vDesc;
+                        fileName = fn;
                 }catch(Exception ex){
                     Log.i("HttpFileUpload","URL Malformatted");
                 }
@@ -33,7 +35,8 @@ public class HttpFileUpload implements Runnable{
         }
 	
         void Sending(){
-                String iFileName = "test.dat";
+        	if(!fileName.equals("")){
+                String iFileName = fileName;
                 String lineEnd = "\r\n";
                 String twoHyphens = "--";
                 String boundary = "*****";
@@ -128,6 +131,7 @@ public class HttpFileUpload implements Runnable{
                 {
                         Log.e(Tag, "IO error: " + ioe.getMessage(), ioe);
                 }
+        	}
         }
 	
         @Override

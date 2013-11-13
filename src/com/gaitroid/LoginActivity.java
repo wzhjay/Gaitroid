@@ -63,6 +63,8 @@ public class LoginActivity extends Activity {
         
         if(db.hasUser()) {
         	Log.d("Gaitroid", "Jumping...");
+        	User u = db.getUser();
+        	((MyApplication) getApplication()).setUserId(u.getID());
         	i = new Intent(this, MultiShimmerPlayActivity.class);
         	startActivity(i);
             finish();

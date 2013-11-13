@@ -22,7 +22,7 @@ public class FileManager {
 			File f;
 			public boolean accept(File dir, String name) {
 
-			    if(name.endsWith(".dat")){
+			    if(name.endsWith(".csv")){
 			    	return true;
 			    }
 
@@ -36,7 +36,7 @@ public class FileManager {
 		return listOfFileNames;
 	}
 	
-	public static boolean uploadFile(String filePath, Context ctx){
+	public static boolean uploadFile(String filePath, Context ctx, String fn){
 		boolean uploaded = false;
 		final UserDBHandler db = new UserDBHandler(ctx);
 		User u = db.getUser();
@@ -49,7 +49,8 @@ public class FileManager {
 		    HttpFileUpload hfu = new HttpFileUpload(
 		    		MyApplication.getBaseAPIPath() + "dataFileUpload/" + userID,	// upload url
 		    		"Gaitroid",		// title
-		    		"User data log file"	// description
+		    		"User data log file",	// description
+		    		fn
 		    	);
 
 		    hfu.Send_Now(fstrm);
