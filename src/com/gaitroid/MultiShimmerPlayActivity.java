@@ -253,8 +253,9 @@ public void onResume(){
   		mService = binder.getService();
   		mServiceBind = true;
   		//update the view
-  		
-  		
+  		// set log file name
+    	mService.setLoggingName(MyApplication.getUserId());
+  		Log.d("Gaitroid", MyApplication.getUserId());
 		updateListView();
   		
   	}

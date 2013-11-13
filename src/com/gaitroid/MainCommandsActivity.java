@@ -131,9 +131,6 @@ public class MainCommandsActivity extends Activity{
 				  }
 				});
 			
-		    
-		    
-		    
 		   
 		    
 	 }

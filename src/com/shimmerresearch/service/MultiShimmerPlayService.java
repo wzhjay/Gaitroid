@@ -234,7 +234,7 @@ public class MultiShimmerPlayService extends Service {
 		            			if (mLogFileName.equals("Default")){
 		            				shimmerLog=new Logging(Long.toString(System.currentTimeMillis()) + " Device" + bA[12] + bA[13] + bA[15] + bA[16],"\t");
 		            			} else {
-		            				shimmerLog=new Logging(Long.toString(System.currentTimeMillis()) + mLogFileName,"\t");
+		            				shimmerLog=new Logging(mLogFileName + "_" + objectCluster.mMyName + "_" + Long.toString(System.currentTimeMillis()),"\t");
 		            			}
 		            			mLogShimmer.remove(objectCluster.mBluetoothAddress);
 		            			if (mLogShimmer.get(objectCluster.mBluetoothAddress)==null){

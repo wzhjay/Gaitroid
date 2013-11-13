@@ -11,6 +11,7 @@ public class MyApplication extends Application {
     private static String BaseAPIPath = "http://192.168.1.101:3000/api/";
     private String SocketConnectPath = "http://192.168.1.101:3000/";
     private String[] BluetoothAddress = {"", ""};
+    private static String userID = "";
 
     public static String getBaseAPIPath() {
         return BaseAPIPath;
@@ -41,6 +42,14 @@ public class MyApplication extends Application {
     	Log.v("bluetoothAddress 1", BluetoothAddress[1]);
     	return BluetoothAddress[1];
 
+    }
+
+    public void setUserId(String uID) {
+        userID = uID;
+    }
+
+    public static String getUserId() {
+        return userID;
     }
 
 //    public void setSomeVariable(String someVariable) {

@@ -112,6 +112,7 @@ public class LoginActivity extends Activity {
 	        		        Log.d("Gaitroid", "Reading user..");
 		        			User u = db.getUser();
 		        			String log = "Id: "+u.getID()+" ,username: " + u.getUsername() + " ,createTime: " + u.getCreateTime();
+		        			((MyApplication) getApplication()).setUserId(u.getID());
 		        			Log.d("Gaitroid", log);
 	        			}
 	        			

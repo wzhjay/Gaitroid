@@ -29,15 +29,15 @@ public class Logging {
 	 */
 	public Logging(String myName){
 		mFileName=myName;
-		File root = Environment.getExternalStorageDirectory();
-  		 outputFile = new File(root, mFileName+".dat");
+		File root = new File(Environment.getExternalStorageDirectory()+File.separator+"Gaitroid");
+  		 outputFile = new File(root, mFileName+".csv");
 	}
 	
 	public Logging(String myName,String delimiter){
 		mFileName=myName;
 		mDelimiter=delimiter;
-		File root = Environment.getExternalStorageDirectory();
-  		 outputFile = new File(root, mFileName+".dat");
+		File root = new File(Environment.getExternalStorageDirectory()+File.separator+"Gaitroid");
+  		 outputFile = new File(root, mFileName+".csv");
 	}
 	
 	/**
