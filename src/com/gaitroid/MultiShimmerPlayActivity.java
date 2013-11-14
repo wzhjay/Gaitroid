@@ -39,7 +39,8 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
-
+import com.beardedhen.bbutton.BootstrapButton;
+import com.beardedhen.bbutton.FontAwesomeText;
 
 
 public class MultiShimmerPlayActivity extends Activity {
@@ -188,7 +189,7 @@ public class MultiShimmerPlayActivity extends Activity {
 //    });
 	
 	// Jump button
-	final Button button_start = (Button) findViewById(R.id.button_start);
+	final BootstrapButton button_start = (BootstrapButton) findViewById(R.id.button_start);
 	button_start.setOnClickListener(new View.OnClickListener() {
         public void onClick(View v) {
         	Intent jumpMainIntent=new Intent(mCtx, GaitroidMain.class);

@@ -25,6 +25,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import com.beardedhen.bbutton.BootstrapButton;
+import com.beardedhen.bbutton.FontAwesomeText;
 
 public class LoginActivity extends Activity {
 	@Override
@@ -54,7 +56,7 @@ public class LoginActivity extends Activity {
         // setting default screen to login.xml
         setContentView(R.layout.login);
         final Context ctx = this;
-        final Button btnLogin = (Button) findViewById(R.id.btnLogin);
+        final BootstrapButton btnLogin = (BootstrapButton) findViewById(R.id.btnLogin);
         final EditText uText = (EditText) findViewById(R.id.username);
         final EditText pText = (EditText) findViewById(R.id.password);
         
