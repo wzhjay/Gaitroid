@@ -46,17 +46,114 @@
             bbutton:icon_left="fa-pause"
             android:layout_margin="10dp"
             />
-        
+        <RadioGroup
+			    android:layout_width="fill_parent"
+			    android:layout_height="wrap_content"
+			    android:id="@+id/radio_speed_group"
+			    android:orientation="vertical"
+			    android:padding="6dip"
+			    android:layout_marginTop="4dip">
+			    
+            <HorizontalScrollView
+		        android:layout_width="wrap_content"
+		        android:layout_height="wrap_content">
+		        <LinearLayout
+            		android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    >
+	            <com.beardedhen.bbutton.BootstrapButton
+		            android:layout_width="wrap_content"
+		            android:layout_height="wrap_content"
+		            bbutton:type="default"
+		            bbutton:size="default"
+		            bbutton:icon_left="fa-minus-square"
+		            bbutton:roundedCorners="true"
+		            android:layout_margin="10dp"
+		            android:layout_marginLeft="0dip"
+		            />
+			    <RadioButton
+			        android:id="@+id/radio_slow"
+			        android:layout_width="wrap_content"
+			        android:layout_height="wrap_content"
+			        android:text="@string/rad_slow"
+			        android:checked="true"
+			        android:textSize="14sp"
+			        android:layout_marginLeft="0dip"/>
+			    </LinearLayout>
+			</HorizontalScrollView>
+			
+            <HorizontalScrollView
+		        android:layout_width="wrap_content"
+		        android:layout_height="wrap_content">
+			    <LinearLayout
+            		android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    >
+			    <com.beardedhen.bbutton.BootstrapButton
+		            android:layout_width="wrap_content"
+		            android:layout_height="wrap_content"
+		            bbutton:type="info"
+		            bbutton:size="default"
+		            bbutton:icon_left="fa-check-square"
+		            bbutton:roundedCorners="true"
+		            android:layout_margin="10dp"
+		            android:layout_marginLeft="0dip"
+		            />
+			    <RadioButton
+			        android:id="@+id/radio_normal"
+			        android:layout_width="wrap_content"
+			        android:layout_height="wrap_content"
+			        android:text="@string/rad_normal"
+			        android:textSize="14sp"
+			        android:layout_marginLeft="0dip"/>
+			    </LinearLayout>
+			</HorizontalScrollView>
+			
+            <HorizontalScrollView
+		        android:layout_width="wrap_content"
+		        android:layout_height="wrap_content">
+			    <LinearLayout
+            		android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    >
+			    <com.beardedhen.bbutton.BootstrapButton
+		            android:layout_width="wrap_content"
+		            android:layout_height="wrap_content"
+		            bbutton:type="primary"
+		            bbutton:size="default"
+		            bbutton:icon_left="fa-plus-square"
+		            bbutton:roundedCorners="true"
+		            android:layout_margin="10dp"
+		            android:layout_marginLeft="6dip"
+		            />
+			    <RadioButton
+			        android:id="@+id/radio_fast"
+			        android:layout_width="wrap_content"
+			        android:layout_height="wrap_content"
+			        android:text="@string/rad_fast"
+			        android:textSize="14sp"
+			        android:layout_marginLeft="6dip"/>
+			    </LinearLayout>
+			</HorizontalScrollView>
+		</RadioGroup>
     </LinearLayout>
     
     <com.beardedhen.bbutton.BootstrapButton
-        android:id="@+id/button_start"
+        android:id="@+id/btn_connect_main_jump"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:text="More"
             bbutton:type="info"
             bbutton:roundedCorners="true"
             bbutton:icon_left="fa-reply-all"
-            android:layout_margin="10dp"
+            android:layout_marginTop="30dip"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
             />
 </LinearLayout>

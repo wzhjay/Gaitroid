@@ -289,24 +289,24 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
                 Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_section_launchpad1, container, false);
 
-            rootView.findViewById(R.id.btn_disconnect)
-	          .setOnClickListener(new View.OnClickListener() {
-	              @Override
-	              public void onClick(View v) {
-	            	  mService.disconnectAllDevices();
-	              }
-	          });
-            
-            rootView.findViewById(R.id.btn_streaming)
-	          .setOnClickListener(new View.OnClickListener() {
-	              @Override
-	              public void onClick(View v) {
-	            	  mService.startStreamingAllDevicesGetSensorNames();
-	            	  Intent mainCommandIntent=new Intent(mCtx, GraphActivity.class);
-	   	 	      	  mainCommandIntent.putExtra("BluetoothAddress",mCurrentDevice);
-	            	  startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_GRAPH_SHIMMER);
-	              }
-	          });
+//            rootView.findViewById(R.id.btn_disconnect)
+//	          .setOnClickListener(new View.OnClickListener() {
+//	              @Override
+//	              public void onClick(View v) {
+//	            	  mService.disconnectAllDevices();
+//	              }
+//	          });
+//            
+//            rootView.findViewById(R.id.btn_streaming)
+//	          .setOnClickListener(new View.OnClickListener() {
+//	              @Override
+//	              public void onClick(View v) {
+//	            	  mService.startStreamingAllDevicesGetSensorNames();
+//	            	  Intent mainCommandIntent=new Intent(mCtx, GraphActivity.class);
+//	   	 	      	  mainCommandIntent.putExtra("BluetoothAddress",mCurrentDevice);
+//	            	  startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_GRAPH_SHIMMER);
+//	              }
+//	          });
             
             String[] fileNames = FileManager.getAllDataFiles();
             FileModel.LoadModel(fileNames);

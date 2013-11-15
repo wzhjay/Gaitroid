@@ -50,8 +50,9 @@ public class DataFileCommandsActivity extends Activity{
 		    Intent sender=getIntent();
 		    String extraData=sender.getExtras().getString("fileName");
 		    fileName=extraData;
-		    setTitle("Log File: " + fileName);
-		    
+		    String[] parts = fileName.split("_");
+		    Log.v("File", parts[1] + "_" + parts[2]);
+		    setTitle("Log File: " + parts[1] + "_" + parts[2]);
 		    final ListView listViewCommands = (ListView) findViewById(R.id.listView1);
 
 		    

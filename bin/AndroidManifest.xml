@@ -46,7 +46,8 @@
 
         <activity android:name="com.gaitroid.DataFileCommandsActivity"
                   android:theme="@android:style/Theme.Dialog"
-                  android:label="Main Commands">
+                  android:label="Main Commands"
+                  android:icon="@drawable/ic_data_file">
         </activity>
 
         <activity android:name="com.gaitroid.CommandsSub"

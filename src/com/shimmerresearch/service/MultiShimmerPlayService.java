@@ -11,11 +11,9 @@ import java.util.Iterator;
 
 
 
-import javax.vecmath.AxisAngle4d;
-import javax.vecmath.Matrix3d;
+
 
 import com.gaitroid.MyApplication;
-import com.gaitroid.MyGLSurfaceView;
 import com.google.common.collect.Multiset;
 import com.shimmerresearch.driver.*;
 import com.shimmerresearch.tools.Logging;
@@ -26,14 +24,11 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.SoundPool;
-import android.opengl.GLSurfaceView;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
-import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 public class MultiShimmerPlayService extends Service {
@@ -58,10 +53,10 @@ public class MultiShimmerPlayService extends Service {
 	private double[][] mMaxData = new double[7][3];
 	private SoundPool mSoundPool;
 	
-//	/** The OpenGL View */
-//	Matrix3d invm3d = new Matrix3d();
-//	Matrix3d fm3d = new Matrix3d();
-//	Matrix3d m3d = new Matrix3d();
+	/** The OpenGL View */
+	// Matrix3d invm3d = new Matrix3d();
+	// Matrix3d fm3d = new Matrix3d();
+	// Matrix3d m3d = new Matrix3d();
 	@Override
 	public IBinder onBind(Intent intent) {
 		return mBinder;
@@ -81,10 +76,11 @@ public class MultiShimmerPlayService extends Service {
 			Arrays.fill(row, -1);
 		Log.d(TAG, "onCreate");
 		
-//		invm3d = new Matrix3d();
-//		fm3d = new Matrix3d();
-//		m3d = new Matrix3d();
-//		invm3d.setIdentity();
+		/** The OpenGL View */
+		// invm3d = new Matrix3d();
+		// fm3d = new Matrix3d();
+		// m3d = new Matrix3d();
+		// invm3d.setIdentity();
 	}
 
 	public class LocalBinder extends Binder {
@@ -179,50 +175,54 @@ public class MultiShimmerPlayService extends Service {
 	            	if ((msg.obj instanceof ObjectCluster)){	// within each msg an object can be include, objectclusters are used to represent the data structure of the shimmer device
 	            	    ObjectCluster objectCluster =  (ObjectCluster) msg.obj; 
 	            	    
-	            	    // FOR 3D Gyro left leg
-//	            	    if (objectCluster.mMyName.equals("0")){
-//	                	    Collection<FormatCluster> accelXFormats = objectCluster.mPropertyCluster.get("Axis Angle A");  // first retrieve all the possible formats for the current sensor device
-//				 	    	float angle = 0,x = 0,y=0,z=0;
-//	                	    if (accelXFormats != null){
-//				 	    		FormatCluster formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(accelXFormats,"CAL")); // retrieve the calibrated data
-//				 	    		angle = (float) formatCluster.mData;
-//				 	    	}
-//				 	    	Collection<FormatCluster> accelYFormats = objectCluster.mPropertyCluster.get("Axis Angle X");  // first retrieve all the possible formats for the current sensor device
-//				 	    	if (accelYFormats != null){
-//				 	    		FormatCluster formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(accelYFormats,"CAL")); // retrieve the calibrated data
-//				 	    		x=(float) formatCluster.mData;
-//				 	    	}
-//				 	    	Collection<FormatCluster> accelZFormats = objectCluster.mPropertyCluster.get("Axis Angle Y");  // first retrieve all the possible formats for the current sensor device
-//				 	    	if (accelZFormats != null){
-//				 	    		FormatCluster formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(accelZFormats,"CAL")); // retrieve the calibrated data
-//				 	    		y=(float) formatCluster.mData;
-//				 	    	}
-//				 	    	Collection<FormatCluster> aaFormats = objectCluster.mPropertyCluster.get("Axis Angle Z");  // first retrieve all the possible formats for the current sensor device
-//				 	    	if (aaFormats != null){
-//				 	    		FormatCluster formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(aaFormats,"CAL")); // retrieve the calibrated data
-//				 	    		z=(float) formatCluster.mData;
-//				 	    		AxisAngle4d aa=new AxisAngle4d(x,y,z,angle);
-//				 	    		m3d.set(aa);
-//				 	    		//flip the rotation matrix (mat = flipMat * mat * flipMat;)
-//				 	    		fm3d.setIdentity();
-//				 	    		fm3d.m11=-1;
-//				 	    		fm3d.m22=-1;
-//				 	    		Matrix3d fm3dtemp = new Matrix3d();
-//				 	    		fm3dtemp.setIdentity();
-//				 	    		fm3d.m11=-1;
-//				 	    		fm3d.m22=-1;
-//				 	    		fm3d.mul(m3d);
-//				 	    		fm3d.mul(fm3dtemp);
-//				 	    		
-//				 	    		//set function
-//				 	    		fm3dtemp.set(invm3d);
-//				 	    		fm3dtemp.mul(fm3d);
-//				 	    		aa.set(fm3dtemp);
-//				 	    		Log.v("angles", (float) (aa.angle*180/Math.PI) + " " + (float)aa.x +" " + (float)aa.y + " " + (float)aa.z);
-//				 	    		com.gaitroid.TrainActivity.t.setAngleAxis((float) (aa.angle*180/Math.PI), (float)aa.x, (float)aa.y, (float)aa.z);
-//				 	    	}
-//				 	    	Log.v("angles", "fuck");
-//			 	    	}
+	            	    // 3D view
+	         //    	    Log.v("3DView", objectCluster.mMyName);
+          //               if (objectCluster.mMyName=="0"){
+          //               	Log.v("3DView", "STRAT");
+	         //        	    Collection<FormatCluster> accelXFormats = objectCluster.mPropertyCluster.get("Axis Angle A");  // first retrieve all the possible formats for the current sensor device
+				 	    // 	float angle = 0,x = 0,y=0,z=0;
+	         //        	    if (accelXFormats != null){
+				 	    // 		FormatCluster formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(accelXFormats,"CAL")); // retrieve the calibrated data
+				 	    // 		angle = (float) formatCluster.mData;
+				 	    // 	}
+				 	    // 	Collection<FormatCluster> accelYFormats = objectCluster.mPropertyCluster.get("Axis Angle X");  // first retrieve all the possible formats for the current sensor device
+				 	    // 	if (accelYFormats != null){
+				 	    // 		FormatCluster formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(accelYFormats,"CAL")); // retrieve the calibrated data
+				 	    // 		x=(float) formatCluster.mData;
+				 	    // 	}
+				 	    // 	Collection<FormatCluster> accelZFormats = objectCluster.mPropertyCluster.get("Axis Angle Y");  // first retrieve all the possible formats for the current sensor device
+				 	    // 	if (accelZFormats != null){
+				 	    // 		FormatCluster formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(accelZFormats,"CAL")); // retrieve the calibrated data
+				 	    // 		y=(float) formatCluster.mData;
+				 	    // 	}
+				 	    // 	Collection<FormatCluster> aaFormats = objectCluster.mPropertyCluster.get("Axis Angle Z");  // first retrieve all the possible formats for the current sensor device
+				 	    // 	if (aaFormats != null){
+				 	    // 		FormatCluster formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(aaFormats,"CAL")); // retrieve the calibrated data
+				 	    // 		z=(float) formatCluster.mData;
+				 	    // 		AxisAngle4d aa=new AxisAngle4d(x,y,z,angle);
+				 	    // 		Log.v("3DView", "x: " + String.valueOf(x) + " y:" + String.valueOf(y) + " z:" + String.valueOf(z) + " angle:" + String.valueOf(angle));
+				 	    // 		Quat4d qt = new Quat4d();
+				 	    // 		qt.set(aa);
+				 	    		
+				 	    // 		m3d.set(aa);
+				 	    // 		//flip the rotation matrix (mat = flipMat * mat * flipMat;)
+				 	    // 		fm3d.setIdentity();
+				 	    // 		fm3d.m11=-1;
+				 	    // 		fm3d.m22=-1;
+				 	    // 		Matrix3d fm3dtemp = new Matrix3d();
+				 	    // 		fm3dtemp.setIdentity();
+				 	    // 		fm3d.m11=-1;
+				 	    // 		fm3d.m22=-1;
+				 	    // 		fm3d.mul(m3d);
+				 	    // 		fm3d.mul(fm3dtemp);
+				 	    		
+				 	    // 		//set function
+				 	    // 		fm3dtemp.set(invm3d);
+				 	    // 		fm3dtemp.mul(fm3d);
+				 	    // 		aa.set(fm3dtemp);
+				 	    // 		GraphActivity.t.setAngleAxis((float) (aa.angle*180/Math.PI), (float)aa.x, (float)aa.y, (float)aa.z);
+				 	    // 	}
+			 	    	// }
 	            	    
 	            	    if (mEnableLogging==true){
 		            	   shimmerLog1= (Logging)mLogShimmer.get(objectCluster.mBluetoothAddress);

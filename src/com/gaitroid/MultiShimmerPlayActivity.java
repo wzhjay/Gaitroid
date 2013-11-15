@@ -188,9 +188,30 @@ public class MultiShimmerPlayActivity extends Activity {
 //        }
 //    });
 	
-	// Jump button
-	final BootstrapButton button_start = (BootstrapButton) findViewById(R.id.button_start);
+	// start button
+	final BootstrapButton button_start = (BootstrapButton) findViewById(R.id.btn_connect_main_start);
 	button_start.setOnClickListener(new View.OnClickListener() {
+        public void onClick(View v) {
+        	// start streaming for all devices
+        	mService.startStreamingAllDevicesGetSensorNames();
+
+        	// strat graph activity
+        	Intent graphIntent=new Intent(mCtx, GraphActivity.class);
+  	 		startActivity(graphIntent);
+        }
+    });
+	
+	// start button
+	final BootstrapButton button_stop = (BootstrapButton) findViewById(R.id.btn_connect_main_stop);
+	button_stop.setOnClickListener(new View.OnClickListener() {
+		public void onClick(View v) {
+			mService.disconnectAllDevices();
+	  }
+	});
+
+	// Jump button
+	final BootstrapButton button_jump = (BootstrapButton) findViewById(R.id.btn_connect_main_jump);
+	button_jump.setOnClickListener(new View.OnClickListener() {
         public void onClick(View v) {
         	Intent jumpMainIntent=new Intent(mCtx, GaitroidMain.class);
   	 		startActivityForResult(jumpMainIntent, 0);

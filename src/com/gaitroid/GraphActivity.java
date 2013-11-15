@@ -16,6 +16,15 @@ import java.util.Collection;
 
 
 
+
+
+
+
+
+import javax.vecmath.AxisAngle4d;
+import javax.vecmath.Matrix3d;
+import javax.vecmath.Quat4d;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -36,11 +45,17 @@ import com.shimmerresearch.service.MultiShimmerPlayService.LocalBinder;
 
 
 
+
+
+
+
+
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -55,8 +70,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 public class GraphActivity extends Activity{
-	   boolean mServiceBind=false;
-	   MultiShimmerPlayService mService;
+	   
 	   int mEnabledSensors=0;
 	   String BluetoothAddress="";
 	   String BluetoothAddress0="";
@@ -67,9 +81,33 @@ public class GraphActivity extends Activity{
 	   
 	   private static GraphView mGraphDisplay;
 	   private static String mSensorView = ""; //The sensor device which should be viewed on the graph
+	   
+	   // 3D view
+	   private GLSurfaceView glSurface;
+	   public static MyGLSurfaceView t;
+	   static Matrix3d invm3d = new Matrix3d();
+	   static Matrix3d fm3d = new Matrix3d();
+	   static Matrix3d m3d = new Matrix3d();
+	   
+	   // services
+	   boolean mServiceBind=false;
+	   static MultiShimmerPlayService mService;
+		
 	public void onCreate(Bundle savedInstanceState) {
 	super.onCreate(savedInstanceState);
 	setContentView(R.layout.graph_view);
+	
+	// for 3D view
+	t= new MyGLSurfaceView(this);
+	//Create an Instance with this Activity
+	glSurface = (GLSurfaceView)findViewById(R.id.graphics_glsurfaceview1);
+	//Set our own Renderer
+	glSurface.setRenderer(t);
+	//Set the GLSurface as View to this Activity
+	invm3d = new Matrix3d();
+	fm3d = new Matrix3d();
+	m3d = new Matrix3d();
+	invm3d.setIdentity();
 	
 	BluetoothAddress0 = ((MyApplication) this.getApplication()).getBluetoothAddress0();
 	BluetoothAddress1 = ((MyApplication) this.getApplication()).getBluetoothAddress1();
@@ -85,9 +123,9 @@ public class GraphActivity extends Activity{
 		e.printStackTrace();
 	}
 	
-	Bundle extras = getIntent().getExtras();
-    BluetoothAddress = extras.getString("BluetoothAddress");
-    setTitle("Graph: " + BluetoothAddress);
+	//Bundle extras = getIntent().getExtras();
+    //BluetoothAddress = extras.getString("BluetoothAddress");
+    //setTitle("Graph: " + BluetoothAddress);
 	Intent intent=new Intent(this, MultiShimmerPlayService.class);
 	getApplicationContext().bindService(intent,mTestServiceConnection, Context.BIND_AUTO_CREATE);
     getWindow().setLayout(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
@@ -133,32 +171,33 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
       		//update the view
       		mServiceBind=true;
       		// modify the service, the BluetoothAddress will not affect the handler
-      		mService.setGraphHandler(mHandler,BluetoothAddress);
+      		mService.setGraphHandler(mHandler,BluetoothAddress0);
       		mService.enableGraphingHandler(true);
-      		mEnabledSensors=mService.getEnabledSensors(BluetoothAddress);
+      		mEnabledSensors=mService.getEnabledSensors(BluetoothAddress0);
 
       	}
 
       	public void onServiceDisconnected(ComponentName arg0) {
       		
-      		Log.d("Shimmer","Service Disconnected on Graph" + " " +BluetoothAddress);// TODO Auto-generated method stub
+      		//Log.d("Shimmer","Service Disconnected on Graph" + " " +BluetoothAddress);// TODO Auto-generated method stub
       		mServiceBind=false;
       	}
         };
 
         public void onPause(){
   	  	  super.onPause();
-  	  	  
-  	  	Log.d("ShimmerH","Graph on Pause");
-  	  	  if(mServiceBind == true){
-  	  		  mService.enableGraphingHandler(false);
-  	  		  getApplicationContext().unbindService(mTestServiceConnection);
-  	  	  }
+	  	  	glSurface.onPause();
+	  	  	Log.d("ShimmerH","Graph on Pause");
+	  	  	if(mServiceBind == true){
+	  	  		mService.enableGraphingHandler(false);
+	  	  		getApplicationContext().unbindService(mTestServiceConnection);
+	  	  	}
   	  	 }
   	    
   	  public void onResume(){
   	  	super.onResume();
-
+  	  	
+  	  	glSurface.onResume();
   	  	Intent intent=new Intent(this, MultiShimmerPlayService.class);
   	  	Log.d("ShimmerH","Graph on Resume");
   	  	getApplicationContext().bindService(intent,mTestServiceConnection, Context.BIND_AUTO_CREATE);
@@ -325,11 +364,7 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
     				 	    	}
     				 	    	
     			            }
-    				 	   //Log.d("deviceName", objectCluster.mBluetoothAddress);
-    				 	   //Log.d("ShimmerSensor", Arrays.deepToString(sensorName));
-    				 	   //Log.d("ShimmerData", Arrays.toString(dataArray));
-    				 	   //Log.d("ShimmerGraph","Received3");
-    				 	   //mGraphDisplay.setDataWithAdjustment(dataArray,"","u16");
+    				 	   
     				 	 
     					}
 
@@ -427,9 +462,56 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
                 			}
 
                             Log.d("gaitroid_data", "acl: " + Arrays.toString(cal_acl_0) + " gyr: " + Arrays.toString(cal_gyr_0) + " mag: " + Arrays.toString(cal_mag_0) + " exp_a0_0: " + cal_exp_a0_0 + " exp_a7_0: " + cal_exp_a7_0);
+                        
+                        
+//                            Log.v("3DView", "STRAT");
+//                            Collection<FormatCluster> accelXFormats = objectCluster.mPropertyCluster.get("Axis Angle A");  // first retrieve all the possible formats for the current sensor device
+//                            float angle = 0,x = 0,y=0,z=0;
+//                            Log.v("3DView", "accelXFormats: " + accelXFormats.toString());
+//                            if (accelXFormats != null){
+//                                FormatCluster formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(accelXFormats,"CAL")); // retrieve the calibrated data
+//                                angle = (float) formatCluster.mData;
+//                            }
+//                            Collection<FormatCluster> accelYFormats = objectCluster.mPropertyCluster.get("Axis Angle X");  // first retrieve all the possible formats for the current sensor device
+//                            if (accelYFormats != null){
+//                                FormatCluster formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(accelYFormats,"CAL")); // retrieve the calibrated data
+//                                x=(float) formatCluster.mData;
+//                            }
+//                            Collection<FormatCluster> accelZFormats = objectCluster.mPropertyCluster.get("Axis Angle Y");  // first retrieve all the possible formats for the current sensor device
+//                            if (accelZFormats != null){
+//                                FormatCluster formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(accelZFormats,"CAL")); // retrieve the calibrated data
+//                                y=(float) formatCluster.mData;
+//                            }
+//                            Collection<FormatCluster> aaFormats = objectCluster.mPropertyCluster.get("Axis Angle Z");  // first retrieve all the possible formats for the current sensor device
+//                            if (aaFormats != null){
+//                                FormatCluster formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(aaFormats,"CAL")); // retrieve the calibrated data
+//                                z=(float) formatCluster.mData;
+//                                AxisAngle4d aa=new AxisAngle4d(x,y,z,angle);
+//                                Log.v("3DView", "x: " + String.valueOf(x) + " y:" + String.valueOf(y) + " z:" + String.valueOf(z) + " angle:" + String.valueOf(angle));
+//                                Quat4d qt = new Quat4d();
+//                                qt.set(aa);
+//                                   
+//                                m3d.set(aa);
+//                                //flip the rotation matrix (mat = flipMat * mat * flipMat;)
+//                                fm3d.setIdentity();
+//                                fm3d.m11=-1;
+//                                fm3d.m22=-1;
+//                                Matrix3d fm3dtemp = new Matrix3d();
+//                                fm3dtemp.setIdentity();
+//                                fm3d.m11=-1;
+//                                fm3d.m22=-1;
+//                                fm3d.mul(m3d);
+//                                fm3d.mul(fm3dtemp);
+//                                   
+//                                //set function
+//                                fm3dtemp.set(invm3d);
+//                                fm3dtemp.mul(fm3d);
+//                                aa.set(fm3dtemp);
+//                                t.setAngleAxis((float) (aa.angle*180/Math.PI), (float)aa.x, (float)aa.y, (float)aa.z);
+//                            }
                         }
                         
-                     // gaitroid, get all the sensor data
+                        // gaitroid, get all the sensor data
                         if(objectCluster.mMyName.equals("1")) {
                         	Log.d("gaitroid_data", "deveice: 1");
                             // acl
@@ -523,11 +605,12 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
                             
                             Log.d("gaitroid_data", "acl: " + Arrays.toString(cal_acl_1) + " gyr: " + Arrays.toString(cal_gyr_1) + " mag: " + Arrays.toString(cal_mag_1) + " exp_a0_1: " + cal_exp_a0_1 + " exp_a7_1: " + cal_exp_a7_1);
                         }
+
                 	}
     				
                     break;
                 }
             }
         };
-	
+        
 }
