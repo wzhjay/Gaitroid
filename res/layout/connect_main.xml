@@ -46,7 +46,9 @@
             bbutton:icon_left="fa-pause"
             android:layout_margin="10dp"
             />
-        <RadioGroup
+    </LinearLayout>
+    
+    <RadioGroup
 			    android:layout_width="fill_parent"
 			    android:layout_height="wrap_content"
 			    android:id="@+id/radio_speed_group"
@@ -142,8 +144,7 @@
 			    </LinearLayout>
 			</HorizontalScrollView>
 		</RadioGroup>
-    </LinearLayout>
-    
+		
     <com.beardedhen.bbutton.BootstrapButton
         android:id="@+id/btn_connect_main_jump"
             android:layout_width="fill_parent"
