@@ -335,9 +335,9 @@ containing a value of this type.
            <colgroup align="left" />
            <colgroup align="left" />
            <tr><th>Attribute</th><th>Description</th></tr>
-           <tr><td><code>{@link #BootstrapButton_android_enabled com.gaitroid:android_enabled}</code></td><td></td></tr>
-           <tr><td><code>{@link #BootstrapButton_android_text com.gaitroid:android_text}</code></td><td></td></tr>
-           <tr><td><code>{@link #BootstrapButton_android_textSize com.gaitroid:android_textSize}</code></td><td></td></tr>
+           <tr><td><code>{@link #BootstrapButton_android_enabled android:enabled}</code></td><td></td></tr>
+           <tr><td><code>{@link #BootstrapButton_android_text android:text}</code></td><td></td></tr>
+           <tr><td><code>{@link #BootstrapButton_android_textSize android:textSize}</code></td><td></td></tr>
            <tr><td><code>{@link #BootstrapButton_icon_left com.gaitroid:icon_left}</code></td><td></td></tr>
            <tr><td><code>{@link #BootstrapButton_icon_right com.gaitroid:icon_right}</code></td><td></td></tr>
            <tr><td><code>{@link #BootstrapButton_roundedCorners com.gaitroid:roundedCorners}</code></td><td></td></tr>
@@ -358,21 +358,21 @@ containing a value of this type.
             0x7f010001, 0x7f010002, 0x7f010003, 0x7f010004
         };
         /**
-          <p>This symbol is the offset where the {@link com.gaitroid.R.attr#android_enabled}
+          <p>This symbol is the offset where the {@link android.R.attr#enabled}
           attribute's value can be found in the {@link #BootstrapButton} array.
-          @attr name android:android_enabled
+          @attr name android:enabled
         */
         public static final int BootstrapButton_android_enabled = 0;
         /**
-          <p>This symbol is the offset where the {@link com.gaitroid.R.attr#android_text}
+          <p>This symbol is the offset where the {@link android.R.attr#text}
           attribute's value can be found in the {@link #BootstrapButton} array.
-          @attr name android:android_text
+          @attr name android:text
         */
         public static final int BootstrapButton_android_text = 2;
         /**
-          <p>This symbol is the offset where the {@link com.gaitroid.R.attr#android_textSize}
+          <p>This symbol is the offset where the {@link android.R.attr#textSize}
           attribute's value can be found in the {@link #BootstrapButton} array.
-          @attr name android:android_textSize
+          @attr name android:textSize
         */
         public static final int BootstrapButton_android_textSize = 1;
         /**
@@ -386,7 +386,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:icon_left
+          @attr name com.gaitroid:icon_left
         */
         public static final int BootstrapButton_icon_left = 4;
         /**
@@ -400,7 +400,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:icon_right
+          @attr name com.gaitroid:icon_right
         */
         public static final int BootstrapButton_icon_right = 5;
         /**
@@ -414,7 +414,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:roundedCorners
+          @attr name com.gaitroid:roundedCorners
         */
         public static final int BootstrapButton_roundedCorners = 6;
         /**
@@ -428,7 +428,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:size
+          @attr name com.gaitroid:size
         */
         public static final int BootstrapButton_size = 7;
         /**
@@ -442,7 +442,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:type
+          @attr name com.gaitroid:type
         */
         public static final int BootstrapButton_type = 3;
         /** Attributes that can be used with a FontAwesomeText.
@@ -451,8 +451,8 @@ containing a value of this type.
            <colgroup align="left" />
            <colgroup align="left" />
            <tr><th>Attribute</th><th>Description</th></tr>
-           <tr><td><code>{@link #FontAwesomeText_android_textColor com.gaitroid:android_textColor}</code></td><td></td></tr>
-           <tr><td><code>{@link #FontAwesomeText_android_textSize com.gaitroid:android_textSize}</code></td><td></td></tr>
+           <tr><td><code>{@link #FontAwesomeText_android_textColor android:textColor}</code></td><td></td></tr>
+           <tr><td><code>{@link #FontAwesomeText_android_textSize android:textSize}</code></td><td></td></tr>
            <tr><td><code>{@link #FontAwesomeText_icon com.gaitroid:icon}</code></td><td></td></tr>
            </table>
            @see #FontAwesomeText_android_textColor
@@ -463,15 +463,15 @@ containing a value of this type.
             0x01010095, 0x01010098, 0x7f010005
         };
         /**
-          <p>This symbol is the offset where the {@link com.gaitroid.R.attr#android_textColor}
+          <p>This symbol is the offset where the {@link android.R.attr#textColor}
           attribute's value can be found in the {@link #FontAwesomeText} array.
-          @attr name android:android_textColor
+          @attr name android:textColor
         */
         public static final int FontAwesomeText_android_textColor = 1;
         /**
-          <p>This symbol is the offset where the {@link com.gaitroid.R.attr#android_textSize}
+          <p>This symbol is the offset where the {@link android.R.attr#textSize}
           attribute's value can be found in the {@link #FontAwesomeText} array.
-          @attr name android:android_textSize
+          @attr name android:textSize
         */
         public static final int FontAwesomeText_android_textSize = 0;
         /**
@@ -485,7 +485,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:icon
+          @attr name com.gaitroid:icon
         */
         public static final int FontAwesomeText_icon = 2;
     };
