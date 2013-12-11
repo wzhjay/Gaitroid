@@ -22,7 +22,7 @@ public class FileManager {
 			File f;
 			public boolean accept(File dir, String name) {
 
-			    if(name.endsWith(".csv")){
+			    if(name.endsWith(".dat")){
 			    	return true;
 			    }
 

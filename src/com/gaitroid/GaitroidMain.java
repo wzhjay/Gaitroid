@@ -41,6 +41,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ExpandableListView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.speech.tts.TextToSpeech;
@@ -178,6 +179,25 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 	    
 	    Intent intent=new Intent(this, MultiShimmerPlayService.class);
 		getApplicationContext().bindService(intent,mTestServiceConnection, Context.BIND_AUTO_CREATE);
+		
+		// ========================================== extendable listview ======================
+		
+		ExpandableListView expandbleLis = getExpandableListView();
+		expandbleLis.setDividerHeight(2);
+		expandbleLis.setGroupIndicator(null);
+		expandbleLis.setClickable(true);
+		
+		setGroupData();
+		setChildGroupData();
+		NewAdapter mNewAdapter = new NewAdapter(groupItem, childItem);
+		mNewAdapter.setInflater(
+		      (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE),
+		      this
+		);
+		getExpandableListView().setAdapter(mNewAdapter);
+		expandbleLis.setOnChildClickListener(this);
+
+		  
     }
     
     // ========================================= preference dialog functions ===================

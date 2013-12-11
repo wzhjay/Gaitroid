@@ -30,14 +30,14 @@ public class Logging {
 	public Logging(String myName){
 		mFileName=myName;
 		File root = new File(Environment.getExternalStorageDirectory()+File.separator+"Gaitroid");
-  		 outputFile = new File(root, mFileName+".csv");
+  		 outputFile = new File(root, mFileName+".dat");
 	}
 	
 	public Logging(String myName,String delimiter){
 		mFileName=myName;
 		mDelimiter=delimiter;
 		File root = new File(Environment.getExternalStorageDirectory()+File.separator+"Gaitroid");
-  		 outputFile = new File(root, mFileName+".csv");
+  		 outputFile = new File(root, mFileName+".dat");
 	}
 	
 	/**
