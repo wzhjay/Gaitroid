@@ -26,7 +26,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.speech.tts.TextToSpeech;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
@@ -41,14 +40,8 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ExpandableListView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.speech.tts.TextToSpeech;
-import android.speech.tts.TextToSpeech.Engine;
-import android.media.AudioManager;
-
-import java.util.HashMap;
 
 public class GaitroidMain extends FragmentActivity implements ActionBar.TabListener {
 
@@ -73,14 +66,6 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 	
 	String BluetoothAddress="";	
 	int mEnabledSensors=0;
-	
-	// test to voice
-	private static TextToSpeech tts;
-	private static HashMap<String, String> ttsParams;
-	private static final int TTS_STREAM = AudioManager.STREAM_NOTIFICATION;
-	private SharedPreferences preferences;
-	private boolean useTtsNotification;
-	private static final String USE_TTS_NOTIFICATION_PREFERENCE_KEY = "USE_TTS_NOTIFICATION_PREFERENCE_KEY";
 	
 	/**
      * The {@link android.support.v4.view.PagerAdapter} that will provide fragments for each of the
@@ -142,21 +127,6 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
                             .setTabListener(this));
         }
         // ============================================ end tabs view ===================
-        
-        // ============================= tts ============================================
-        preferences = getPreferences(MODE_PRIVATE);
-    	useTtsNotification = true;
-    	useTtsNotification = preferences.getBoolean(
-    			USE_TTS_NOTIFICATION_PREFERENCE_KEY, useTtsNotification);
-        
-    	
-    	// ============================= end tts ========================================
-    	
-        // =============================================== test to voice ===============
-        //ttsParams = new HashMap<String, String>();
-		//ttsParams.put(Engine.KEY_PARAM_STREAM, String.valueOf(TTS_STREAM));
-
-		this.setVolumeControlStream(TTS_STREAM);
 		
         // =============================================== services ===================
 
@@ -290,27 +260,16 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_section_launchpad1, container, false);
-
-//            rootView.findViewById(R.id.btn_disconnect)
-//	          .setOnClickListener(new View.OnClickListener() {
-//	              @Override
-//	              public void onClick(View v) {
-//	            	  mService.disconnectAllDevices();
-//	              }
-//	          });
-//            
-//            rootView.findViewById(R.id.btn_streaming)
-//	          .setOnClickListener(new View.OnClickListener() {
-//	              @Override
-//	              public void onClick(View v) {
-//	            	  mService.startStreamingAllDevicesGetSensorNames();
-//	            	  Intent mainCommandIntent=new Intent(mCtx, GraphActivity.class);
-//	   	 	      	  mainCommandIntent.putExtra("BluetoothAddress",mCurrentDevice);
-//	            	  startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_GRAPH_SHIMMER);
-//	              }
-//	          });
             
             String[] fileNames = FileManager.getAllDataFiles();
+            TextView textViewToChange = (TextView) rootView.findViewById(R.id.file_mag_text);
+            if(fileNames.length <= 0) {
+            	textViewToChange.setText("No log files unsubmit.");
+            }
+            else {
+            	textViewToChange.setText("Submit or delete the log files.");
+            }
+            	
             FileModel.LoadModel(fileNames);
             final ListView listViewFiles = (ListView) rootView.findViewById(R.id.data_file_listview);
             String[] ids = new String[FileModel.Items.size()];
@@ -344,17 +303,28 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_section_launchpad2, container, false);
-    		
-            rootView.findViewById(R.id.button_audio)
-            .setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                	if (tts != null) {
-						tts.speak("Hello", TextToSpeech.QUEUE_FLUSH,
-								ttsParams);
-					}
-                }
-            });
+            
+            String[] records = {"Canada", "Germany", "USA"};;
+            TestDoneRecordModel.LoadModel(records);
+            final ListView listViewRecords = (ListView) rootView.findViewById(R.id.listview_fragment2);
+            String[] ids = new String[TestDoneRecordModel.Items.size()];
+            for (int i= 0; i < ids.length; i++){
+
+                ids[i] = Integer.toString(i+1);
+            }
+            
+            TestDoneRecordAdapter adapter = new TestDoneRecordAdapter(mCtx,R.layout.data_file_name, R.id.rowFileTextView, ids);
+            listViewRecords.setAdapter(adapter);
+            
+            listViewRecords.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+        		@Override
+        		public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
+        		    Intent fileCommandIntent=new Intent(mCtx, DataFileCommandsActivity.class);
+        		    fileCommandIntent.putExtra("date",  TestDoneRecordModel.GetbyId(position+1).Name);
+             		startActivity(fileCommandIntent);
+        		}
+        	});
             
             return rootView;
         }
@@ -516,10 +486,6 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
   		  getApplicationContext().unbindService(mTestServiceConnection);
   	  }
   	  
-  	  // text to voice
-  	  if (tts != null) {
-		tts.shutdown();
-  	  }
     }
     
   public void onResume(){

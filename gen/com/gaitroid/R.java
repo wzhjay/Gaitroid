@@ -159,7 +159,6 @@ containing a value of this type.
         public static final int btn_connect_main_start=0x7f0b000e;
         public static final int btn_connect_main_stop=0x7f0b000f;
         public static final int button1=0x7f0b004c;
-        public static final int button_audio=0x7f0b001e;
         public static final int button_scan=0x7f0b001a;
         public static final int cancel_dialog_btn=0x7f0b003c;
         public static final int checkBoxAccelerometer=0x7f0b0007;
@@ -211,6 +210,7 @@ containing a value of this type.
         public static final int listViewFiles=0x7f0b0045;
         public static final int listViewSounds=0x7f0b003e;
         public static final int listView_connect_main=0x7f0b000c;
+        public static final int listview_fragment2=0x7f0b001e;
         public static final int logout_btn=0x7f0b002e;
         public static final int logout_dialog_btn=0x7f0b003b;
         public static final int name=0x7f0b0022;
