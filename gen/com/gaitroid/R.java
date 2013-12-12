@@ -7,8 +7,6 @@
 
 package com.gaitroid;
 
-import org.xmlpull.v1.XmlPullParser;
-
 public final class R {
     public static final class array {
         public static final int accel_range_spinner_array=0x7f050001;
@@ -241,8 +239,6 @@ containing a value of this type.
         public static final int user_info_btn=0x7f0b002d;
         public static final int user_photo=0x7f0b0020;
         public static final int username=0x7f0b0021;
-		public static int group_view;
-		public static int childText;
     }
     public static final class layout {
         public static final int bootstrap_button=0x7f030000;
@@ -275,8 +271,6 @@ containing a value of this type.
         public static final int shimmer_commands=0x7f03001b;
         public static final int training=0x7f03001c;
         public static final int viewpager=0x7f03001d;
-		public static XmlPullParser group_row;
-		public static XmlPullParser child_row;
     }
     public static final class menu {
         public static final int gaitroid_main=0x7f0a0000;
