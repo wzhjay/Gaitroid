@@ -35,5 +35,4 @@
         <item name="android:textColor">#fff</item>
         <item name="android:background">@drawable/button_red_selector</item>
     </style>
-
 </resources>

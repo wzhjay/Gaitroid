@@ -1,7 +1,8 @@
 package com.gaitroid;
 
-import android.R;
+import com.gaitroid.R;
 import android.content.Context;
+import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -57,7 +58,7 @@ public class RecordAdapter extends BaseExpandableListAdapter {
     @Override
     public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
         if (convertView == null) {
-            convertView = inflater.inflate(R.layout.simple_expandable_list_item_1, parent, false);
+            convertView = inflater.inflate(R.layout.record_group, parent, false);
         }
 
         ((TextView) convertView).setText(getGroup(groupPosition).toString());
@@ -67,7 +68,7 @@ public class RecordAdapter extends BaseExpandableListAdapter {
     @Override
     public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
         if(convertView == null) {
-            convertView = inflater.inflate(R.layout.simple_list_item_1, parent, false);
+            convertView = inflater.inflate(R.layout.record_child, parent, false);
         }
 
         ((TextView)convertView).setText(getChild(groupPosition,childPosition).toString());
