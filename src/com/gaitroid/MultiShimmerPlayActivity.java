@@ -37,6 +37,7 @@ import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.Toast;
 import com.beardedhen.bbutton.BootstrapButton;
@@ -67,6 +68,10 @@ public class MultiShimmerPlayActivity extends Activity {
 	public static final int REQUEST_CONFIGURE_GRAPH = 8;
 	private boolean mServiceFirstTime=true;
 	
+	// checkbox value
+	public boolean slowChecked = false;
+	public boolean normalChecked = false;
+	public boolean fastChecked = false;
 	
 	@Override
   public void onCreate(Bundle savedInstanceState) {
@@ -163,31 +168,6 @@ public class MultiShimmerPlayActivity extends Activity {
 		}
 	});
 	
-	// connect socket button
-//	final Button button_socket = (Button) findViewById(R.id.button_socket);
-//	button_socket.setOnClickListener(new View.OnClickListener() {
-//		@Override
-//        public void onClick(View v) {
-//			IOCallback io = new BasicExample();
-//			SocketIO socket = null ;
-//			
-//			try {
-//    			socket = new SocketIO("http://192.168.237.150:3000/");
-//    			socket.connect(io);
-//    		} catch (MalformedURLException e) {
-//    			// TODO Auto-generated catch block
-//    			e.printStackTrace();
-//    		}
-//			
-//			try {
-//				socket.emit("msg", new JSONObject().put("key", "hello world"));
-//			} catch (JSONException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//        }
-//    });
-	
 	// start button
 	final BootstrapButton button_start = (BootstrapButton) findViewById(R.id.btn_connect_main_start);
 	button_start.setOnClickListener(new View.OnClickListener() {
@@ -218,6 +198,11 @@ public class MultiShimmerPlayActivity extends Activity {
         }
     });
   }
+
+	// check boxes
+//	final CheckBox slowCheck = (CheckBox) findViewById(R.id.check_slow);
+//	final CheckBox normalCheck = (CheckBox) findViewById(R.id.check_normal);
+//	final CheckBox fastCheck = (CheckBox) findViewById(R.id.check_fast);
 	
 	  
   public void updateListView(){

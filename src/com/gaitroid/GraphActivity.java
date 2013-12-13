@@ -6,26 +6,12 @@ import io.socket.SocketIO;
 import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.Collection;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+import java.util.Locale;
 
 import javax.vecmath.AxisAngle4d;
 import javax.vecmath.Matrix3d;
 import javax.vecmath.Quat4d;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -36,25 +22,12 @@ import com.gaitroid.R;
 import com.shimmerresearch.service.MultiShimmerPlayService;
 import com.shimmerresearch.service.MultiShimmerPlayService.LocalBinder;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.media.MediaPlayer;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.os.Handler;
@@ -63,13 +36,11 @@ import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnLongClickListener;
-import android.view.Window;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
-import android.widget.ListView;
-import android.widget.Toast;
 
-public class GraphActivity extends Activity{
+import android.speech.tts.TextToSpeech;
+
+public class GraphActivity extends Activity implements TextToSpeech.OnInitListener{
 	   
 	   int mEnabledSensors=0;
 	   String BluetoothAddress="";
@@ -92,58 +63,65 @@ public class GraphActivity extends Activity{
 	   // services
 	   boolean mServiceBind=false;
 	   static MultiShimmerPlayService mService;
-		
+	   
+	   // tts
+	   private TextToSpeech tts;
+	   
 	public void onCreate(Bundle savedInstanceState) {
-	super.onCreate(savedInstanceState);
-	setContentView(R.layout.graph_view);
-	
-	// for 3D view
-	t= new MyGLSurfaceView(this);
-	//Create an Instance with this Activity
-	glSurface = (GLSurfaceView)findViewById(R.id.graphics_glsurfaceview1);
-	//Set our own Renderer
-	glSurface.setRenderer(t);
-	//Set the GLSurface as View to this Activity
-	invm3d = new Matrix3d();
-	fm3d = new Matrix3d();
-	m3d = new Matrix3d();
-	invm3d.setIdentity();
-	
-	BluetoothAddress0 = ((MyApplication) this.getApplication()).getBluetoothAddress0();
-	BluetoothAddress1 = ((MyApplication) this.getApplication()).getBluetoothAddress1();
-	socketConnectPath = ((MyApplication) this.getApplication()).getSocketConnectPath();
-	io = new BasicExample();
-	socket = null ;
-	
-	try {
-		socket = new SocketIO(socketConnectPath);
-		socket.connect(io);
-	} catch (MalformedURLException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	}
-	
-	//Bundle extras = getIntent().getExtras();
-    //BluetoothAddress = extras.getString("BluetoothAddress");
-    //setTitle("Graph: " + BluetoothAddress);
-	Intent intent=new Intent(this, MultiShimmerPlayService.class);
-	getApplicationContext().bindService(intent,mTestServiceConnection, Context.BIND_AUTO_CREATE);
-    getWindow().setLayout(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
-    View mGraph = (View) findViewById(R.id.graph);
-    mGraphDisplay = (GraphView)findViewById(R.id.graph);
-    
-    mGraph.setOnLongClickListener(new OnLongClickListener() {
-    	
-		public boolean onLongClick(View arg0) {
-			// TODO Auto-generated method stub
-			Log.d("ShimmerGraph","on long click");
-
-			Intent mainCommandIntent=new Intent(GraphActivity.this,SensorViewActivity.class);
-			mainCommandIntent.putExtra("Enabled_Sensors",mEnabledSensors);
-			startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_CONFIGURE_GRAPH);
-			return false;
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.graph_view);
+		
+		// for 3D view
+		t= new MyGLSurfaceView(this);
+		//Create an Instance with this Activity
+		glSurface = (GLSurfaceView)findViewById(R.id.graphics_glsurfaceview1);
+		//Set our own Renderer
+		glSurface.setRenderer(t);
+		//Set the GLSurface as View to this Activity
+		invm3d = new Matrix3d();
+		fm3d = new Matrix3d();
+		m3d = new Matrix3d();
+		invm3d.setIdentity();
+		
+		BluetoothAddress0 = ((MyApplication) this.getApplication()).getBluetoothAddress0();
+		BluetoothAddress1 = ((MyApplication) this.getApplication()).getBluetoothAddress1();
+		socketConnectPath = ((MyApplication) this.getApplication()).getSocketConnectPath();
+		io = new BasicExample();
+		socket = null ;
+		
+		try {
+			socket = new SocketIO(socketConnectPath);
+			socket.connect(io);
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		
+		//Bundle extras = getIntent().getExtras();
+	    //BluetoothAddress = extras.getString("BluetoothAddress");
+	    //setTitle("Graph: " + BluetoothAddress);
+		Intent intent=new Intent(this, MultiShimmerPlayService.class);
+		getApplicationContext().bindService(intent,mTestServiceConnection, Context.BIND_AUTO_CREATE);
+	    getWindow().setLayout(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
+	    View mGraph = (View) findViewById(R.id.graph);
+	    mGraphDisplay = (GraphView)findViewById(R.id.graph);
+	    
+	    mGraph.setOnLongClickListener(new OnLongClickListener() {
+	    	
+			public boolean onLongClick(View arg0) {
+				// TODO Auto-generated method stub
+				Log.d("ShimmerGraph","on long click");
+	
+				Intent mainCommandIntent=new Intent(GraphActivity.this,SensorViewActivity.class);
+				mainCommandIntent.putExtra("Enabled_Sensors",mEnabledSensors);
+				startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_CONFIGURE_GRAPH);
+				return false;
+			}
 		});
+	    
+	    // tts
+	    tts = new TextToSpeech(this, this);
+    
 	}
 	
 public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -612,5 +590,86 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
                 }
             }
         };
+        
+        @Override
+        public void onDestroy() {
+            // Don't forget to shutdown tts!
+            if (tts != null) {
+                tts.stop();
+                tts.shutdown();
+            }
+            super.onDestroy();
+        }
+        
+        // ==================================== tts =======================================
+		@Override
+		public void onInit(int status) {
+			// TODO Auto-generated method stub
+			if (status == TextToSpeech.SUCCESS) {
+				 
+	            int result = tts.setLanguage(Locale.US);
+	 
+	            if (result == TextToSpeech.LANG_MISSING_DATA
+	                    || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+	                Log.e("TTS", "This Language is not supported");
+	            } else {
+	            	preparation();
+	            }
+	 
+	        } else {
+	            Log.e("TTS", "Initilization Failed!");
+	        }
+		}
+		
+		private void speakOut(String text) {
+			 
+	        String tt = text;
+	 
+	        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
+	    }
+		
+		// preparation
+		private void preparation() {
+			//Pause for 1 seconds
+            try {
+            	speakOut("test start in five seconds");
+				Thread.sleep(2000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			//Pause for 1 seconds
+            try {
+            	speakOut("please stand straight and get ready");
+				Thread.sleep(3000);
+				waiting();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		// waiting for five seconds
+		private void waiting() {
+			MediaPlayer mPlayer = MediaPlayer.create(this, R.raw.buzz);
+			for (int i = 0; i < 5; i++) {
+		            //Pause for 1 seconds
+		            try {
+		            	//make a sound 
+			            mPlayer.start();
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+		        }
+			walking();
+		}
+		
+		// start walking
+		private void walking() {
+			speakOut("start");
+			
+		}
         
 }
