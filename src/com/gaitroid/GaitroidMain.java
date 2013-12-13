@@ -1,11 +1,12 @@
 package com.gaitroid;
 
 import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import root.gast.speech.SpeechRecognizingAndSpeakingActivity;
 
 import com.shimmerresearch.service.MultiShimmerPlayService;
 import com.shimmerresearch.service.MultiShimmerPlayService.LocalBinder;
@@ -25,7 +26,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
@@ -40,6 +40,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ExpandableListView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -66,6 +67,11 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 	
 	String BluetoothAddress="";	
 	int mEnabledSensors=0;
+	
+	// for expendable list view fragment2
+	private static List<Record> Records;
+	private static ExpandableListView expandableListView;
+    private static RecordAdapter recordsAdapter;
 	
 	/**
      * The {@link android.support.v4.view.PagerAdapter} that will provide fragments for each of the
@@ -149,7 +155,7 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 	    
 	    Intent intent=new Intent(this, MultiShimmerPlayService.class);
 		getApplicationContext().bindService(intent,mTestServiceConnection, Context.BIND_AUTO_CREATE);
-		
+			
     }
     
     // ========================================= preference dialog functions ===================
@@ -304,27 +310,10 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
                 Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_section_launchpad2, container, false);
             
-            String[] records = {"Canada", "Germany", "USA"};;
-            TestDoneRecordModel.LoadModel(records);
-            final ListView listViewRecords = (ListView) rootView.findViewById(R.id.listview_fragment2);
-            String[] ids = new String[TestDoneRecordModel.Items.size()];
-            for (int i= 0; i < ids.length; i++){
-
-                ids[i] = Integer.toString(i+1);
-            }
-            
-            TestDoneRecordAdapter adapter = new TestDoneRecordAdapter(mCtx,R.layout.data_file_name, R.id.rowFileTextView, ids);
-            listViewRecords.setAdapter(adapter);
-            
-            listViewRecords.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-        		@Override
-        		public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
-        		    Intent fileCommandIntent=new Intent(mCtx, DataFileCommandsActivity.class);
-        		    fileCommandIntent.putExtra("date",  TestDoneRecordModel.GetbyId(position+1).Name);
-             		startActivity(fileCommandIntent);
-        		}
-        	});
+    		LoadRecords();
+            expandableListView = (ExpandableListView) rootView.findViewById(R.id.expandableListView);
+            recordsAdapter = new RecordAdapter(mCtx, Records);
+            expandableListView.setAdapter(recordsAdapter);
             
             return rootView;
         }
@@ -395,6 +384,32 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
         }
     }
  // =============================================== end tabs view functions ===================
+    
+    // ========================================== fragment2 extendable listview ==================
+    private static void LoadRecords() {
+        Records = new ArrayList<Record>();
+
+        ArrayList<String> citiesAustralia = new ArrayList<String>(
+                Arrays.asList("Brisbane", "Hobart", "Melbourne", "Sydney"));
+        Records.add(new Record("Australia", citiesAustralia));
+
+        ArrayList<String> citiesChina = new ArrayList<String>(
+                Arrays.asList("Beijing", "Chuzhou", "Dongguan", "Shangzhou"));
+        Records.add(new Record("China", citiesChina));
+
+        ArrayList<String> citiesIndia = new ArrayList<String>(
+                Arrays.asList("Bombay", "Calcutta", "Delhi", "Madras"));
+        Records.add(new Record("India", citiesIndia));
+
+        ArrayList<String> citiesNewZealand = new ArrayList<String>(
+                Arrays.asList("Auckland", "Christchurch", "Wellington"));
+        Records.add(new Record("New Zealand", citiesNewZealand));
+
+        ArrayList<String> citiesRussia = new ArrayList<String>(
+                Arrays.asList("Moscow", "Kursk", "Novosibirsk", "Saint Petersburg"));
+        Records.add(new Record("Russia", citiesRussia));
+    }
+    // =========================================== end fragment2 extendable listview ==================
     
     @Override
 	public boolean onCreateOptionsMenu(Menu menu) {
