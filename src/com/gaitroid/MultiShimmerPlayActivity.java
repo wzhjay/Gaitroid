@@ -38,6 +38,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.Toast;
 import com.beardedhen.bbutton.BootstrapButton;
@@ -72,6 +73,10 @@ public class MultiShimmerPlayActivity extends Activity {
 	public boolean slowChecked = false;
 	public boolean normalChecked = false;
 	public boolean fastChecked = false;
+	public static final String NORMAL = "NORMAL";
+	public static final String SLOW = "SLOW";
+	public static final String FAST = "FAST";
+	public String checkSpeed = NORMAL;
 	
 	@Override
   public void onCreate(Bundle savedInstanceState) {
@@ -177,6 +182,7 @@ public class MultiShimmerPlayActivity extends Activity {
 
         	// strat graph activity
         	Intent graphIntent=new Intent(mCtx, GraphActivity.class);
+        	graphIntent.putExtra("speed", checkSpeed);
   	 		startActivity(graphIntent);
         }
     });
@@ -197,12 +203,39 @@ public class MultiShimmerPlayActivity extends Activity {
   	 		startActivityForResult(jumpMainIntent, 0);
         }
     });
-  }
-
+	
 	// check boxes
-//	final CheckBox slowCheck = (CheckBox) findViewById(R.id.check_slow);
-//	final CheckBox normalCheck = (CheckBox) findViewById(R.id.check_normal);
-//	final CheckBox fastCheck = (CheckBox) findViewById(R.id.check_fast);
+	final CheckBox slowCheck = (CheckBox) findViewById(R.id.check_slow);
+	final CheckBox normalCheck = (CheckBox) findViewById(R.id.check_normal);
+	final CheckBox fastCheck = (CheckBox) findViewById(R.id.check_fast);
+	
+	slowCheck.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+		public void onCheckedChanged(CompoundButton buttonView,boolean isChecked) {
+            // TODO Auto-generated method stub
+            if(slowCheck.isChecked()){
+            	checkSpeed = SLOW;
+            }
+        }
+    });
+	
+	normalCheck.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+		public void onCheckedChanged(CompoundButton buttonView,boolean isChecked) {
+            // TODO Auto-generated method stub
+            if(normalCheck.isChecked()){
+            	checkSpeed = NORMAL;
+            }
+        }
+    });
+	
+	fastCheck.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+		public void onCheckedChanged(CompoundButton buttonView,boolean isChecked) {
+            // TODO Auto-generated method stub
+            if(fastCheck.isChecked()){
+            	checkSpeed = FAST;
+            }
+        }
+    });
+  }
 	
 	  
   public void updateListView(){

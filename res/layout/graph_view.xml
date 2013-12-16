@@ -1,8 +1,11 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent" android:orientation="vertical" android:background="#ff444444">
+    android:layout_height="fill_parent" 
+    android:orientation="vertical" 
+    android:background="#ff444444"
+    android:gravity="center">
    
-    <com.gaitroid.GraphView
+<!--     <com.gaitroid.GraphView
     	android:id="@+id/graph"
 	    android:layout_width="fill_parent" 
 	    android:layout_height="fill_parent"/>
@@ -10,5 +13,12 @@
         android:id="@+id/graphics_glsurfaceview1" 
         android:layout_width="fill_parent" 
         android:layout_height="fill_parent">
-    </android.opengl.GLSurfaceView>
+    </android.opengl.GLSurfaceView> -->
+    
+    <ImageView
+        android:id="@+id/gait_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/gaitroid_1"
+        android:scaleType="centerInside" />
 </LinearLayout>

@@ -7,6 +7,7 @@ import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Locale;
+import java.util.Timer;
 
 import javax.vecmath.AxisAngle4d;
 import javax.vecmath.Matrix3d;
@@ -37,6 +38,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnLongClickListener;
 import android.view.ViewGroup.LayoutParams;
+import android.widget.ImageView;
 
 import android.speech.tts.TextToSpeech;
 
@@ -67,16 +69,24 @@ public class GraphActivity extends Activity implements TextToSpeech.OnInitListen
 	   // tts
 	   private TextToSpeech tts;
 	   
+	   // image
+	   private ImageView image;
+	    int flag = 0;
+	    int v[]={R.drawable.gaitroid_1, R.drawable.gaitroid_2, R.drawable.gaitroid_3, R.drawable.gaitroid_4, R.drawable.gaitroid_5};
+	    Handler imgHandler = new Handler();
+	    public String speedCheck = "NORMAL";
+	    public int speed = 0;
+	   
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.graph_view);
 		
 		// for 3D view
-		t= new MyGLSurfaceView(this);
+		//t= new MyGLSurfaceView(this);
 		//Create an Instance with this Activity
-		glSurface = (GLSurfaceView)findViewById(R.id.graphics_glsurfaceview1);
+		//glSurface = (GLSurfaceView)findViewById(R.id.graphics_glsurfaceview1);
 		//Set our own Renderer
-		glSurface.setRenderer(t);
+		//glSurface.setRenderer(t);
 		//Set the GLSurface as View to this Activity
 		invm3d = new Matrix3d();
 		fm3d = new Matrix3d();
@@ -103,25 +113,33 @@ public class GraphActivity extends Activity implements TextToSpeech.OnInitListen
 		Intent intent=new Intent(this, MultiShimmerPlayService.class);
 		getApplicationContext().bindService(intent,mTestServiceConnection, Context.BIND_AUTO_CREATE);
 	    getWindow().setLayout(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
-	    View mGraph = (View) findViewById(R.id.graph);
-	    mGraphDisplay = (GraphView)findViewById(R.id.graph);
+	    //View mGraph = (View) findViewById(R.id.graph);
+	    //mGraphDisplay = (GraphView)findViewById(R.id.graph);
 	    
-	    mGraph.setOnLongClickListener(new OnLongClickListener() {
-	    	
-			public boolean onLongClick(View arg0) {
-				// TODO Auto-generated method stub
-				Log.d("ShimmerGraph","on long click");
-	
-				Intent mainCommandIntent=new Intent(GraphActivity.this,SensorViewActivity.class);
-				mainCommandIntent.putExtra("Enabled_Sensors",mEnabledSensors);
-				startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_CONFIGURE_GRAPH);
-				return false;
-			}
-		});
+//	    mGraph.setOnLongClickListener(new OnLongClickListener() {
+//	    	
+//			public boolean onLongClick(View arg0) {
+//				// TODO Auto-generated method stub
+//				Log.d("ShimmerGraph","on long click");
+//	
+//				Intent mainCommandIntent=new Intent(GraphActivity.this,SensorViewActivity.class);
+//				mainCommandIntent.putExtra("Enabled_Sensors",mEnabledSensors);
+//				startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_CONFIGURE_GRAPH);
+//				return false;
+//			}
+//		});
 	    
 	    // tts
 	    tts = new TextToSpeech(this, this);
-    
+	    
+	    // image
+	    Intent sender = getIntent();
+	    speedCheck = sender.getExtras().getString("speed");
+	    Log.v("speed", speedCheck);
+	    image = (ImageView) findViewById(R.id.gait_image);
+	    setSpeed();
+	    imgHandler.postDelayed(changeImage, 1000);
+
 	}
 	
 public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -164,7 +182,7 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
         public void onPause(){
   	  	  super.onPause();
-	  	  	glSurface.onPause();
+	  	  	//glSurface.onPause();
 	  	  	Log.d("ShimmerH","Graph on Pause");
 	  	  	if(mServiceBind == true){
 	  	  		mService.enableGraphingHandler(false);
@@ -175,7 +193,7 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
   	  public void onResume(){
   	  	super.onResume();
   	  	
-  	  	glSurface.onResume();
+  	  	//glSurface.onResume();
   	  	Intent intent=new Intent(this, MultiShimmerPlayService.class);
   	  	Log.d("ShimmerH","Graph on Resume");
   	  	getApplicationContext().bindService(intent,mTestServiceConnection, Context.BIND_AUTO_CREATE);
@@ -672,4 +690,34 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
 			
 		}
         
+		// ======================================== image content =======================================
+		private void setSpeed() {
+			if(speedCheck.equals("NORMAL")) {
+				speed = 200;
+			}
+			else if (speedCheck.equals("SLOW")) {
+				speed = 500;
+			}
+			else if (speedCheck.equals("FAST")) {
+				speed = 50;
+			}
+			else
+				speed = 200;
+		}
+		
+		Runnable changeImage = new Runnable(){
+			
+		    @Override
+		    public void run(){
+		    	Log.v("speed", speed + "");
+		        if(flag>1000)
+		        	imgHandler.removeCallbacks(changeImage);
+		        else{
+		        	image.setImageResource(v[flag%4]);
+		        	imgHandler.postDelayed(changeImage, speed);
+		        	flag++;
+		        }
+		    }
+
+		};
 }
