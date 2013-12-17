@@ -19,6 +19,7 @@ import org.json.JSONObject;
 import com.shimmerresearch.driver.FormatCluster;
 import com.shimmerresearch.driver.ObjectCluster;
 import com.shimmerresearch.driver.Shimmer;
+import com.beardedhen.bbutton.BootstrapButton;
 import com.gaitroid.R;
 import com.shimmerresearch.service.MultiShimmerPlayService;
 import com.shimmerresearch.service.MultiShimmerPlayService.LocalBinder;
@@ -38,6 +39,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnLongClickListener;
 import android.view.ViewGroup.LayoutParams;
+import android.widget.Button;
 import android.widget.ImageView;
 
 import android.speech.tts.TextToSpeech;
@@ -140,7 +142,16 @@ public class GraphActivity extends Activity implements TextToSpeech.OnInitListen
 	    image = (ImageView) findViewById(R.id.gait_image);
 	    setSpeed();
 	    imgHandler.postDelayed(changeImage, 1000);
-
+	    
+	    // stop button
+	 	final BootstrapButton button_stop = (BootstrapButton) findViewById(R.id.stop_graph);
+	 	button_stop.setOnClickListener(new View.OnClickListener() {
+	         public void onClick(View v) {
+	         	// start streaming for all devices
+	         	mService.stopStreamingAllDevices();
+	         	finish();
+ 	        }
+ 	    });
 	}
 	
 public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -726,4 +737,5 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		    }
 
 		};
+
 }
