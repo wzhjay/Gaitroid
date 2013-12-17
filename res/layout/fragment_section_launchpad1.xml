@@ -9,24 +9,35 @@
 
 	        <TextView
 		        android:id="@+id/file_mag_text"
-		        android:layout_width="fill_parent"
+		        android:layout_width="match_parent"
 			    android:layout_height="wrap_content"
-		        android:layout_alignParentRight="true"
-		        android:layout_alignParentTop="true"
 		        android:layout_marginRight="10dip"
-		        android:layout_alignWithParentIfMissing="true"
-		        android:gravity="center_vertical"
 		        android:text="Data Logged files Management"
 		        android:textSize="16sp"
-		        android:padding="6dip" />
+		        android:padding="6dip"
+		        android:background="#1abc9c" />
 			
 		     <ListView
-		        android:id="@+id/data_file_listview"
+		         android:id="@+id/data_file_listview"
+		         android:layout_width="match_parent"
+		         android:layout_height="wrap_content"
+		         android:layout_marginBottom="20dip"
+		         android:layout_marginTop="10dip" />
+		     
+			<TextView
+		        android:id="@+id/history_text"
 		        android:layout_width="match_parent"
-		        android:layout_height="wrap_content"
-		        android:layout_weight="0.42" 
-		        android:layout_marginTop="20dip">
-
-		    </ListView>
+			    android:layout_height="wrap_content"
+		        android:layout_marginRight="10dip"
+		        android:text="Test History"
+		        android:textSize="16sp"
+		        android:padding="6dip"
+		        android:background="#16a085" />
+		    
+			<ExpandableListView
+	            android:id="@+id/expandableListView"
+	            android:layout_width="match_parent"
+	            android:layout_height="wrap_content"/>
+		    
         </LinearLayout>
 </FrameLayout>

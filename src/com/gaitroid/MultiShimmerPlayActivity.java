@@ -214,6 +214,8 @@ public class MultiShimmerPlayActivity extends Activity {
             // TODO Auto-generated method stub
             if(slowCheck.isChecked()){
             	checkSpeed = SLOW;
+            	normalCheck.setChecked(false);
+            	fastCheck.setChecked(false);
             }
         }
     });
@@ -223,6 +225,8 @@ public class MultiShimmerPlayActivity extends Activity {
             // TODO Auto-generated method stub
             if(normalCheck.isChecked()){
             	checkSpeed = NORMAL;
+            	slowCheck.setChecked(false);
+            	fastCheck.setChecked(false);
             }
         }
     });
@@ -232,6 +236,8 @@ public class MultiShimmerPlayActivity extends Activity {
             // TODO Auto-generated method stub
             if(fastCheck.isChecked()){
             	checkSpeed = FAST;
+            	slowCheck.setChecked(false);
+            	normalCheck.setChecked(false);
             }
         }
     });

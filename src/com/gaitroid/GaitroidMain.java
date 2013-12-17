@@ -297,6 +297,12 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
         		}
         	});
             
+            // loading the history
+            LoadRecords();
+            expandableListView = (ExpandableListView) rootView.findViewById(R.id.expandableListView);
+            recordsAdapter = new RecordAdapter(mCtx, Records);
+            expandableListView.setAdapter(recordsAdapter);
+            
             return rootView;
         }
     }
@@ -310,10 +316,6 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
                 Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_section_launchpad2, container, false);
             
-    		LoadRecords();
-            expandableListView = (ExpandableListView) rootView.findViewById(R.id.expandableListView);
-            recordsAdapter = new RecordAdapter(mCtx, Records);
-            expandableListView.setAdapter(recordsAdapter);
             
             return rootView;
         }
@@ -390,24 +392,25 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
         Records = new ArrayList<Record>();
 
         ArrayList<String> citiesAustralia = new ArrayList<String>(
-                Arrays.asList("Brisbane", "Hobart", "Melbourne", "Sydney"));
-        Records.add(new Record("Australia", citiesAustralia));
+                Arrays.asList("09:30", "11:00", "14:30", "16:00"));
+        Records.add(new Record("2013 Dec 16", citiesAustralia));
 
         ArrayList<String> citiesChina = new ArrayList<String>(
-                Arrays.asList("Beijing", "Chuzhou", "Dongguan", "Shangzhou"));
-        Records.add(new Record("China", citiesChina));
+                Arrays.asList("08:00", "12:30"));
+        Records.add(new Record("2013 Dec 10", citiesChina));
 
         ArrayList<String> citiesIndia = new ArrayList<String>(
-                Arrays.asList("Bombay", "Calcutta", "Delhi", "Madras"));
-        Records.add(new Record("India", citiesIndia));
+                Arrays.asList("13:30", "14:50", "18:00"));
+        Records.add(new Record("2013 Dec 08", citiesIndia));
 
         ArrayList<String> citiesNewZealand = new ArrayList<String>(
-                Arrays.asList("Auckland", "Christchurch", "Wellington"));
-        Records.add(new Record("New Zealand", citiesNewZealand));
-
+                Arrays.asList("9:40"));
+        Records.add(new Record("2013 Dec 04", citiesNewZealand));
+        
         ArrayList<String> citiesRussia = new ArrayList<String>(
-                Arrays.asList("Moscow", "Kursk", "Novosibirsk", "Saint Petersburg"));
-        Records.add(new Record("Russia", citiesRussia));
+                Arrays.asList("10:30", "13:20", "15:10"));
+        Records.add(new Record("2013 Nov 28", citiesRussia));
+
     }
     // =========================================== end fragment2 extendable listview ==================
     
