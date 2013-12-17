@@ -69,14 +69,15 @@ public class GraphActivity extends Activity implements TextToSpeech.OnInitListen
 	   // tts
 	   private TextToSpeech tts;
 	   
-	   // image
+	   // gait images flow
 	   private ImageView image;
-	    int flag = 0;
-	    int v[]={R.drawable.gaitroid_1, R.drawable.gaitroid_2, R.drawable.gaitroid_3, R.drawable.gaitroid_4, R.drawable.gaitroid_5};
-	    Handler imgHandler = new Handler();
-	    public String speedCheck = "NORMAL";
-	    public int speed = 0;
-	   
+	   int flag = 0;
+	   int v[]={R.drawable.gaitroid_1, R.drawable.gaitroid_2, R.drawable.gaitroid_3, R.drawable.gaitroid_4, R.drawable.gaitroid_5};
+	   Handler imgHandler = new Handler();
+	   public String speedCheck = "NORMAL";
+	   public int speed = 0;
+	   boolean left = true;
+	    
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.graph_view);
@@ -687,19 +688,18 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		// start walking
 		private void walking() {
 			speakOut("start");
-			
 		}
         
 		// ======================================== image content =======================================
 		private void setSpeed() {
 			if(speedCheck.equals("NORMAL")) {
-				speed = 200;
+				speed = 180;
 			}
 			else if (speedCheck.equals("SLOW")) {
-				speed = 500;
+				speed = 250;
 			}
 			else if (speedCheck.equals("FAST")) {
-				speed = 50;
+				speed = 120;
 			}
 			else
 				speed = 200;
@@ -709,10 +709,16 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
 			
 		    @Override
 		    public void run(){
-		    	Log.v("speed", speed + "");
 		        if(flag>1000)
 		        	imgHandler.removeCallbacks(changeImage);
 		        else{
+		        	if(flag%4 == 0){
+		        		if(left)
+		        			speakOut("left"); 
+		        		else
+		        			speakOut("right");
+		        		left = !left;
+		        	}
 		        	image.setImageResource(v[flag%4]);
 		        	imgHandler.postDelayed(changeImage, speed);
 		        	flag++;

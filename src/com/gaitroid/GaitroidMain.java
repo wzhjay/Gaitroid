@@ -387,7 +387,7 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
     }
  // =============================================== end tabs view functions ===================
     
-    // ========================================== fragment2 extendable listview ==================
+    // ========================================== fragment1 extendable listview ==================
     private static void LoadRecords() {
         Records = new ArrayList<Record>();
 

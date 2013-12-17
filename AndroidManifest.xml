@@ -86,7 +86,7 @@
         
         <activity android:name="com.gaitroid.GraphActivity"
             	  android:theme="@android:style/Theme.Dialog"
-            	  android:label="Graph">
+            	  android:label="Testing...">
         </activity>
         
         <activity android:name="com.gaitroid.SensorViewActivity" 
