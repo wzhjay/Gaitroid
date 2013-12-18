@@ -115,6 +115,11 @@
         
         <service android:enabled="true"
               	 android:name="com.shimmerresearch.service.MultiShimmerPlayService" />
+        
+        <service android:name=".MyAlarmService"
+                 android:enabled="true" />
+        
+        <receiver android:name=".AlarmReceiver" android:process=":remote" />
     </application>
 
 </manifest>

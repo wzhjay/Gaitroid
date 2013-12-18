@@ -68,6 +68,7 @@ public class DateTimePickerActivity extends Activity{
 				    		Toast.LENGTH_LONG).show();
 				}else{
 					setAlarm(cal);
+					Toast.makeText(DateTimePickerActivity.this, "Alarm Created!", Toast.LENGTH_LONG).show();
 				}
 				
 			}});
@@ -86,15 +87,11 @@ public class DateTimePickerActivity extends Activity{
     }
 	
 	private void setAlarm(Calendar targetCal){
-
-//		info.setText("\n\n***\n"
-//				+ "Alarm is set@ " + targetCal.getTime() + "\n"
-//				+ "***\n");
-//		
-//		Intent intent = new Intent(getBaseContext(), AlarmReceiver.class);
-//		PendingIntent pendingIntent = PendingIntent.getBroadcast(getBaseContext(), RQS_1, intent, 0);
-//		AlarmManager alarmManager = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
-//		alarmManager.set(AlarmManager.RTC_WAKEUP, targetCal.getTimeInMillis(), pendingIntent);	  
+		
+		Intent intent = new Intent(getBaseContext(), AlarmReceiver.class);
+		PendingIntent pendingIntent = PendingIntent.getBroadcast(getBaseContext(), RQS_1, intent, 0);
+		AlarmManager alarmManager = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+		alarmManager.set(AlarmManager.RTC_WAKEUP, targetCal.getTimeInMillis(), pendingIntent);	  
 	}
 
 }
