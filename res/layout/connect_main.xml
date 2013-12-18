@@ -41,7 +41,7 @@
             android:layout_height="match_parent"
 		    android:layout_alignParentRight="true"
 		    android:layout_weight="1"
-            android:text="STOP"
+            android:text="DISCONNECT"
             bbutton:type="danger"
             bbutton:icon_left="fa-pause"
             android:layout_margin="10dp"

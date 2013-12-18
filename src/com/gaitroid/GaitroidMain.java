@@ -163,6 +163,7 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 		
     }
     
+    // back button on title bar
     public boolean onOptionsItemSelected(MenuItem item){
         Intent myIntent = new Intent(getApplicationContext(), MultiShimmerPlayActivity.class);
         startActivityForResult(myIntent, 0);
@@ -328,7 +329,14 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
                 Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_section_launchpad2, container, false);
             
-            
+            rootView.findViewById(R.id.btn_set_todo)
+            .setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                	Intent i = new Intent(GaitroidMain.mCtx, DateTimePickerActivity.class);
+                	startActivity(i);
+                }
+            });
             return rootView;
         }
     }
