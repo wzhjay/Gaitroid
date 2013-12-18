@@ -73,12 +73,10 @@ public class GraphActivity extends Activity implements TextToSpeech.OnInitListen
 	   
 	   // gait images flow
 	   private ImageView image;
-	   int flag = 0;
-	   int v[]={R.drawable.gaitroid_1, R.drawable.gaitroid_2, R.drawable.gaitroid_3, R.drawable.gaitroid_4, R.drawable.gaitroid_5};
-	   Handler imgHandler = new Handler();
+	   
 	   public String speedCheck = "NORMAL";
 	   public int speed = 0;
-	   boolean left = true;
+	   
 	    
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -141,7 +139,6 @@ public class GraphActivity extends Activity implements TextToSpeech.OnInitListen
 	    Log.v("speed", speedCheck);
 	    image = (ImageView) findViewById(R.id.gait_image);
 	    setSpeed();
-	    imgHandler.postDelayed(changeImage, 1000);
 	    
 	    // stop button
 	 	final BootstrapButton button_stop = (BootstrapButton) findViewById(R.id.stop_graph);
@@ -643,7 +640,8 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
 	                    || result == TextToSpeech.LANG_NOT_SUPPORTED) {
 	                Log.e("TTS", "This Language is not supported");
 	            } else {
-	            	preparation();
+	            	//preparation();
+	            	start();
 	            }
 	 
 	        } else {
@@ -652,53 +650,16 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		}
 		
 		private void speakOut(String text) {
-			 
 	        String tt = text;
-	 
 	        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
 	    }
 		
-		// preparation
-		private void preparation() {
-			//Pause for 1 seconds
-            try {
-            	speakOut("test start in five seconds");
-				Thread.sleep(2000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			//Pause for 1 seconds
-            try {
-            	speakOut("please stand straight and get ready");
-				Thread.sleep(3000);
-				waiting();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		
-		// waiting for five seconds
-		private void waiting() {
-			MediaPlayer mPlayer = MediaPlayer.create(this, R.raw.buzz);
-			for (int i = 0; i < 5; i++) {
-		            //Pause for 1 seconds
-		            try {
-		            	//make a sound 
-			            mPlayer.start();
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-		        }
+		// loop the procedures
+		private void start() {
+			starting();
+			fiveSecondPrepare();
+			stratSignal();
 			walking();
-		}
-		
-		// start walking
-		private void walking() {
-			speakOut("start");
 		}
         
 		// ======================================== image content =======================================
@@ -716,26 +677,91 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
 				speed = 200;
 		}
 		
-		Runnable changeImage = new Runnable(){
-			
-		    @Override
-		    public void run(){
-		        if(flag>1000)
-		        	imgHandler.removeCallbacks(changeImage);
-		        else{
-		        	if(flag%4 == 0){
-		        		if(left)
-		        			speakOut("left"); 
-		        		else
-		        			speakOut("right");
-		        		left = !left;
+		public void starting() {
+			final String str[] = {"test start in five seconds", "please stand straight and get ready"};
+			final Handler startHandler = new Handler();
+			startHandler.postDelayed(new Runnable()
+		    {
+				private int flag = 0;
+		        @Override
+		        public void run()
+		        {
+		        	if(flag < 2) {
+		        		speakOut(str[flag]);
+		        		startHandler.postDelayed(this, 2000);
+		        		flag++;
 		        	}
-		        	image.setImageResource(v[flag%4]);
-		        	imgHandler.postDelayed(changeImage, speed);
-		        	flag++;
+		        	else
+		        		startHandler.removeCallbacks(this);
 		        }
-		    }
-
-		};
+		    }, 200); // 0.2 second delay (takes millis)
+		}
+		
+		public void fiveSecondPrepare(){
+			final Handler fiveSecondPrepareHandler = new Handler();
+			final MediaPlayer mPlayer = MediaPlayer.create(this, R.raw.buzz);
+			fiveSecondPrepareHandler.postDelayed(new Runnable()
+		    {
+				private int time = 0;
+		        @Override
+		        public void run()
+		        {
+		        	if(time < 5) {
+		        		mPlayer.start();
+		        		fiveSecondPrepareHandler.postDelayed(this, 1000);
+		        		time++;
+		        	}
+		        	else
+		        		fiveSecondPrepareHandler.removeCallbacks(this);
+		        }
+		    }, 5000); // 1 second delay (takes millis)
+		}
+		
+		public void stratSignal() {
+			final Handler stratSignalHandler = new Handler();
+			stratSignalHandler.postDelayed(new Runnable(){
+				private int flag = 0;
+				@Override
+		        public void run()
+		        {
+		        	if(flag < 1) {
+		        		speakOut("start");
+		        		stratSignalHandler.postDelayed(this, 1000);
+		        		flag++;
+		        	}
+		        	else
+		        		stratSignalHandler.removeCallbacks(this);
+		        }
+			}, 10000);
+		}
+		
+		
+		public void walking() {
+			
+			final int v[]={R.drawable.gaitroid_1, R.drawable.gaitroid_2, R.drawable.gaitroid_3, R.drawable.gaitroid_4, R.drawable.gaitroid_5};
+			final Handler imgHandler = new Handler();
+			
+			imgHandler.postDelayed(new Runnable()
+			{
+				private int flag = 0;
+				private boolean left = true;
+				public void run(){
+					if(flag>1000)
+			        	imgHandler.removeCallbacks(this);
+			        else{
+			        	if(flag%4 == 0){
+			        		if(left)
+			        			speakOut("left"); 
+			        		else
+			        			speakOut("right");
+			        		left = !left;
+			        	}
+			        	image.setImageResource(v[flag%4]);
+			        	imgHandler.postDelayed(this, speed);
+			        	flag++;
+			        }
+				}
+			}, 11000);
+		}
 
 }
