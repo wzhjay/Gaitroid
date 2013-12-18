@@ -30,6 +30,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.app.ActionBar;
@@ -155,7 +156,18 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 	    
 	    Intent intent=new Intent(this, MultiShimmerPlayService.class);
 		getApplicationContext().bindService(intent,mTestServiceConnection, Context.BIND_AUTO_CREATE);
-			
+		
+		// back button on title bar
+		ActionBar ab = getActionBar();
+		ab.setDisplayHomeAsUpEnabled(true);
+		
+    }
+    
+    public boolean onOptionsItemSelected(MenuItem item){
+        Intent myIntent = new Intent(getApplicationContext(), MultiShimmerPlayActivity.class);
+        startActivityForResult(myIntent, 0);
+        return true;
+
     }
     
     // ========================================= preference dialog functions ===================
