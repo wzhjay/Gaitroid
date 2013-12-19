@@ -69,7 +69,7 @@ public class GraphActivity extends Activity implements TextToSpeech.OnInitListen
 	   static MultiShimmerPlayService mService;
 	   
 	   // tts
-	   private TextToSpeech tts;
+	   private static TextToSpeech tts;
 	   
 	   // gait images flow
 	   private ImageView image;
@@ -77,7 +77,22 @@ public class GraphActivity extends Activity implements TextToSpeech.OnInitListen
 	   public String speedCheck = "NORMAL";
 	   public int speed = 0;
 	   
-	    
+	   static String[] sensor_acl = {"Accelerometer X", "Accelerometer Y", "Accelerometer Z"};
+	   static String[] sensor_gyr = {"Gyroscope X", "Gyroscope Y", "Gyroscope Z"};
+	   static String[] sensor_mag = {"Magnetometer X", "Magnetometer Y", "Magnetometer Z"};
+	   static String sensor_exp_a0 = "ExpBoard A0";
+	   static String sensor_exp_a7 = "ExpBoard A7";
+       static double[] cal_acl_0 = new double[3];
+       static double[] cal_gyr_0 = new double[3];
+       static double[] cal_mag_0 = new double[3];
+       static double[] cal_acl_1 = new double[3];
+       static double[] cal_gyr_1 = new double[3];
+       static double[] cal_mag_1 = new double[3];
+       static double cal_exp_a0_0 = 0.0;
+       static double cal_exp_a7_0 = 0.0;
+       static double cal_exp_a0_1 = 0.0;
+       static double cal_exp_a7_1 = 0.0;
+       
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.graph_view);
@@ -221,21 +236,21 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
                 	    	
                 	    ObjectCluster objectCluster =  (ObjectCluster) msg.obj; 
             			
-                        String[] sensor_acl = {"Accelerometer X", "Accelerometer Y", "Accelerometer Z"};
-                        String[] sensor_gyr = {"Gyroscope X", "Gyroscope Y", "Gyroscope Z"};
-                        String[] sensor_mag = {"Magnetometer X", "Magnetometer Y", "Magnetometer Z"};
-                        String sensor_exp_a0 = "ExpBoard A0";
-                        String sensor_exp_a7 = "ExpBoard A7";
-                        double[] cal_acl_0 = new double[3];
-                        double[] cal_gyr_0 = new double[3];
-                        double[] cal_mag_0 = new double[3];
-                        double[] cal_acl_1 = new double[3];
-                        double[] cal_gyr_1 = new double[3];
-                        double[] cal_mag_1 = new double[3];
-                        double cal_exp_a0_0 = 0.0;
-                        double cal_exp_a7_0 = 0.0;
-                        double cal_exp_a0_1 = 0.0;
-                        double cal_exp_a7_1 = 0.0;
+//                        String[] sensor_acl = {"Accelerometer X", "Accelerometer Y", "Accelerometer Z"};
+//                        String[] sensor_gyr = {"Gyroscope X", "Gyroscope Y", "Gyroscope Z"};
+//                        String[] sensor_mag = {"Magnetometer X", "Magnetometer Y", "Magnetometer Z"};
+//                        String sensor_exp_a0 = "ExpBoard A0";
+//                        String sensor_exp_a7 = "ExpBoard A7";
+//                        double[] cal_acl_0 = new double[3];
+//                        double[] cal_gyr_0 = new double[3];
+//                        double[] cal_mag_0 = new double[3];
+//                        double[] cal_acl_1 = new double[3];
+//                        double[] cal_gyr_1 = new double[3];
+//                        double[] cal_mag_1 = new double[3];
+//                        double cal_exp_a0_0 = 0.0;
+//                        double cal_exp_a7_0 = 0.0;
+//                        double cal_exp_a0_1 = 0.0;
+//                        double cal_exp_a7_1 = 0.0;
 
                 		int[] dataArray = new int[0];
                 		double[] calibratedDataArray = new double[0];
@@ -457,8 +472,8 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
                             	job.put("acl", acl);
                             	job.put("gyr", gyr);
                             	job.put("mag", mag);
-                            	job.put("exp_a0_0", cal_exp_a0_0);
-                            	job.put("exp_a7_0", cal_exp_a7_0);
+                            	job.put("exp_a0_0", cal_exp_a0_0); // LEFT FRONT
+                            	job.put("exp_a7_0", cal_exp_a7_0); // LEFT BACK
                             	Log.d("job 0", job.toString());
                 				socket.emit("gaitroid_data_0", job);
                 			} catch (JSONException e) {
@@ -599,8 +614,8 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
                             	job.put("acl", acl);
                             	job.put("gyr", gyr);
                             	job.put("mag", mag);
-                            	job.put("exp_a0_1", cal_exp_a0_1);
-                            	job.put("exp_a7_1", cal_exp_a7_1);
+                            	job.put("exp_a0_1", cal_exp_a0_1); // RIGHT BACK
+                            	job.put("exp_a7_1", cal_exp_a7_1); // RIGHT FRONT
                             	Log.d("job 1", job.toString());
                 				socket.emit("gaitroid_data_1", job);
                 			} catch (JSONException e) {
@@ -610,13 +625,23 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
                             
                             Log.d("gaitroid_data", "acl: " + Arrays.toString(cal_acl_1) + " gyr: " + Arrays.toString(cal_gyr_1) + " mag: " + Arrays.toString(cal_mag_1) + " exp_a0_1: " + cal_exp_a0_1 + " exp_a7_1: " + cal_exp_a7_1);
                         }
-
+                        PhaseDetect(cal_exp_a0_0, cal_exp_a7_0, cal_exp_a0_1, cal_exp_a7_1);
                 	}
     				
                     break;
                 }
             }
         };
+        
+        public static void PhaseDetect(double left_front, double left_back, double right_front, double right_back) {
+        	Log.v("sensor", "left_front: " + left_front + " left_back: " + left_back + " right_front: " + right_front +  " right_back: " + right_back);
+        	if( (left_front < 3000) && 
+        		(left_back < 3000) &&
+        		(right_front < 1000) &&
+        		(right_back > 3500)) { // Left toe off
+        		speakOut("left toe off");
+        	}
+        }
         
         @Override
         public void onDestroy() {
@@ -649,7 +674,7 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
 	        }
 		}
 		
-		private void speakOut(String text) {
+		private static void speakOut(String text) {
 	        String tt = text;
 	        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
 	    }
@@ -750,11 +775,11 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
 			        	imgHandler.removeCallbacks(this);
 			        else{
 			        	if(flag%4 == 0){
-			        		if(left)
-			        			speakOut("left"); 
-			        		else
-			        			speakOut("right");
-			        		left = !left;
+//			        		if(left)
+//			        			speakOut("left"); 
+//			        		else
+//			        			speakOut("right");
+//			        		left = !left;
 			        	}
 			        	image.setImageResource(v[flag%4]);
 			        	imgHandler.postDelayed(this, speed);
