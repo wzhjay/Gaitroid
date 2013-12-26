@@ -8,6 +8,9 @@ import java.util.List;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.gaitroid.MyPlayCard;
+import com.fima.cardsui.views.CardUI;
+
 import com.shimmerresearch.service.MultiShimmerPlayService;
 import com.shimmerresearch.service.MultiShimmerPlayService.LocalBinder;
 
@@ -73,6 +76,9 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 	private static List<Record> Records;
 	private static ExpandableListView expandableListView;
     private static RecordAdapter recordsAdapter;
+    
+    private static CardUI mCardView;
+    
 	
 	/**
      * The {@link android.support.v4.view.PagerAdapter} that will provide fragments for each of the
@@ -337,6 +343,33 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
                 	startActivity(i);
                 }
             });
+            
+			// init CardView
+            mCardView = (CardUI) rootView.findViewById(R.id.cardsview);
+			mCardView.setSwipeable(false);
+			
+			mCardView
+					.addCard(new MyPlayCard(
+							"Menu Overflow",
+							"The PlayCards allow you to easily set a menu overflow on your card.\nYou can also declare the left stripe's color in a String, like \"#33B5E5\" for the holo blue color, same for the title color.",
+							"#e00707", "#e00707", false, true));
+
+			// add one card
+			mCardView
+					.addCardToLastStack(new MyPlayCard(
+							"Different Colors for Title & Stripe",
+							"You can set any color for the title and any other color for the left stripe",
+							"#f2a400", "#9d36d0", false, false));
+		
+			mCardView
+					.addCardToLastStack(new MyPlayCard(
+							"Set Clickable or Not",
+							"You can easily implement an onClickListener on any card, but the last boolean parameter of the PlayCards allow you to toggle the clickable background.",
+							"#4ac925", "#222222", true, true));
+		
+			// draw cards
+			mCardView.refresh();
+			
             return rootView;
         }
     }
