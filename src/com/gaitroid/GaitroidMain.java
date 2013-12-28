@@ -1,10 +1,20 @@
 package com.gaitroid;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -166,8 +176,33 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 		// back button on title bar
 		ActionBar ab = getActionBar();
 		ab.setDisplayHomeAsUpEnabled(true);
-		
     }
+    
+    public static String getPatientTests(String userid) {
+	    StringBuilder builder = new StringBuilder();
+	    HttpClient client = new DefaultHttpClient();
+	    Log.i("Gaitroid", MyApplication.getBaseAPIPath() + "getPatientTest/" + userid);
+	    HttpGet httpGet = new HttpGet(MyApplication.getBaseAPIPath() + "getPatientTest/" + userid);
+	    try {
+	      HttpResponse response = client.execute(httpGet);
+	      StatusLine statusLine = response.getStatusLine();
+	      int statusCode = statusLine.getStatusCode();
+	      if (statusCode == 200) {
+	        BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+	        String line;
+	        while ((line = rd.readLine()) != null) {
+	          builder.append(line);
+	        }
+	      } else {
+	        Log.e("Gaitroid", "Failed to call api");
+	      }
+	    } catch (ClientProtocolException e) {
+	      e.printStackTrace();
+	    } catch (IOException e) {
+	      e.printStackTrace();
+	    }
+	    return builder.toString();
+	}
     
     // back button on title bar
     public boolean onOptionsItemSelected(MenuItem item){
@@ -330,6 +365,8 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
      * A fragment that launches as home screen.
      */
     public static class LaunchpadSectionFragment2 extends Fragment {
+    	String[] stripeColors = {"#33B5E5", "#AA66CC", "#99CC00", "#FFBB33", "#FF4444"};
+    	String[] titleColors = {"#0099CC", "#9933CC", "#669900", "#FF8800", "#CC0000", "#222222", "#e00707", "#9d36d0"};
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
@@ -344,29 +381,44 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
                 }
             });
             
-			// init CardView
+            // init CardView
             mCardView = (CardUI) rootView.findViewById(R.id.cardsview);
 			mCardView.setSwipeable(false);
 			
-			mCardView
-					.addCard(new MyPlayCard(
-							"Menu Overflow",
-							"The PlayCards allow you to easily set a menu overflow on your card.\nYou can also declare the left stripe's color in a String, like \"#33B5E5\" for the holo blue color, same for the title color.",
-							"#e00707", "#e00707", false, true));
-
-			// add one card
-			mCardView
-					.addCardToLastStack(new MyPlayCard(
-							"Different Colors for Title & Stripe",
-							"You can set any color for the title and any other color for the left stripe",
-							"#f2a400", "#9d36d0", false, false));
-		
-			mCardView
-					.addCardToLastStack(new MyPlayCard(
-							"Set Clickable or Not",
-							"You can easily implement an onClickListener on any card, but the last boolean parameter of the PlayCards allow you to toggle the clickable background.",
-							"#4ac925", "#222222", true, true));
-		
+    		// request feeds
+    		String userid = MyApplication.getUserId();
+    		String patientTests = getPatientTests(userid);
+    		Log.i("Gaitriod", userid);
+    		if(patientTests != null){
+        		try {
+        			JSONArray jsonArray = new JSONArray(patientTests);
+        			Log.i("Gaitroid", "Number of tests " + jsonArray.length());
+        			for (int i = 0; i < jsonArray.length(); i++) {
+        				JSONObject patient = jsonArray.getJSONObject(i);
+        				Log.i("Gaitroid", patient.toString());
+        				Log.i("Gaitroid", patient.optString("content"));
+        				Log.i("Gaitroid", patient.optString("userid"));
+        				Log.i("Gaitroid", patient.optString("speed"));
+        				Log.i("Gaitroid", patient.optString("due_time"));
+        				String speed  = patient.optString("speed");
+        				String title = "By " + patient.optString("due_time").substring(0, 10);
+        				String content = patient.optString("content");
+        				if(speed.charAt(0) == '1') { content+="\r\nSLOW";}
+        				if(speed.charAt(1) == '1') { content+="\r\nNORMAL";}
+        				if(speed.charAt(2) == '1') { content+="\r\nFAST";}
+        				String stripeColor = stripeColors[(int) (Math.random()*4)];
+        				String titleColor = titleColors[(int) (Math.random()*7)];
+        				Boolean hasOverflow = false;
+        				Boolean isClickable = true;
+        				
+        				mCardView
+        				.addCard(new MyPlayCard(title, content, stripeColor, titleColor, hasOverflow, isClickable));
+        			}
+        		} catch (Exception e) {
+        			e.printStackTrace();
+        		}
+    		}
+    		
 			// draw cards
 			mCardView.refresh();
 			
