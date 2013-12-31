@@ -177,7 +177,7 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
 		ActionBar ab = getActionBar();
 		ab.setDisplayHomeAsUpEnabled(true);
     }
-    
+     
     public static String getPatientTests(String userid) {
 	    StringBuilder builder = new StringBuilder();
 	    HttpClient client = new DefaultHttpClient();
@@ -389,7 +389,7 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
     		String userid = MyApplication.getUserId();
     		String patientTests = getPatientTests(userid);
     		Log.i("Gaitriod", userid);
-    		if(patientTests != null){
+    		if(patientTests.length() > 0){
         		try {
         			JSONArray jsonArray = new JSONArray(patientTests);
         			Log.i("Gaitroid", "Number of tests " + jsonArray.length());
@@ -401,7 +401,7 @@ public class GaitroidMain extends FragmentActivity implements ActionBar.TabListe
         				Log.i("Gaitroid", patient.optString("speed"));
         				Log.i("Gaitroid", patient.optString("due_time"));
         				String speed  = patient.optString("speed");
-        				String title = "By " + patient.optString("due_time").substring(0, 10);
+        				String title = "By " + patient.optString("due_time").substring(0, 10) + " 23:59";
         				String content = patient.optString("content");
         				if(speed.charAt(0) == '1') { content+="\r\nSLOW";}
         				if(speed.charAt(1) == '1') { content+="\r\nNORMAL";}
