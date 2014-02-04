@@ -6,6 +6,7 @@ import io.socket.SocketIO;
 import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Timer;
 
@@ -93,17 +94,21 @@ public class GraphActivity extends Activity implements TextToSpeech.OnInitListen
        static double cal_exp_a0_1 = 0.0;
        static double cal_exp_a7_1 = 0.0;
        
+       // windows
+       private static int windowSize = 256;
+       private static int windowOverlapSize = 192;
+       private static LinkedList<Instance> window1 = new LinkedList<Instance>();
+       private static LinkedList<Instance> window2 = new LinkedList<Instance>();
+       private static LinkedList<Instance> window3 = new LinkedList<Instance>();
+       private static LinkedList<LinkedList> windowsTobeProcessedQueue = new LinkedList<LinkedList>();
+       private static boolean window1Start = true;
+       private static boolean window2Start = false;
+       private static boolean window3Start = false;
+       
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.graph_view);
 		
-		// for 3D view
-		//t= new MyGLSurfaceView(this);
-		//Create an Instance with this Activity
-		//glSurface = (GLSurfaceView)findViewById(R.id.graphics_glsurfaceview1);
-		//Set our own Renderer
-		//glSurface.setRenderer(t);
-		//Set the GLSurface as View to this Activity
 		invm3d = new Matrix3d();
 		fm3d = new Matrix3d();
 		m3d = new Matrix3d();
@@ -123,28 +128,10 @@ public class GraphActivity extends Activity implements TextToSpeech.OnInitListen
 			e.printStackTrace();
 		}
 		
-		//Bundle extras = getIntent().getExtras();
-	    //BluetoothAddress = extras.getString("BluetoothAddress");
-	    //setTitle("Graph: " + BluetoothAddress);
 		Intent intent=new Intent(this, MultiShimmerPlayService.class);
 		getApplicationContext().bindService(intent,mTestServiceConnection, Context.BIND_AUTO_CREATE);
 	    getWindow().setLayout(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
-	    //View mGraph = (View) findViewById(R.id.graph);
-	    //mGraphDisplay = (GraphView)findViewById(R.id.graph);
-	    
-//	    mGraph.setOnLongClickListener(new OnLongClickListener() {
-//	    	
-//			public boolean onLongClick(View arg0) {
-//				// TODO Auto-generated method stub
-//				Log.d("ShimmerGraph","on long click");
-//	
-//				Intent mainCommandIntent=new Intent(GraphActivity.this,SensorViewActivity.class);
-//				mainCommandIntent.putExtra("Enabled_Sensors",mEnabledSensors);
-//				startActivityForResult(mainCommandIntent, GaitroidMain.REQUEST_CONFIGURE_GRAPH);
-//				return false;
-//			}
-//		});
-	    
+
 	    // tts
 	    tts = new TextToSpeech(this, this);
 	    
@@ -235,22 +222,6 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
                 	    if ((msg.obj instanceof ObjectCluster)){
                 	    	
                 	    ObjectCluster objectCluster =  (ObjectCluster) msg.obj; 
-            			
-//                        String[] sensor_acl = {"Accelerometer X", "Accelerometer Y", "Accelerometer Z"};
-//                        String[] sensor_gyr = {"Gyroscope X", "Gyroscope Y", "Gyroscope Z"};
-//                        String[] sensor_mag = {"Magnetometer X", "Magnetometer Y", "Magnetometer Z"};
-//                        String sensor_exp_a0 = "ExpBoard A0";
-//                        String sensor_exp_a7 = "ExpBoard A7";
-//                        double[] cal_acl_0 = new double[3];
-//                        double[] cal_gyr_0 = new double[3];
-//                        double[] cal_mag_0 = new double[3];
-//                        double[] cal_acl_1 = new double[3];
-//                        double[] cal_gyr_1 = new double[3];
-//                        double[] cal_mag_1 = new double[3];
-//                        double cal_exp_a0_0 = 0.0;
-//                        double cal_exp_a7_0 = 0.0;
-//                        double cal_exp_a0_1 = 0.0;
-//                        double cal_exp_a7_1 = 0.0;
 
                 		int[] dataArray = new int[0];
                 		double[] calibratedDataArray = new double[0];
@@ -483,52 +454,6 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
                             Log.d("gaitroid_data", "acl: " + Arrays.toString(cal_acl_0) + " gyr: " + Arrays.toString(cal_gyr_0) + " mag: " + Arrays.toString(cal_mag_0) + " exp_a0_0: " + cal_exp_a0_0 + " exp_a7_0: " + cal_exp_a7_0);
                         
-                        
-//                            Log.v("3DView", "STRAT");
-//                            Collection<FormatCluster> accelXFormats = objectCluster.mPropertyCluster.get("Axis Angle A");  // first retrieve all the possible formats for the current sensor device
-//                            float angle = 0,x = 0,y=0,z=0;
-//                            Log.v("3DView", "accelXFormats: " + accelXFormats.toString());
-//                            if (accelXFormats != null){
-//                                FormatCluster formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(accelXFormats,"CAL")); // retrieve the calibrated data
-//                                angle = (float) formatCluster.mData;
-//                            }
-//                            Collection<FormatCluster> accelYFormats = objectCluster.mPropertyCluster.get("Axis Angle X");  // first retrieve all the possible formats for the current sensor device
-//                            if (accelYFormats != null){
-//                                FormatCluster formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(accelYFormats,"CAL")); // retrieve the calibrated data
-//                                x=(float) formatCluster.mData;
-//                            }
-//                            Collection<FormatCluster> accelZFormats = objectCluster.mPropertyCluster.get("Axis Angle Y");  // first retrieve all the possible formats for the current sensor device
-//                            if (accelZFormats != null){
-//                                FormatCluster formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(accelZFormats,"CAL")); // retrieve the calibrated data
-//                                y=(float) formatCluster.mData;
-//                            }
-//                            Collection<FormatCluster> aaFormats = objectCluster.mPropertyCluster.get("Axis Angle Z");  // first retrieve all the possible formats for the current sensor device
-//                            if (aaFormats != null){
-//                                FormatCluster formatCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(aaFormats,"CAL")); // retrieve the calibrated data
-//                                z=(float) formatCluster.mData;
-//                                AxisAngle4d aa=new AxisAngle4d(x,y,z,angle);
-//                                Log.v("3DView", "x: " + String.valueOf(x) + " y:" + String.valueOf(y) + " z:" + String.valueOf(z) + " angle:" + String.valueOf(angle));
-//                                Quat4d qt = new Quat4d();
-//                                qt.set(aa);
-//                                   
-//                                m3d.set(aa);
-//                                //flip the rotation matrix (mat = flipMat * mat * flipMat;)
-//                                fm3d.setIdentity();
-//                                fm3d.m11=-1;
-//                                fm3d.m22=-1;
-//                                Matrix3d fm3dtemp = new Matrix3d();
-//                                fm3dtemp.setIdentity();
-//                                fm3d.m11=-1;
-//                                fm3d.m22=-1;
-//                                fm3d.mul(m3d);
-//                                fm3d.mul(fm3dtemp);
-//                                   
-//                                //set function
-//                                fm3dtemp.set(invm3d);
-//                                fm3dtemp.mul(fm3d);
-//                                aa.set(fm3dtemp);
-//                                t.setAngleAxis((float) (aa.angle*180/Math.PI), (float)aa.x, (float)aa.y, (float)aa.z);
-//                            }
                         }
                         
                         // gaitroid, get all the sensor data
@@ -632,6 +557,44 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
                 }
             }
         };
+        
+        public static void formWindows(Instance ins) {
+        	if(window1.size() == windowSize){
+        		window1Start = false;
+        	}
+        	
+        	if(window2.size() == windowSize){
+        		window2Start = false;
+        	}
+        	
+        	if(window3.size() == windowSize){
+        		window3Start = false;
+        	}
+        	
+        	if(window1Start && window1.size() < windowSize) {
+        		window1.add(ins);
+        		if(window1.size() == windowOverlapSize) {
+        			window2 = new LinkedList<Instance>();
+        			window2Start = true;
+        		}
+        	}
+        	
+        	if(window2Start && window2.size() < windowSize) {
+        		window2.add(ins);
+        		if(window2.size() == windowOverlapSize) {
+        			window3 = new LinkedList<Instance>();
+        			window3Start = true;
+        		}
+        	}
+        	
+        	if(window3Start && window3.size() < windowSize) {
+        		window3.add(ins);
+        		if(window3.size() == windowOverlapSize) {
+        			window1 = new LinkedList<Instance>();
+        			window1Start = true;
+        		}
+        	}
+        }
         
         public static void PhaseDetect(double left_front, double left_back, double right_front, double right_back) {
         	Log.v("sensor", "left_front: " + left_front + " left_back: " + left_back + " right_front: " + right_front +  " right_back: " + right_back);
