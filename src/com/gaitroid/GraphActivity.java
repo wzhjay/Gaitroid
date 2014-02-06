@@ -105,45 +105,6 @@ public class GraphActivity extends Activity implements TextToSpeech.OnInitListen
        static double cal_exp_a0_1 = 0.0;
        static double cal_exp_a7_1 = 0.0;
        
-       // windows
-       private static int windowSize = 256;
-       private static int windowOverlapSize = 192;
-       private static int counterPrev = 0;
-       private static int counterNext = 0;
-       private static LinkedList<Instances> windowsTobeProcessedQueue = new LinkedList<Instances>();
-
-       // weka attributes definition
-       //Left
-       static Attribute sensor_acl_0_x = new Attribute("Left Accelerometer X"); 
-       static Attribute sensor_acl_0_y = new Attribute("Left Accelerometer Y"); 
-       static Attribute sensor_acl_0_z = new Attribute("Left Accelerometer Z"); 
-       static Attribute sensor_gyr_0_x = new Attribute("Left Gyroscope X"); 
-       static Attribute sensor_gyr_0_y = new Attribute("Left Gyroscope Y"); 
-       static Attribute sensor_gyr_0_z = new Attribute("Left Gyroscope Z"); 
-       static Attribute sensor_mag_0_x = new Attribute("Left Magnetometer X"); 
-       static Attribute sensor_mag_0_y = new Attribute("Left Magnetometer Y"); 
-       static Attribute sensor_mag_0_z = new Attribute("Left Magnetometer Z"); 
-       static Attribute sensor_exp_0_a0 = new Attribute("Left FSR F"); 
-       static Attribute sensor_exp_0_a7 = new Attribute("Left FSR B"); 
-       
-       // Right
-       static Attribute sensor_acl_1_x = new Attribute("Right Accelerometer X"); 
-       static Attribute sensor_acl_1_y = new Attribute("Right Accelerometer Y"); 
-       static Attribute sensor_acl_1_z = new Attribute("Right Accelerometer Z"); 
-       static Attribute sensor_gyr_1_x = new Attribute("Right Gyroscope X"); 
-       static Attribute sensor_gyr_1_y = new Attribute("Right Gyroscope Y"); 
-       static Attribute sensor_gyr_1_z = new Attribute("Right Gyroscope Z"); 
-       static Attribute sensor_mag_1_x = new Attribute("Right Magnetometer X"); 
-       static Attribute sensor_mag_1_y = new Attribute("Right Magnetometer Y"); 
-       static Attribute sensor_mag_1_z = new Attribute("Right Magnetometer Z"); 
-       static Attribute sensor_exp_1_a0 = new Attribute("Right FSR F"); 
-       static Attribute sensor_exp_1_a7 = new Attribute("Right FSR B");
-       
-       // weka instance(window) definition
-       private static Instances prev;
-       private static Instances next;
-       private static FastVector fvWekaAttributes;
-       
 	@SuppressWarnings("unchecked")
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -191,44 +152,6 @@ public class GraphActivity extends Activity implements TextToSpeech.OnInitListen
 	         	finish();
  	        }
  	    });
-	 	
-	 	
-	 	// weka initialization
-	 	// Declare the class attribute along with its values
-	 	FastVector fvClassVal = new FastVector(2);
-	 	fvClassVal.addElement("normal");
-	    fvClassVal.addElement("abnormal");
-	    Attribute ClassAttribute = new Attribute("theClass", fvClassVal);
-	       
-	    fvWekaAttributes = new FastVector(22);
-	    fvWekaAttributes.addElement(sensor_acl_0_x);    
-	    fvWekaAttributes.addElement(sensor_acl_0_y);    
-	    fvWekaAttributes.addElement(sensor_acl_0_z);
-	    fvWekaAttributes.addElement(sensor_gyr_0_x);    
-	    fvWekaAttributes.addElement(sensor_gyr_0_y);    
-	    fvWekaAttributes.addElement(sensor_gyr_0_z);
-	    fvWekaAttributes.addElement(sensor_mag_0_x);    
-	    fvWekaAttributes.addElement(sensor_mag_0_y);    
-	    fvWekaAttributes.addElement(sensor_mag_0_z);
-	    fvWekaAttributes.addElement(sensor_exp_0_a0);    
-	    fvWekaAttributes.addElement(sensor_exp_0_a7);
-	    
-	    fvWekaAttributes.addElement(sensor_acl_1_x);    
-	    fvWekaAttributes.addElement(sensor_acl_1_y);    
-	    fvWekaAttributes.addElement(sensor_acl_1_z);
-	    fvWekaAttributes.addElement(sensor_gyr_1_x);    
-	    fvWekaAttributes.addElement(sensor_gyr_1_y);    
-	    fvWekaAttributes.addElement(sensor_gyr_1_z);
-	    fvWekaAttributes.addElement(sensor_mag_1_x);    
-	    fvWekaAttributes.addElement(sensor_mag_1_y);    
-	    fvWekaAttributes.addElement(sensor_mag_1_z);
-	    fvWekaAttributes.addElement(sensor_exp_1_a0);    
-	    fvWekaAttributes.addElement(sensor_exp_1_a7);
-	    
-	    fvWekaAttributes.addElement(ClassAttribute);
-	       
-	    prev = new Instances("GaitroidTest", fvWekaAttributes, windowSize);  // "GaitroidTest" is relaition name
-	    //next = new Instances("GaitroidTest", fvWekaAttributes, windowSize);
 	}
 	
 public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -628,41 +551,7 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
                 			}
                             Log.d("gaitroid_data", "acl: " + Arrays.toString(cal_acl_1) + " gyr: " + Arrays.toString(cal_gyr_1) + " mag: " + Arrays.toString(cal_mag_1) + " exp_a0_1: " + cal_exp_a0_1 + " exp_a7_1: " + cal_exp_a7_1);
                         }
-
-                        // left
-                        Instance inst = new DenseInstance(22);
-                        inst.setValue(sensor_acl_0_x, cal_acl_0[0]);
-                        inst.setValue(sensor_acl_0_y, cal_acl_0[1]);
-                        inst.setValue(sensor_acl_0_z, cal_acl_0[2]);
                         
-                        inst.setValue(sensor_gyr_0_x, cal_gyr_0[0]);
-                        inst.setValue(sensor_gyr_0_y, cal_gyr_0[1]);
-                        inst.setValue(sensor_gyr_0_z, cal_gyr_0[2]);
-                        
-                        inst.setValue(sensor_mag_0_x, cal_mag_0[0]);
-                        inst.setValue(sensor_mag_0_y, cal_mag_0[1]);
-                        inst.setValue(sensor_mag_0_z, cal_mag_0[2]);
-                        
-                        inst.setValue(sensor_exp_0_a0, cal_exp_a0_0);
-                        inst.setValue(sensor_exp_0_a7, cal_exp_a7_0);
-                        
-                        // right
-                        inst.setValue(sensor_acl_1_x, cal_acl_1[0]);
-                        inst.setValue(sensor_acl_1_y, cal_acl_1[1]);
-                        inst.setValue(sensor_acl_1_z, cal_acl_1[2]);
-                        
-                        inst.setValue(sensor_gyr_1_x, cal_gyr_1[0]);
-                        inst.setValue(sensor_gyr_1_y, cal_gyr_1[1]);
-                        inst.setValue(sensor_gyr_1_z, cal_gyr_1[2]);
-                        
-                        inst.setValue(sensor_mag_1_x, cal_mag_1[0]);
-                        inst.setValue(sensor_mag_1_y, cal_mag_1[1]);
-                        inst.setValue(sensor_mag_1_z, cal_mag_1[2]);
-                        
-                        inst.setValue(sensor_exp_1_a0, cal_exp_a0_1);
-                        inst.setValue(sensor_exp_1_a7, cal_exp_a7_1);
-                        
-                        formWindows(inst);
                         //PhaseDetect(cal_exp_a0_0, cal_exp_a7_0, cal_exp_a0_1, cal_exp_a7_1);
                 	}
     				
@@ -671,28 +560,28 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
             }
         };
         
-        @SuppressWarnings("unchecked")
-		public static void formWindows(Instance inst) {
-        	if(counterPrev < windowSize) {
-        		prev.add(inst);
-        		counterPrev += 1;
-        	} else { // when prev window full, i.e. counterPrev == windowSize
-        		Instances window = new Instances(prev); // copy prev Instances which full
-        		windowsTobeProcessedQueue.add(window);
-        		prev = next;	// point to next Instances
-        		counterPrev = counterNext;	// map counter from next to prev
-        		counterNext = 0;	// reset next counter
-        	}
-        	
-        	if(counterPrev == windowOverlapSize) {
-        		next = new Instances("GaitroidTest", fvWekaAttributes, windowSize);
-        	}
-        	
-        	if(counterPrev > windowOverlapSize) {
-        		next.add(inst);
-        		counterNext += 1;
-        	}
-        }
+//        @SuppressWarnings("unchecked")
+//		public static void formWindows(Instance inst) {
+//        	if(counterPrev < windowSize) {
+//        		prev.add(inst);
+//        		counterPrev += 1;
+//        	} else { // when prev window full, i.e. counterPrev == windowSize
+//        		Instances window = new Instances(prev); // copy prev Instances which full
+//        		windowsTobeProcessedQueue.add(window);
+//        		prev = next;	// point to next Instances
+//        		counterPrev = counterNext;	// map counter from next to prev
+//        		counterNext = 0;	// reset next counter
+//        	}
+//        	
+//        	if(counterPrev == windowOverlapSize) {
+//        		next = new Instances("GaitroidTest", fvWekaAttributes, windowSize);
+//        	}
+//        	
+//        	if(counterPrev > windowOverlapSize) {
+//        		next.add(inst);
+//        		counterNext += 1;
+//        	}
+//        }
         
         public static void PhaseDetect(double left_front, double left_back, double right_front, double right_back) {
         	Log.v("sensor", "left_front: " + left_front + " left_back: " + left_back + " right_front: " + right_front +  " right_back: " + right_back);
