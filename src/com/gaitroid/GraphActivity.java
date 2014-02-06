@@ -4,16 +4,9 @@ import io.socket.IOCallback;
 import io.socket.SocketIO;
 
 import java.net.MalformedURLException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.Locale;
-import java.util.Timer;
-
-import javax.vecmath.AxisAngle4d;
-import javax.vecmath.Matrix3d;
-import javax.vecmath.Quat4d;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,28 +25,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.media.MediaPlayer;
-import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
-import android.view.View.OnLongClickListener;
 import android.view.ViewGroup.LayoutParams;
-import android.widget.Button;
 import android.widget.ImageView;
 
 import android.speech.tts.TextToSpeech;
-
-// weka util
-import weka.core.Attribute;
-import weka.core.DenseInstance;
-import weka.core.FastVector;
-import weka.core.Instance;
-import weka.core.Instances;
-import weka.classifiers.Evaluation;
-import weka.classifiers.trees.J48;
 
 @SuppressWarnings("deprecation")
 public class GraphActivity extends Activity implements TextToSpeech.OnInitListener{
@@ -68,13 +49,6 @@ public class GraphActivity extends Activity implements TextToSpeech.OnInitListen
 	   
 	   private static GraphView mGraphDisplay;
 	   private static String mSensorView = ""; //The sensor device which should be viewed on the graph
-	   
-	   // 3D view
-	   private GLSurfaceView glSurface;
-	   public static MyGLSurfaceView t;
-	   static Matrix3d invm3d = new Matrix3d();
-	   static Matrix3d fm3d = new Matrix3d();
-	   static Matrix3d m3d = new Matrix3d();
 	   
 	   // services
 	   boolean mServiceBind=false;
@@ -109,11 +83,6 @@ public class GraphActivity extends Activity implements TextToSpeech.OnInitListen
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.graph_view);
-		
-		invm3d = new Matrix3d();
-		fm3d = new Matrix3d();
-		m3d = new Matrix3d();
-		invm3d.setIdentity();
 		
 		BluetoothAddress0 = ((MyApplication) this.getApplication()).getBluetoothAddress0();
 		BluetoothAddress1 = ((MyApplication) this.getApplication()).getBluetoothAddress1();
