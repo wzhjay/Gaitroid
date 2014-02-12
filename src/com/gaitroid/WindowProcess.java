@@ -52,8 +52,7 @@ public class WindowProcess {
     static Attribute sensor_exp_1_a7 = new Attribute("Right FSR B");
     
     
-	public WindowProcess(ArrayList<Window> windows) {
-		
+	public WindowProcess() {
 		correlation = new PearsonsCorrelation();
 		// weka initialization
 		// Declare the class attribute along with its values
@@ -89,7 +88,9 @@ public class WindowProcess {
 			    
 		fvWekaAttributes.addElement(ClassAttribute);
 		
-		
+	}
+	
+	public void processWindows(ArrayList<Window> windows) {
 		for(int i=0; i<windows.size(); i++) {
 			processIndividualWindow(windows.get(i));
 		}

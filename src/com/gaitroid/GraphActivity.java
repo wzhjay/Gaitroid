@@ -79,6 +79,12 @@ public class GraphActivity extends Activity implements TextToSpeech.OnInitListen
        static double cal_exp_a0_1 = 0.0;
        static double cal_exp_a7_1 = 0.0;
        
+       // buffer and window processing
+       static int bufferSize = DataStreamBuffer.bufferSize; 
+       static int bufferSizeCounter = 0;
+       static DataStreamBuffer myDataStreamBuffer;
+       static WindowProcess wp;
+       
 	@SuppressWarnings("unchecked")
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -121,6 +127,10 @@ public class GraphActivity extends Activity implements TextToSpeech.OnInitListen
 	         	finish();
  	        }
  	    });
+	 	
+	 	// buffer and window processing
+	 	myDataStreamBuffer = new DataStreamBuffer();
+	 	wp = new WindowProcess();
 	}
 	
 public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -493,6 +503,53 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
                                 cal_exp_a7_1 = gaitroid_formatCluster.mData;
                             }
                             
+                            // store data into circuler buffer
+                            // if buffer full, reset the bufferSizeCounter, overwrite new data into buffer
+                            // create temp buffer, create windows of buffer data
+                            // after done window processing, clear windows
+                            while(bufferSizeCounter < bufferSize) {
+                            	Log.v("bufferSizeCounter", bufferSizeCounter + "");
+                            	bufferSizeCounter += 1;
+                            	if(bufferSizeCounter >= bufferSize) {
+                            		bufferSizeCounter = 0;
+                            		myDataStreamBuffer.cretaeWindows();
+                            		Log.v("myWindows", myDataStreamBuffer.myWindows.size() + "");
+                            		//wp.processWindows(myDataStreamBuffer.myWindows);
+                            		myDataStreamBuffer.clearWindows();
+                            		Log.v("myWindows", myDataStreamBuffer.myWindows.size() + "");
+                            	}
+                            	
+                            	myDataStreamBuffer.Acel_Left_X.insertData(cal_acl_1[0]);
+                            	myDataStreamBuffer.Acel_Left_Y.insertData(cal_acl_1[1]);
+                            	myDataStreamBuffer.Acel_Left_Z.insertData(cal_acl_1[2]);
+                            	
+                            	myDataStreamBuffer.Gyro_Left_X.insertData(cal_gyr_1[0]);
+                            	myDataStreamBuffer.Gyro_Left_Y.insertData(cal_gyr_1[1]);
+                            	myDataStreamBuffer.Gyro_Left_Z.insertData(cal_gyr_1[2]);
+                            	
+                            	myDataStreamBuffer.Mag_Left_X.insertData(cal_mag_1[0]);
+                            	myDataStreamBuffer.Mag_Left_Y.insertData(cal_mag_1[1]);
+                            	myDataStreamBuffer.Mag_Left_Z.insertData(cal_mag_1[2]);
+                            	
+                            	myDataStreamBuffer.FSR_Left_F.insertData(cal_exp_a0_0);
+                            	myDataStreamBuffer.FSR_Left_B.insertData(cal_exp_a7_0);
+                            	
+                            	myDataStreamBuffer.Acel_Right_X.insertData(cal_acl_1[0]);
+                            	myDataStreamBuffer.Acel_Right_Y.insertData(cal_acl_1[1]);
+                            	myDataStreamBuffer.Acel_Right_Z.insertData(cal_acl_1[2]);
+                            	
+                            	myDataStreamBuffer.Gyro_Right_X.insertData(cal_gyr_1[0]);
+                            	myDataStreamBuffer.Gyro_Right_Y.insertData(cal_gyr_1[1]);
+                            	myDataStreamBuffer.Gyro_Right_Z.insertData(cal_gyr_1[2]);
+                            	
+                            	myDataStreamBuffer.Mag_Right_X.insertData(cal_mag_1[0]);
+                            	myDataStreamBuffer.Mag_Right_Y.insertData(cal_mag_1[1]);
+                            	myDataStreamBuffer.Mag_Right_Z.insertData(cal_mag_1[2]);
+                            	
+                            	myDataStreamBuffer.FSR_Right_F.insertData(cal_exp_a0_1);
+                            	myDataStreamBuffer.FSR_Right_B.insertData(cal_exp_a7_1);
+                            }
+                            
                             try {
                             	JSONObject job = new JSONObject();
                             	JSONObject acl = new JSONObject();
@@ -510,8 +567,8 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
                             	job.put("acl", acl);
                             	job.put("gyr", gyr);
                             	job.put("mag", mag);
-                            	job.put("exp_a0_1", cal_exp_a0_1); // RIGHT BACK
-                            	job.put("exp_a7_1", cal_exp_a7_1); // RIGHT FRONT
+                            	job.put("exp_a0_1", cal_exp_a0_1); // RIGHT FRONT
+                            	job.put("exp_a7_1", cal_exp_a7_1); // RIGHT back
                             	Log.d("job 1", job.toString());
                 				socket.emit("gaitroid_data_1", job);
                 			} catch (JSONException e) {

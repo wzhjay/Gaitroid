@@ -3,8 +3,8 @@ package com.gaitroid;
 public class Window {
 	
 	// define window size
-	public final static int windowSize = 128;
-	public final static int windowOverlapSize = 96;  // 25% overlap
+	public final static int windowSize = 100;
+	public final static int windowOverlapSize = 75;  // 25% overlap, 6 windows per buffer (475)
 
 	// all accelerometer sensor
 	public double[] acel_left_x;
