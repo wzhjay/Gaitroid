@@ -11,6 +11,8 @@ import java.util.Locale;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import weka.core.Instances;
+
 import com.shimmerresearch.driver.FormatCluster;
 import com.shimmerresearch.driver.ObjectCluster;
 import com.shimmerresearch.driver.Shimmer;
@@ -130,7 +132,12 @@ public class GraphActivity extends Activity implements TextToSpeech.OnInitListen
 	 	
 	 	// buffer and window processing
 	 	myDataStreamBuffer = new DataStreamBuffer();
-	 	wp = new WindowProcess();
+	 	try {
+			wp = new WindowProcess();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -507,16 +514,17 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
                             // if buffer full, reset the bufferSizeCounter, overwrite new data into buffer
                             // create temp buffer, create windows of buffer data
                             // after done window processing, clear windows
-                            while(bufferSizeCounter < bufferSize) {
+                            if(bufferSizeCounter < bufferSize) {
                             	Log.v("bufferSizeCounter", bufferSizeCounter + "");
                             	bufferSizeCounter += 1;
                             	if(bufferSizeCounter >= bufferSize) {
                             		bufferSizeCounter = 0;
                             		myDataStreamBuffer.cretaeWindows();
                             		Log.v("myWindows", myDataStreamBuffer.myWindows.size() + "");
-                            		//wp.processWindows(myDataStreamBuffer.myWindows);
+                            		wp.processWindows(myDataStreamBuffer.myWindows);
                             		myDataStreamBuffer.clearWindows();
                             		Log.v("myWindows", myDataStreamBuffer.myWindows.size() + "");
+                            		Log.v("windowsTobeProcessedQueue", wp.getWindowsTobeProcessedQueue().size() + "");
                             	}
                             	
                             	myDataStreamBuffer.Acel_Left_X.insertData(cal_acl_1[0]);
@@ -750,6 +758,18 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
 					if(flag>1000)
 			        	imgHandler.removeCallbacks(this);
 			        else{
+			        	
+			        	// test on classification
+			        	if(wp.getWindowsTobeProcessedQueue().size() > 0) {
+				        	Instances insts = wp.getWindowsTobeProcessedQueue().remove(0);
+				        	try {
+								wp.WekaClassify(insts);
+							} catch (Exception e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+			        	}
+			        	
 			        	if(flag%4 == 0){
 //			        		if(left)
 //			        			speakOut("left"); 

@@ -1,6 +1,7 @@
 package com.gaitroid;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import weka.classifiers.Classifier;
@@ -16,6 +17,8 @@ import weka.core.converters.ArffLoader;
 import org.apache.commons.math.stat.StatUtils;
 import org.apache.commons.math.stat.correlation.PearsonsCorrelation;
 
+import android.util.Log;
+
 @SuppressWarnings("deprecation")
 public class WindowProcess {
 	
@@ -24,6 +27,9 @@ public class WindowProcess {
 	private final int instanceSize = 22;
 	private ArrayList<Instances> windowsTobeProcessedQueue = new ArrayList<Instances>();
 	PearsonsCorrelation correlation;
+	private Evaluation eval;
+	private Classifier cls;
+	
 	// weka attributes definition
     //Left
     static Attribute sensor_acl_0_x = new Attribute("Left Accelerometer X"); 
@@ -32,11 +38,11 @@ public class WindowProcess {
     static Attribute sensor_gyr_0_x = new Attribute("Left Gyroscope X"); 
     static Attribute sensor_gyr_0_y = new Attribute("Left Gyroscope Y"); 
     static Attribute sensor_gyr_0_z = new Attribute("Left Gyroscope Z"); 
+    static Attribute sensor_exp_0_a7 = new Attribute("Left FSR B"); 
+    static Attribute sensor_exp_0_a0 = new Attribute("Left FSR F"); 
     static Attribute sensor_mag_0_x = new Attribute("Left Magnetometer X"); 
     static Attribute sensor_mag_0_y = new Attribute("Left Magnetometer Y"); 
-    static Attribute sensor_mag_0_z = new Attribute("Left Magnetometer Z"); 
-    static Attribute sensor_exp_0_a0 = new Attribute("Left FSR F"); 
-    static Attribute sensor_exp_0_a7 = new Attribute("Left FSR B"); 
+    static Attribute sensor_mag_0_z = new Attribute("Left Magnetometer Z");
     
     // Right
     static Attribute sensor_acl_1_x = new Attribute("Right Accelerometer X"); 
@@ -45,21 +51,27 @@ public class WindowProcess {
     static Attribute sensor_gyr_1_x = new Attribute("Right Gyroscope X"); 
     static Attribute sensor_gyr_1_y = new Attribute("Right Gyroscope Y"); 
     static Attribute sensor_gyr_1_z = new Attribute("Right Gyroscope Z"); 
+    static Attribute sensor_exp_1_a7 = new Attribute("Right FSR B");
+    static Attribute sensor_exp_1_a0 = new Attribute("Right FSR F"); 
     static Attribute sensor_mag_1_x = new Attribute("Right Magnetometer X"); 
     static Attribute sensor_mag_1_y = new Attribute("Right Magnetometer Y"); 
     static Attribute sensor_mag_1_z = new Attribute("Right Magnetometer Z"); 
-    static Attribute sensor_exp_1_a0 = new Attribute("Right FSR F"); 
-    static Attribute sensor_exp_1_a7 = new Attribute("Right FSR B");
     
     
-	public WindowProcess() {
+	public WindowProcess() throws Exception {
 		correlation = new PearsonsCorrelation();
 		// weka initialization
 		// Declare the class attribute along with its values
-		FastVector<String> fvClassVal = new FastVector<String>(2);
-		fvClassVal.addElement("normal");
-		fvClassVal.addElement("abnormal");
-		Attribute ClassAttribute = new Attribute("theClass", fvClassVal);
+		FastVector<String> fvClassVal = new FastVector<String>(8);
+		fvClassVal.addElement("Right_heel_strike");
+		fvClassVal.addElement("Right_toe_contact");
+		fvClassVal.addElement("Left_toe_off");
+		fvClassVal.addElement("Right_heel_off");
+		fvClassVal.addElement("Left_heel_strike");
+		fvClassVal.addElement("Left_toe_contact");
+		fvClassVal.addElement("Right_toe_off");
+		fvClassVal.addElement("Left_heel_off");
+		Attribute ClassAttribute = new Attribute("class", fvClassVal);
 			       
 		fvWekaAttributes = new FastVector<Attribute>(22);
 		fvWekaAttributes.addElement(sensor_acl_0_x);    
@@ -88,6 +100,23 @@ public class WindowProcess {
 			    
 		fvWekaAttributes.addElement(ClassAttribute);
 		
+		// build classifier
+		buildClassifier();
+	}
+	
+	// build classifier	
+	public void buildClassifier() throws Exception {
+		ArffLoader loader = new ArffLoader();
+		loader.setFile(new File("file:///android_asset/train.arff"));
+		Instances train = loader.getStructure();
+		Log.v("Classify", train.toString());
+		
+		// train classifier
+		cls = new J48();
+		cls.buildClassifier(train);
+				
+		// evaluate classifier and print some statistics
+		eval = new Evaluation(train);
 	}
 	
 	public void processWindows(ArrayList<Window> windows) {
@@ -139,6 +168,7 @@ public class WindowProcess {
             
             // add into instances
             insts.add(inst);
+            Log.v("Instance", inst.toString());
 		}
 		// append to Queue wiat for classification
 		windowsTobeProcessedQueue.add(insts);
@@ -149,6 +179,10 @@ public class WindowProcess {
 		double mean_acel_left_x = StatUtils.mean(w.acel_left_x);
 		double std_acel_left_x = StatUtils.variance(w.acel_left_x);
 		double median_acel_left_x = StatUtils.percentile(w.acel_left_x, 50);
+		
+		Log.v("Features", "mean_acel_left_x: " + mean_acel_left_x + 
+						" std_acel_left_x: " + std_acel_left_x + 
+						" median_acel_left_x: " + median_acel_left_x);
 		
 		double mean_acel_left_y = StatUtils.mean(w.acel_left_y);
 		double std_acel_left_y = StatUtils.variance(w.acel_left_y);
@@ -196,6 +230,10 @@ public class WindowProcess {
 		double correlation_mag_left_x_y = correlation.correlation(w.mag_left_x, w.mag_left_y);
 		double correlation_mag_left_x_z = correlation.correlation(w.mag_left_x, w.mag_left_z);
 		double correlation_mag_left_y_z = correlation.correlation(w.mag_left_y, w.mag_left_z);
+		
+		Log.v("Features", "correlation_acel_left_x_y: " + correlation_acel_left_x_y + 
+						 " correlation_acel_left_x_z: " + correlation_acel_left_x_z + 
+						 " correlation_acel_left_y_z: " + correlation_acel_left_y_z);
 	}
 
 	public ArrayList<Instances> getWindowsTobeProcessedQueue() {
@@ -207,19 +245,10 @@ public class WindowProcess {
 		this.windowsTobeProcessedQueue = windowsTobeProcessedQueue;
 	}
 	
-	public static void WekaClassify(Instances insts) throws Exception {
-		ArffLoader loader = new ArffLoader();
-		loader.setFile(new File("/some/where/data.arff"));
-		Instances train = loader.getStructure();
+	public void WekaClassify(Instances insts) throws Exception {
+		Log.v("Classify", "start classify");
 		Instances test = insts;
-		
-		// train classifier
-		Classifier cls = new J48();
-		cls.buildClassifier(train);
-		
-		// evaluate classifier and print some statistics
-		Evaluation eval = new Evaluation(train);
 		eval.evaluateModel(cls, test);
-		System.out.println(eval.toSummaryString("\nResults\n======\n", false));
+		Log.v("Classify", eval.toSummaryString("Results", false));
 	}
 }
