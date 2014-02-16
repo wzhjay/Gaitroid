@@ -1,7 +1,9 @@
 package com.gaitroid;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 import weka.classifiers.Classifier;
@@ -17,6 +19,8 @@ import weka.core.converters.ArffLoader;
 import org.apache.commons.math.stat.StatUtils;
 import org.apache.commons.math.stat.correlation.PearsonsCorrelation;
 
+import android.content.Context;
+import android.content.res.Resources;
 import android.util.Log;
 
 @SuppressWarnings("deprecation")
@@ -58,7 +62,7 @@ public class WindowProcess {
     static Attribute sensor_mag_1_z = new Attribute("Right Magnetometer Z"); 
     
     
-	public WindowProcess() throws Exception {
+	public WindowProcess(Context ctx) throws Exception {
 		correlation = new PearsonsCorrelation();
 		// weka initialization
 		// Declare the class attribute along with its values
@@ -101,15 +105,30 @@ public class WindowProcess {
 		fvWekaAttributes.addElement(ClassAttribute);
 		
 		// build classifier
-		buildClassifier();
+		buildClassifier(ctx);
 	}
 	
 	// build classifier	
-	public void buildClassifier() throws Exception {
+	public void buildClassifier(Context ctx) throws Exception {
+		Log.v("Classifier", "buildClassifier");
 		ArffLoader loader = new ArffLoader();
-		loader.setFile(new File("file:///android_asset/train.arff"));
+		File f = new File(ctx.getFilesDir(), "train.arff");
+		InputStream inputStream = ctx.getResources().openRawResource(R.raw.train);
+        FileOutputStream fileOutputStream = new FileOutputStream(f);
+
+        byte buf[]=new byte[1024];
+        int len;
+        while((len=inputStream.read(buf))>0) {
+            fileOutputStream.write(buf,0,len);
+        }
+
+        fileOutputStream.close();
+        inputStream.close();
+        
+		Log.v("Classifier", f.length() + "");
+		loader.setFile(f);
 		Instances train = loader.getStructure();
-		Log.v("Classify", train.toString());
+		Log.v("Classifier", train.toString());
 		
 		// train classifier
 		cls = new J48();

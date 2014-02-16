@@ -435,6 +435,7 @@ int layout training 0x7f03002a
 int layout viewpager 0x7f03002b
 int menu gaitroid_main 0x7f0a0000
 int raw buzz 0x7f040000
+int raw train 0x7f040001
 int string accel_range_spinner_default 0x7f09000d
 int string action_settings 0x7f090001
 int string app_name 0x7f090000

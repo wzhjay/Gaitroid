@@ -133,7 +133,7 @@ public class GraphActivity extends Activity implements TextToSpeech.OnInitListen
 	 	// buffer and window processing
 	 	myDataStreamBuffer = new DataStreamBuffer();
 	 	try {
-			wp = new WindowProcess();
+			wp = new WindowProcess(getBaseContext());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -521,10 +521,22 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
                             		bufferSizeCounter = 0;
                             		myDataStreamBuffer.cretaeWindows();
                             		Log.v("myWindows", myDataStreamBuffer.myWindows.size() + "");
+                            		
                             		wp.processWindows(myDataStreamBuffer.myWindows);
                             		myDataStreamBuffer.clearWindows();
                             		Log.v("myWindows", myDataStreamBuffer.myWindows.size() + "");
                             		Log.v("windowsTobeProcessedQueue", wp.getWindowsTobeProcessedQueue().size() + "");
+                            		
+                            		// test on classification
+            			        	if(wp.getWindowsTobeProcessedQueue().size() > 0) {
+            				        	Instances insts = wp.getWindowsTobeProcessedQueue().remove(0);
+            				        	try {
+            								wp.WekaClassify(insts);
+            							} catch (Exception e) {
+            								// TODO Auto-generated catch block
+            								e.printStackTrace();
+            							}
+            			        	}
                             	}
                             	
                             	myDataStreamBuffer.Acel_Left_X.insertData(cal_acl_1[0]);
@@ -758,17 +770,6 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
 					if(flag>1000)
 			        	imgHandler.removeCallbacks(this);
 			        else{
-			        	
-			        	// test on classification
-			        	if(wp.getWindowsTobeProcessedQueue().size() > 0) {
-				        	Instances insts = wp.getWindowsTobeProcessedQueue().remove(0);
-				        	try {
-								wp.WekaClassify(insts);
-							} catch (Exception e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-			        	}
 			        	
 			        	if(flag%4 == 0){
 //			        		if(left)
