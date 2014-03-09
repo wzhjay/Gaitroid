@@ -530,6 +530,7 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
                             		// test on classification
             			        	if(wp.getWindowsTobeProcessedQueue().size() > 0) {
             				        	Instances insts = wp.getWindowsTobeProcessedQueue().remove(0);
+            				        	Log.v("windowsTobeProcessedQueue", "get instances from head of queue");
             				        	try {
             								wp.WekaClassify(insts);
             							} catch (Exception e) {

@@ -512,7 +512,6 @@ containing a value of this type.
     }
     public static final class raw {
         public static final int buzz=0x7f040000;
-        public static final int train=0x7f040001;
     }
     public static final class string {
         public static final int accel_range_spinner_default=0x7f09000d;
