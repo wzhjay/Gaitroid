@@ -3,6 +3,7 @@ package com.gaitroid;
 import io.socket.IOCallback;
 import io.socket.SocketIO;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -83,7 +84,7 @@ public class GraphActivity extends Activity implements TextToSpeech.OnInitListen
        
        // buffer and window processing
        static int bufferSize = DataStreamBuffer.bufferSize; 
-       static int bufferSizeCounter = 0;
+       static int bufferSizeCounter = -1000;
        static DataStreamBuffer myDataStreamBuffer;
        static WindowProcess wp;
        
@@ -510,67 +511,6 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
                                 cal_exp_a7_1 = gaitroid_formatCluster.mData;
                             }
                             
-                            // store data into circuler buffer
-                            // if buffer full, reset the bufferSizeCounter, overwrite new data into buffer
-                            // create temp buffer, create windows of buffer data
-                            // after done window processing, clear windows
-                            if(bufferSizeCounter < bufferSize) {
-                            	Log.v("bufferSizeCounter", bufferSizeCounter + "");
-                            	bufferSizeCounter += 1;
-                            	if(bufferSizeCounter >= bufferSize) {
-                            		bufferSizeCounter = 0;
-                            		myDataStreamBuffer.cretaeWindows();
-                            		Log.v("myWindows", myDataStreamBuffer.myWindows.size() + "");
-                            		
-                            		wp.processWindows(myDataStreamBuffer.myWindows);
-                            		myDataStreamBuffer.clearWindows();
-                            		Log.v("myWindows", myDataStreamBuffer.myWindows.size() + "");
-                            		Log.v("windowsTobeProcessedQueue", wp.getWindowsTobeProcessedQueue().size() + "");
-                            		
-                            		// test on classification
-            			        	if(wp.getWindowsTobeProcessedQueue().size() > 0) {
-            				        	Instances insts = wp.getWindowsTobeProcessedQueue().remove(0);
-            				        	Log.v("windowsTobeProcessedQueue", "get instances from head of queue");
-            				        	try {
-            								wp.WekaClassify(insts);
-            							} catch (Exception e) {
-            								// TODO Auto-generated catch block
-            								e.printStackTrace();
-            							}
-            			        	}
-                            	}
-                            	
-                            	myDataStreamBuffer.Acel_Left_X.insertData(cal_acl_1[0]);
-                            	myDataStreamBuffer.Acel_Left_Y.insertData(cal_acl_1[1]);
-                            	myDataStreamBuffer.Acel_Left_Z.insertData(cal_acl_1[2]);
-                            	
-                            	myDataStreamBuffer.Gyro_Left_X.insertData(cal_gyr_1[0]);
-                            	myDataStreamBuffer.Gyro_Left_Y.insertData(cal_gyr_1[1]);
-                            	myDataStreamBuffer.Gyro_Left_Z.insertData(cal_gyr_1[2]);
-                            	
-                            	myDataStreamBuffer.Mag_Left_X.insertData(cal_mag_1[0]);
-                            	myDataStreamBuffer.Mag_Left_Y.insertData(cal_mag_1[1]);
-                            	myDataStreamBuffer.Mag_Left_Z.insertData(cal_mag_1[2]);
-                            	
-                            	myDataStreamBuffer.FSR_Left_F.insertData(cal_exp_a0_0);
-                            	myDataStreamBuffer.FSR_Left_B.insertData(cal_exp_a7_0);
-                            	
-                            	myDataStreamBuffer.Acel_Right_X.insertData(cal_acl_1[0]);
-                            	myDataStreamBuffer.Acel_Right_Y.insertData(cal_acl_1[1]);
-                            	myDataStreamBuffer.Acel_Right_Z.insertData(cal_acl_1[2]);
-                            	
-                            	myDataStreamBuffer.Gyro_Right_X.insertData(cal_gyr_1[0]);
-                            	myDataStreamBuffer.Gyro_Right_Y.insertData(cal_gyr_1[1]);
-                            	myDataStreamBuffer.Gyro_Right_Z.insertData(cal_gyr_1[2]);
-                            	
-                            	myDataStreamBuffer.Mag_Right_X.insertData(cal_mag_1[0]);
-                            	myDataStreamBuffer.Mag_Right_Y.insertData(cal_mag_1[1]);
-                            	myDataStreamBuffer.Mag_Right_Z.insertData(cal_mag_1[2]);
-                            	
-                            	myDataStreamBuffer.FSR_Right_F.insertData(cal_exp_a0_1);
-                            	myDataStreamBuffer.FSR_Right_B.insertData(cal_exp_a7_1);
-                            }
-                            
                             try {
                             	JSONObject job = new JSONObject();
                             	JSONObject acl = new JSONObject();
@@ -598,6 +538,72 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
                 			}
                             Log.d("gaitroid_data", "acl: " + Arrays.toString(cal_acl_1) + " gyr: " + Arrays.toString(cal_gyr_1) + " mag: " + Arrays.toString(cal_mag_1) + " exp_a0_1: " + cal_exp_a0_1 + " exp_a7_1: " + cal_exp_a7_1);
                         }
+                     // store data into circuler buffer
+                        // if buffer full, reset the bufferSizeCounter, overwrite new data into buffer
+                        // create temp buffer, create windows of buffer data
+                        // after done window processing, clear windows
+                        if(bufferSizeCounter < bufferSize) {
+                        	Log.v("bufferSizeCounter", bufferSizeCounter + "");
+                        	bufferSizeCounter += 1;
+                        	
+                        	myDataStreamBuffer.Acel_Left_X.insertData(cal_acl_0[0]);
+                        	myDataStreamBuffer.Acel_Left_Y.insertData(cal_acl_0[1]);
+                        	myDataStreamBuffer.Acel_Left_Z.insertData(cal_acl_0[2]);
+                        	
+                        	myDataStreamBuffer.Gyro_Left_X.insertData(cal_gyr_0[0]);
+                        	myDataStreamBuffer.Gyro_Left_Y.insertData(cal_gyr_0[1]);
+                        	myDataStreamBuffer.Gyro_Left_Z.insertData(cal_gyr_0[2]);
+                        	
+                        	myDataStreamBuffer.Mag_Left_X.insertData(cal_mag_0[0]);
+                        	myDataStreamBuffer.Mag_Left_Y.insertData(cal_mag_0[1]);
+                        	myDataStreamBuffer.Mag_Left_Z.insertData(cal_mag_0[2]);
+                        	
+                        	myDataStreamBuffer.FSR_Left_F.insertData(cal_exp_a0_0);
+                        	myDataStreamBuffer.FSR_Left_B.insertData(cal_exp_a7_0);
+                        	
+                        	myDataStreamBuffer.Acel_Right_X.insertData(cal_acl_1[0]);
+                        	myDataStreamBuffer.Acel_Right_Y.insertData(cal_acl_1[1]);
+                        	myDataStreamBuffer.Acel_Right_Z.insertData(cal_acl_1[2]);
+                        	
+                        	myDataStreamBuffer.Gyro_Right_X.insertData(cal_gyr_1[0]);
+                        	myDataStreamBuffer.Gyro_Right_Y.insertData(cal_gyr_1[1]);
+                        	myDataStreamBuffer.Gyro_Right_Z.insertData(cal_gyr_1[2]);
+                        	
+                        	myDataStreamBuffer.Mag_Right_X.insertData(cal_mag_1[0]);
+                        	myDataStreamBuffer.Mag_Right_Y.insertData(cal_mag_1[1]);
+                        	myDataStreamBuffer.Mag_Right_Z.insertData(cal_mag_1[2]);
+                        	
+                        	myDataStreamBuffer.FSR_Right_F.insertData(cal_exp_a0_1);
+                        	myDataStreamBuffer.FSR_Right_B.insertData(cal_exp_a7_1);
+                        }
+                        
+                        if(bufferSizeCounter >= bufferSize) {
+                    		bufferSizeCounter = 0;
+                    		myDataStreamBuffer.cretaeWindows();
+                    		Log.v("myWindows", myDataStreamBuffer.myWindows.size() + "");
+                    		
+                    		try {
+								wp.processWindows(myDataStreamBuffer.myWindows);
+							} catch (IOException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
+                    		myDataStreamBuffer.clearWindows();
+                    		Log.v("myWindows", myDataStreamBuffer.myWindows.size() + "");
+                    		Log.v("windowsTobeProcessedQueue", wp.getWindowsTobeProcessedQueue().size() + "");
+                    		
+                    		// test on classification
+    			        	if(wp.getWindowsTobeProcessedQueue().size() > 0) {
+    				        	Instances insts = wp.getWindowsTobeProcessedQueue().remove(0);
+    				        	Log.v("windowsTobeProcessedQueue", "get instances from head of queue");
+    				        	try {
+    								wp.WekaClassify(insts);
+    							} catch (Exception e) {
+    								// TODO Auto-generated catch block
+    								e.printStackTrace();
+    							}
+    			        	}
+                    	}
                         
                         //PhaseDetect(cal_exp_a0_0, cal_exp_a7_0, cal_exp_a0_1, cal_exp_a7_1);
                 	}

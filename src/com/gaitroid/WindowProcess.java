@@ -1,7 +1,9 @@
 package com.gaitroid;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -37,33 +39,35 @@ public class WindowProcess {
 	PearsonsCorrelation correlation;
 	private Evaluation eval;
 	private Classifier cls;
+	private Instances structure;
+	private String fileAddress = Environment.getExternalStorageDirectory()+File.separator+"Gaitroid/train.arff";
 	
 	// weka attributes definition
     //Left
-    static Attribute sensor_acl_0_x = new Attribute("Left_Accelerometer_X"); 
-    static Attribute sensor_acl_0_y = new Attribute("Left_Accelerometer_Y"); 
-    static Attribute sensor_acl_0_z = new Attribute("Left_Accelerometer_Z"); 
-    static Attribute sensor_gyr_0_x = new Attribute("Left_Gyroscope_X"); 
-    static Attribute sensor_gyr_0_y = new Attribute("Left_Gyroscope_Y"); 
-    static Attribute sensor_gyr_0_z = new Attribute("Left_Gyroscope_Z"); 
-    static Attribute sensor_exp_0_a7 = new Attribute("Left_FSR_B"); 
-    static Attribute sensor_exp_0_a0 = new Attribute("Left_FSR_F"); 
-    static Attribute sensor_mag_0_x = new Attribute("Left_Magnetometer_X"); 
-    static Attribute sensor_mag_0_y = new Attribute("Left_Magnetometer_Y"); 
-    static Attribute sensor_mag_0_z = new Attribute("Left_Magnetometer_Z");
+    Attribute sensor_acl_0_x = new Attribute("Left_Accelerometer_X"); 
+    Attribute sensor_acl_0_y = new Attribute("Left_Accelerometer_Y"); 
+    Attribute sensor_acl_0_z = new Attribute("Left_Accelerometer_Z"); 
+    Attribute sensor_gyr_0_x = new Attribute("Left_Gyroscope_X"); 
+    Attribute sensor_gyr_0_y = new Attribute("Left_Gyroscope_Y"); 
+    Attribute sensor_gyr_0_z = new Attribute("Left_Gyroscope_Z"); 
+    Attribute sensor_exp_0_a7 = new Attribute("Left_FSR_B"); 
+    Attribute sensor_exp_0_a0 = new Attribute("Left_FSR_F"); 
+    Attribute sensor_mag_0_x = new Attribute("Left_Magnetometer_X"); 
+    Attribute sensor_mag_0_y = new Attribute("Left_Magnetometer_Y"); 
+    Attribute sensor_mag_0_z = new Attribute("Left_Magnetometer_Z");
     
     // Right
-    static Attribute sensor_acl_1_x = new Attribute("Right_Accelerometer_X"); 
-    static Attribute sensor_acl_1_y = new Attribute("Right_Accelerometer_Y"); 
-    static Attribute sensor_acl_1_z = new Attribute("Right_Accelerometer_Z"); 
-    static Attribute sensor_gyr_1_x = new Attribute("Right_Gyroscope_X"); 
-    static Attribute sensor_gyr_1_y = new Attribute("Right_Gyroscope_Y"); 
-    static Attribute sensor_gyr_1_z = new Attribute("Right_Gyroscope_Z"); 
-    static Attribute sensor_exp_1_a7 = new Attribute("Right_FSR_B");
-    static Attribute sensor_exp_1_a0 = new Attribute("Right_FSR_F"); 
-    static Attribute sensor_mag_1_x = new Attribute("Right_Magnetometer_X"); 
-    static Attribute sensor_mag_1_y = new Attribute("Right_Magnetometer_Y"); 
-    static Attribute sensor_mag_1_z = new Attribute("Right_Magnetometer_Z"); 
+    Attribute sensor_acl_1_x = new Attribute("Right_Accelerometer_X"); 
+    Attribute sensor_acl_1_y = new Attribute("Right_Accelerometer_Y"); 
+    Attribute sensor_acl_1_z = new Attribute("Right_Accelerometer_Z"); 
+    Attribute sensor_gyr_1_x = new Attribute("Right_Gyroscope_X"); 
+    Attribute sensor_gyr_1_y = new Attribute("Right_Gyroscope_Y"); 
+    Attribute sensor_gyr_1_z = new Attribute("Right_Gyroscope_Z"); 
+    Attribute sensor_exp_1_a7 = new Attribute("Right_FSR_B");
+    Attribute sensor_exp_1_a0 = new Attribute("Right_FSR_F"); 
+    Attribute sensor_mag_1_x = new Attribute("Right_Magnetometer_X"); 
+    Attribute sensor_mag_1_y = new Attribute("Right_Magnetometer_Y"); 
+    Attribute sensor_mag_1_z = new Attribute("Right_Magnetometer_Z"); 
     
     
 	public WindowProcess(Context ctx) throws Exception {
@@ -137,34 +141,36 @@ public class WindowProcess {
 	        //create a new file, specifying the path, and the filename
 	        //which we want to save the file as.
 	        File file = new File(SDCardRoot,"/Gaitroid/train.arff");
-
-	        //this will be used to write the downloaded data into the file we created
-	        FileOutputStream fileOutput = new FileOutputStream(file);
-
-	        //this will be used in reading the data from the internet
-	        InputStream inputStream = urlConnection.getInputStream();
-
-	        //this is the total size of the file
-	        int totalSize = urlConnection.getContentLength();
-	        //variable to store total downloaded bytes
-	        int downloadedSize = 0;
-
-	        //create a buffer...
-	        byte[] buffer = new byte[1024];
-	        int bufferLength = 0; //used to store a temporary size of the buffer
-
-	        //now, read through the input buffer and write the contents to the file
-	        while ( (bufferLength = inputStream.read(buffer)) > 0 ) {
-	                //add the data in the buffer to the file in the file output stream (the file on the sd card
-	                fileOutput.write(buffer, 0, bufferLength);
-	                //add up the size so we know how much is downloaded
-	                downloadedSize += bufferLength;
-	                //this is where you would do something to report the prgress, like this maybe
-//	                updateProgress(downloadedSize, totalSize);
-
+	        
+	        if(!file.exists()) {
+		        //this will be used to write the downloaded data into the file we created
+		        FileOutputStream fileOutput = new FileOutputStream(file);
+	
+		        //this will be used in reading the data from the internet
+		        InputStream inputStream = urlConnection.getInputStream();
+	
+		        //this is the total size of the file
+		        int totalSize = urlConnection.getContentLength();
+		        //variable to store total downloaded bytes
+		        int downloadedSize = 0;
+	
+		        //create a buffer...
+		        byte[] buffer = new byte[1024];
+		        int bufferLength = 0; //used to store a temporary size of the buffer
+	
+		        //now, read through the input buffer and write the contents to the file
+		        while ( (bufferLength = inputStream.read(buffer)) > 0 ) {
+		                //add the data in the buffer to the file in the file output stream (the file on the sd card
+		                fileOutput.write(buffer, 0, bufferLength);
+		                //add up the size so we know how much is downloaded
+		                downloadedSize += bufferLength;
+		                //this is where you would do something to report the prgress, like this maybe
+	//	                updateProgress(downloadedSize, totalSize);
+	
+		        }
+		        //close the output stream when done
+		        fileOutput.close();
 	        }
-	        //close the output stream when done
-	        fileOutput.close();
 		//catch some possible errors...
 		} catch (MalformedURLException e) {
 		        e.printStackTrace();
@@ -177,11 +183,14 @@ public class WindowProcess {
 	public void buildClassifier(Context ctx) throws Exception {
 		Log.v("Classifier", "buildClassifier");
 		ArffLoader loader = new ArffLoader();
-		Log.v("Classifier", loader.toString());
-		File f = new File(Environment.getExternalStorageDirectory()+File.separator+"Gaitroid/train.arff");
-		Log.v("Classifier", f.getPath() + " " + f.exists() + "");
+		File f = new File(fileAddress);
 		loader.setFile(f);
-		Instances train = loader.getStructure();
+		structure = loader.getStructure();
+		BufferedReader reader = new BufferedReader(new FileReader(fileAddress));
+		Instances train = new Instances(reader);
+		// setting class attribute
+		train.setClassIndex(train.numAttributes() - 1);
+		reader.close();
 		Log.v("Classifier", train.toSummaryString());
 		
 		// train classifier
@@ -190,20 +199,28 @@ public class WindowProcess {
 				
 		// evaluate classifier and print some statistics
 		eval = new Evaluation(train);
+		
+		// test
+		Instances test = train;
+		eval.evaluateModel(cls, test);
+		Log.v("Classify", "evaluation start");
+		Log.v("Classify", eval.toSummaryString("\nResults\n=======================================================\n", false));
 	}
 	
-	public void processWindows(ArrayList<Window> windows) {
+	public void processWindows(ArrayList<Window> windows) throws IOException {
 		for(int i=0; i<windows.size(); i++) {
 			processIndividualWindow(windows.get(i));
 		}
 	}
 	
-	public void processIndividualWindow(Window w) {
+	public void processIndividualWindow(Window w) throws IOException {
 		
 		// extract the features before building Instance
 		featureExtract(w);
 		
-		Instances insts = new Instances("GaitroidTest", fvWekaAttributes, windowSize);  // "GaitroidTest" is relaition name
+		//Instances insts = new Instances("Gait", fvWekaAttributes, windowSize);  // "GaitroidTest" is relaition name
+		//Log.v("Instances", insts.toSummaryString());
+		Instances insts = new Instances(structure);		
 		// form instance
 		for(int i=0; i<windowSize; i++) {
 			// left
@@ -241,7 +258,6 @@ public class WindowProcess {
             
             // add into instances
             insts.add(inst);
-            Log.v("Instance", inst.toString());
 		}
 		// append to Queue wiat for classification
 		windowsTobeProcessedQueue.add(insts);
@@ -322,6 +338,6 @@ public class WindowProcess {
 		Log.v("Classify", "start classify");
 		Instances test = insts;
 		eval.evaluateModel(cls, test);
-		Log.v("Classify", eval.toSummaryString("\nResults\n======\n", false));
+		Log.v("Classify", eval.toSummaryString("\nResults\n=======================================================\n", false));
 	}
 }
