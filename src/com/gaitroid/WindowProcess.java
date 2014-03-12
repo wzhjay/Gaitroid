@@ -218,43 +218,51 @@ public class WindowProcess {
 		// extract the features before building Instance
 		featureExtract(w);
 		
-		//Instances insts = new Instances("Gait", fvWekaAttributes, windowSize);  // "GaitroidTest" is relaition name
-		//Log.v("Instances", insts.toSummaryString());
-		Instances insts = new Instances(structure);		
+		//Instances insts = new Instances("Gait", fvWekaAttributes, windowSize);  // "Gait" is relaition name
+		Instances insts = new Instances(structure, windowSize);
+		Log.v("Instances", insts.toSummaryString());
+//		Log.v("Instances", "1" + insts.attribute(1).toString());
+//		Log.v("Instances", "2" + insts.attribute(2).toString());
+//		Log.v("Instances", "12" + insts.attribute(12).toString());
 		// form instance
 		for(int i=0; i<windowSize; i++) {
 			// left
             Instance inst = new DenseInstance(instanceSize);
-            inst.setValue(sensor_acl_0_x, w.acel_left_x[i]);
-            inst.setValue(sensor_acl_0_y, w.acel_left_y[i]);
-            inst.setValue(sensor_acl_0_z, w.acel_left_z[i]);
+            inst.setValue(0, w.acel_left_x[i]);
+            inst.setValue(1, w.acel_left_y[i]);
+            inst.setValue(2, w.acel_left_z[i]);
             
-            inst.setValue(sensor_gyr_0_x, w.gyro_left_x[i]);
-            inst.setValue(sensor_gyr_0_y, w.gyro_left_y[i]);
-            inst.setValue(sensor_gyr_0_z, w.gyro_left_z[i]);
+            inst.setValue(3, w.gyro_left_x[i]);
+            inst.setValue(4, w.gyro_left_y[i]);
+            inst.setValue(5, w.gyro_left_z[i]);
             
-            inst.setValue(sensor_mag_0_x, w.mag_left_x[i]);
-            inst.setValue(sensor_mag_0_y, w.mag_left_y[i]);
-            inst.setValue(sensor_mag_0_z, w.mag_left_z[i]);
+            inst.setValue(8, w.mag_left_x[i]);
+            inst.setValue(9, w.mag_left_y[i]);
+            inst.setValue(10, w.mag_left_z[i]);
             
-            inst.setValue(sensor_exp_0_a0, w.fsr_left_front[i]);
-            inst.setValue(sensor_exp_0_a7, w.fsr_left_back[i]);
+            inst.setValue(7, w.fsr_left_front[i]);
+            inst.setValue(6, w.fsr_left_back[i]);
             
             // right
-            inst.setValue(sensor_acl_1_x, w.acel_right_x[i]);
-            inst.setValue(sensor_acl_1_y, w.acel_right_y[i]);
-            inst.setValue(sensor_acl_1_z, w.acel_right_z[i]);
+            inst.setValue(11, w.acel_right_x[i]);
+            inst.setValue(12, w.acel_right_y[i]);
+            inst.setValue(13, w.acel_right_z[i]);
             
-            inst.setValue(sensor_gyr_1_x, w.gyro_right_x[i]);
-            inst.setValue(sensor_gyr_1_y, w.gyro_right_y[i]);
-            inst.setValue(sensor_gyr_1_z, w.gyro_right_z[i]);
+            inst.setValue(14, w.gyro_right_x[i]);
+            inst.setValue(15, w.gyro_right_y[i]);
+            inst.setValue(16, w.gyro_right_z[i]);
             
-            inst.setValue(sensor_mag_1_x, w.mag_right_x[i]);
-            inst.setValue(sensor_mag_1_y, w.mag_right_y[i]);
-            inst.setValue(sensor_mag_1_z, w.mag_right_z[i]);
+            inst.setValue(19, w.mag_right_x[i]);
+            inst.setValue(20, w.mag_right_y[i]);
+            inst.setValue(21, w.mag_right_z[i]);
             
-            inst.setValue(sensor_exp_1_a0, w.fsr_right_front[i]);
-            inst.setValue(sensor_exp_1_a7, w.fsr_right_back[i]);
+            inst.setValue(18, w.fsr_right_front[i]);
+            inst.setValue(17, w.fsr_right_back[i]);
+           
+            // test on class attribute
+            //inst.setClassValue("Right_heel_strike");
+            inst.setClassMissing();
+            inst.setDataset(insts);
             
             // add into instances
             insts.add(inst);
