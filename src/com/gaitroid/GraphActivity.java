@@ -84,7 +84,7 @@ public class GraphActivity extends Activity implements TextToSpeech.OnInitListen
        
        // buffer and window processing
        static int bufferSize = DataStreamBuffer.bufferSize; 
-       static int bufferSizeCounter = -1000;
+       static int bufferSizeCounter = -500;
        static DataStreamBuffer myDataStreamBuffer;
        static WindowProcess wp;
        

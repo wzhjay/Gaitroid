@@ -25,7 +25,6 @@ import org.apache.commons.math.stat.StatUtils;
 import org.apache.commons.math.stat.correlation.PearsonsCorrelation;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.os.Environment;
 import android.util.Log;
 
@@ -34,7 +33,7 @@ public class WindowProcess {
 	
 	private final int windowSize = Window.windowSize; 
 	private FastVector<Attribute> fvWekaAttributes;
-	private final int instanceSize = 22;
+	private final int instanceSize = 23;
 	private ArrayList<Instances> windowsTobeProcessedQueue = new ArrayList<Instances>();
 	PearsonsCorrelation correlation;
 	private Evaluation eval;
@@ -85,7 +84,7 @@ public class WindowProcess {
 		fvClassVal.addElement("Left_heel_off");
 		Attribute ClassAttribute = new Attribute("class", fvClassVal);
 			       
-		fvWekaAttributes = new FastVector<Attribute>(22);
+		fvWekaAttributes = new FastVector<Attribute>(23);
 		fvWekaAttributes.addElement(sensor_acl_0_x);    
 		fvWekaAttributes.addElement(sensor_acl_0_y);    
 		fvWekaAttributes.addElement(sensor_acl_0_z);
@@ -181,7 +180,7 @@ public class WindowProcess {
 	
 	// build classifier	
 	public void buildClassifier(Context ctx) throws Exception {
-		Log.v("Classifier", "buildClassifier");
+//		Log.v("Classifier", "buildClassifier");
 		ArffLoader loader = new ArffLoader();
 		File f = new File(fileAddress);
 		loader.setFile(f);
@@ -195,8 +194,7 @@ public class WindowProcess {
 		
 		// train classifier
 		cls = new J48();
-		cls.buildClassifier(train);
-				
+		cls.buildClassifier(train);		
 		// evaluate classifier and print some statistics
 		eval = new Evaluation(train);
 		
@@ -221,9 +219,9 @@ public class WindowProcess {
 		//Instances insts = new Instances("Gait", fvWekaAttributes, windowSize);  // "Gait" is relaition name
 		Instances insts = new Instances(structure, windowSize);
 		Log.v("Instances", insts.toSummaryString());
-//		Log.v("Instances", "1" + insts.attribute(1).toString());
-//		Log.v("Instances", "2" + insts.attribute(2).toString());
-//		Log.v("Instances", "12" + insts.attribute(12).toString());
+		Log.v("Instances", "1 " + insts.attribute(1).toString());
+		Log.v("Instances", "2 " + insts.attribute(2).toString());
+		Log.v("Instances", "12 " + insts.attribute(12).toString());
 		// form instance
 		for(int i=0; i<windowSize; i++) {
 			// left
@@ -260,10 +258,16 @@ public class WindowProcess {
             inst.setValue(17, w.fsr_right_back[i]);
            
             // test on class attribute
-            //inst.setClassValue("Right_heel_strike");
-            inst.setClassMissing();
-            inst.setDataset(insts);
-            
+//            inst.setValue(22, "Right_heel_strike");
+            inst.setMissing(22);
+//            inst.setDataset(insts);
+            try {
+				double classNum = cls.classifyInstance(inst);
+				Log.v("ClassNum", classNum + "");
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
             // add into instances
             insts.add(inst);
 		}
@@ -345,6 +349,8 @@ public class WindowProcess {
 	public void WekaClassify(Instances insts) throws Exception {
 		Log.v("Classify", "start classify");
 		Instances test = insts;
+		Log.v("ClassifierTest", "ClassifierTest");
+		Log.v("ClassifierTest", test.toSummaryString());
 		eval.evaluateModel(cls, test);
 		Log.v("Classify", eval.toSummaryString("\nResults\n=======================================================\n", false));
 	}
