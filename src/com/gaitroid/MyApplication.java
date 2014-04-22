@@ -8,10 +8,10 @@ import android.util.Log;
 
 public class MyApplication extends Application {
 	
-    private static String BaseAPIPath = "http://192.168.1.100:3000/api/";
-    private String SocketConnectPath = "http://192.168.1.100:3000/";
-//    private static String BaseAPIPath = "http://192.168.237.240:3000/api/";
-//    private String SocketConnectPath = "http://192.168.237.240:3000/";
+    private static String BaseAPIPath = "http://192.168.1.101:3000/api/";
+    private String SocketConnectPath = "http://192.168.1.101:3000/";
+//    private static String BaseAPIPath = "http://172.28.180.69:3000/api/";
+//    private String SocketConnectPath = "http://172.28.180.69:3000/";
     private String[] BluetoothAddress = {"", ""};
     private static String userID = "";
 
